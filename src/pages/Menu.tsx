@@ -307,11 +307,6 @@ const Menu: React.FC = () => {
             filteredItems.map((item, index) => (
               <div
                 key={item.id}
-                className="opacity-0 animate-slide-up"
-                style={{
-                  animationDelay: `${index * 0.05}s`,
-                  animationFillMode: 'forwards',
-                }}
               >
                 <FoodCard item={item} />
               </div>
