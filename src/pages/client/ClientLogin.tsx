@@ -14,51 +14,63 @@ const ClientLogin: React.FC = () => {
   const { login, register } = useClientAuth();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '' });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (mode === 'login') {
-      if (!form.email || !form.password) {
-        toast.error('يرجى ملء جميع الحقول');
-        return;
-      }
-      const success = login(form.email, form.password);
-      if (success) {
-        toast.success('تم تسجيل الدخول بنجاح');
-        navigate('/client/dashboard');
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
+    try {
+      if (mode === 'login') {
+        if (!form.email || !form.password) {
+          toast.error('يرجى ملء جميع الحقول');
+          return;
+        }
+        const result = await login(form.email.trim(), form.password);
+        if (result.success) {
+          toast.success('تم تسجيل الدخول بنجاح');
+          navigate('/client/dashboard');
+        } else {
+          toast.error('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+        }
       } else {
-        toast.error('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+        if (!form.name || !form.email || !form.phone || !form.password) {
+          toast.error('يرجى ملء جميع الحقول');
+          return;
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(form.email.trim())) {
+          toast.error('يرجى إدخال بريد إلكتروني صحيح');
+          return;
+        }
+        if (form.name.trim().length < 3) {
+          toast.error('الاسم يجب أن يكون 3 أحرف على الأقل');
+          return;
+        }
+        if (form.phone.trim().length < 9) {
+          toast.error('رقم الهاتف غير صحيح');
+          return;
+        }
+        if (form.password.length < 6) {
+          toast.error('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+          return;
+        }
+        const result = await register({ ...form, email: form.email.trim() });
+        if (result.success) {
+          toast.success('تم إنشاء الحساب بنجاح! تحقق من بريدك لتأكيد الحساب');
+          navigate('/client/dashboard');
+        } else {
+          if (result.error?.includes('already registered')) {
+            toast.error('البريد الإلكتروني مسجل مسبقاً');
+          } else {
+            toast.error(result.error || 'حدث خطأ أثناء إنشاء الحساب');
+          }
+        }
       }
-    } else {
-      if (!form.name || !form.email || !form.phone || !form.password) {
-        toast.error('يرجى ملء جميع الحقول');
-        return;
-      }
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(form.email.trim())) {
-        toast.error('يرجى إدخال بريد إلكتروني صحيح');
-        return;
-      }
-      if (form.name.trim().length < 3) {
-        toast.error('الاسم يجب أن يكون 3 أحرف على الأقل');
-        return;
-      }
-      if (form.phone.trim().length < 9) {
-        toast.error('رقم الهاتف غير صحيح');
-        return;
-      }
-      if (form.password.length < 6) {
-        toast.error('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
-        return;
-      }
-      const success = register(form);
-      if (success) {
-        toast.success('تم إنشاء الحساب بنجاح');
-        navigate('/client/dashboard');
-      } else {
-        toast.error('البريد الإلكتروني مسجل مسبقاً');
-      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -112,7 +124,7 @@ const ClientLogin: React.FC = () => {
                 value={form.email}
                 onChange={e => setForm({ ...form, email: e.target.value })}
                 placeholder="البريد الإلكتروني"
-                type="text"
+                type="email"
                 dir="ltr"
                 className="rounded-xl pr-10 text-right"
               />
@@ -136,9 +148,18 @@ const ClientLogin: React.FC = () => {
               </button>
             </div>
 
-            <Button type="submit" className="w-full btn-primary rounded-full" size="lg">
-              {mode === 'login' ? 'تسجيل الدخول' : 'إنشاء حساب'}
-              <ArrowRight className="w-4 h-4 mr-2" />
+            <Button type="submit" className="w-full btn-primary rounded-full" size="lg" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  جاري التحميل...
+                </div>
+              ) : (
+                <>
+                  {mode === 'login' ? 'تسجيل الدخول' : 'إنشاء حساب'}
+                  <ArrowRight className="w-4 h-4 mr-2" />
+                </>
+              )}
             </Button>
 
             <div className="text-center pt-2">
