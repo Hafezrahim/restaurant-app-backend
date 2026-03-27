@@ -48,9 +48,6 @@ export const Header: React.FC<HeaderProps> = ({ showSearch = true, title }) => {
 
         {/* Left (RTL End) - Action Icons */}
         <div className="flex items-center gap-1">
-          <div className="md:hidden">
-            <WebNav />
-          </div>
 
           {/* Desktop action icons: Wishlist, Cart, Sign-in/Dashboard, Notifications */}
           <TooltipProvider delayDuration={300}>
