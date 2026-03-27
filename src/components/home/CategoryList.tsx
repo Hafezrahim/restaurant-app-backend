@@ -1,10 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { categories } from '@/data/menuData';
+import { useCategories } from '@/backend/hooks/useMenuData';
 import { cn } from '@/lib/utils';
 
 export const CategoryList: React.FC = () => {
   const navigate = useNavigate();
+  const { data: categories = [] } = useCategories();
+
+  if (categories.length === 0) return null;
 
   return (
     <section className="mt-6">

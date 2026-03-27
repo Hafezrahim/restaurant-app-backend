@@ -1,11 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { menuItems } from '@/data/menuData';
+import { useMenuItems } from '@/backend/hooks/useMenuData';
 import { FoodCard } from '@/components/menu/FoodCard';
 
 export const PopularItems: React.FC = () => {
   const navigate = useNavigate();
+  const { data: menuItems = [] } = useMenuItems();
   const popularItems = menuItems.filter((item) => item.isPopular).slice(0, 4);
+
+  if (popularItems.length === 0) return null;
 
   return (
     <section className="mt-8">

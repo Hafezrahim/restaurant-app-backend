@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { FoodCard } from '@/components/menu/FoodCard';
 import { Footer } from '@/components/layout/Footer';
-import { categories, menuItems } from '@/data/menuData';
+import { useCategories, useMenuItems } from '@/backend/hooks/useMenuData';
 import { cn } from '@/lib/utils';
 import { Category } from '@/types';
 import { Helmet } from 'react-helmet-async';

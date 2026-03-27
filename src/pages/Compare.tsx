@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { categories } from '@/data/menuData';
+import { useCategories } from '@/backend/hooks/useMenuData';
 import { toast } from 'sonner';
 
 type SortOption = 'default' | 'price-asc' | 'price-desc' | 'rating-asc' | 'rating-desc';

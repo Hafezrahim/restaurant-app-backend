@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowRight, Heart, Minus, Plus, Star, ShoppingCart, Clock, Flame, Users } from 'lucide-react';
-import { menuItems } from '@/data/menuData';
+import { useMenuItems, useMenuItem } from '@/backend/hooks/useMenuData';
 import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { Button } from '@/components/ui/button';
