@@ -1,13 +1,15 @@
 import React from 'react';
-import { menuItems } from '@/data/menuData';
+import { useMenuItems } from '@/backend/hooks/useMenuData';
 import { useCart } from '@/context/CartContext';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { MenuItem } from '@/types';
 
 export const POSGrid: React.FC = () => {
   const { addItem } = useCart();
+  const { data: menuItems = [] } = useMenuItems();
 
-  const handleQuickAdd = (item: typeof menuItems[0]) => {
+  const handleQuickAdd = (item: MenuItem) => {
     addItem(item);
     toast({
       title: 'تمت الإضافة!',

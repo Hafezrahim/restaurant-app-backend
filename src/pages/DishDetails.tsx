@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowRight, Heart, Minus, Plus, Star, ShoppingCart, Clock, Flame, Users } from 'lucide-react';
-import { menuItems } from '@/data/menuData';
+import { useMenuItems, useMenuItem } from '@/backend/hooks/useMenuData';
 import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { Button } from '@/components/ui/button';
@@ -18,8 +18,9 @@ const DishDetails: React.FC = () => {
   const { addItem, items, updateQuantity } = useCart();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { formatPrice } = useCurrency();
+  const { data: menuItems = [] } = useMenuItems();
+  const { data: dish } = useMenuItem(id);
 
-  const dish = menuItems.find((item) => item.id === id);
   const cartItem = items.find((item) => item.id === id);
   const quantity = cartItem?.quantity || 0;
   const favorite = dish ? isFavorite(dish.id) : false;
@@ -38,7 +39,7 @@ const DishDetails: React.FC = () => {
       if (suggestions.length >= 4) break;
     }
     return suggestions;
-  }, [dish]);
+  }, [dish, menuItems]);
 
   if (!dish) {
     return (
