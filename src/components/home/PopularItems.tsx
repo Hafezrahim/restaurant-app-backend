@@ -25,11 +25,6 @@ export const PopularItems: React.FC = () => {
         {popularItems.map((item, index) => (
           <div
             key={item.id}
-            className="opacity-0 animate-slide-up"
-            style={{
-              animationDelay: `${index * 0.1}s`,
-              animationFillMode: 'forwards',
-            }}
           >
             <FoodCard item={item} />
           </div>

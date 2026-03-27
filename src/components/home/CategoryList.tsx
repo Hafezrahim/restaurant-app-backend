@@ -17,11 +17,7 @@ export const CategoryList: React.FC = () => {
           <button
             key={cat.id}
             onClick={() => navigate(`/menu?category=${cat.id}`)}
-            className={cn(
-              'flex flex-col items-center gap-2 min-w-[4.5rem] opacity-0 animate-scale-in',
-              `stagger-${index + 1}`
-            )}
-            style={{ animationFillMode: 'forwards' }}
+            className="flex flex-col items-center gap-2 min-w-[4.5rem] transition-transform duration-200"
           >
             <div className="w-16 h-16 rounded-full overflow-hidden shadow-card transition-all duration-200 hover:shadow-elevated hover:scale-105 ring-2 ring-primary/20">
               <img 
