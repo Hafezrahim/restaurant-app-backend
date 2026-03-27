@@ -1,19 +1,15 @@
 import React from 'react';
-import { ShoppingBag, Clock, CheckCircle, Truck } from 'lucide-react';
+import { ShoppingBag, Clock, CheckCircle, Truck, Package, XCircle } from 'lucide-react';
 import { ClientLayout } from '@/components/client/ClientLayout';
 import { useCurrency } from '@/context/CurrencyContext';
-import { Helmet } from 'react-helmet-async';
 
-const statusIcons: Record<string, React.ReactNode> = {
-  pending: <Clock className="w-4 h-4 text-secondary" />,
-  preparing: <Truck className="w-4 h-4 text-accent" />,
-  delivered: <CheckCircle className="w-4 h-4 text-green-500" />,
-};
-
-const statusLabels: Record<string, string> = {
-  pending: 'قيد الانتظار',
-  preparing: 'قيد التجهيز',
-  delivered: 'تم التوصيل',
+const statusConfig: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
+  pending: { icon: <Clock className="w-4 h-4" />, label: 'قيد الانتظار', color: 'text-secondary bg-secondary/10' },
+  confirmed: { icon: <Package className="w-4 h-4" />, label: 'مؤكد', color: 'text-primary bg-primary/10' },
+  preparing: { icon: <Truck className="w-4 h-4" />, label: 'قيد التجهيز', color: 'text-accent bg-accent/10' },
+  out_for_delivery: { icon: <Truck className="w-4 h-4" />, label: 'في الطريق', color: 'text-accent bg-accent/10' },
+  delivered: { icon: <CheckCircle className="w-4 h-4" />, label: 'تم التوصيل', color: 'text-green-600 bg-green-500/10' },
+  cancelled: { icon: <XCircle className="w-4 h-4" />, label: 'ملغي', color: 'text-destructive bg-destructive/10' },
 };
 
 const ClientOrders: React.FC = () => {
@@ -21,37 +17,41 @@ const ClientOrders: React.FC = () => {
   const { formatPrice } = useCurrency();
 
   return (
-    <>
-      <Helmet><title>طلباتي - مطعم مزاج</title></Helmet>
-      <ClientLayout title="طلباتي">
-        {orders.length === 0 ? (
-          <div className="bg-card rounded-2xl p-12 shadow-card text-center">
-            <ShoppingBag className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-bold text-lg text-foreground mb-2">لا توجد طلبات بعد</h3>
-            <p className="text-sm text-muted-foreground">ستظهر طلباتك هنا بعد إتمام أول طلب</p>
+    <ClientLayout title="طلباتي">
+      {orders.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+            <ShoppingBag className="w-10 h-10 text-muted-foreground" />
           </div>
-        ) : (
-          <div className="space-y-3">
-            {orders.map((order: any, i: number) => (
-              <div key={i} className="bg-card rounded-2xl p-4 shadow-card">
+          <h3 className="font-bold text-lg text-foreground mb-1">لا توجد طلبات بعد</h3>
+          <p className="text-sm text-muted-foreground text-center">ستظهر طلباتك هنا بعد إتمام أول طلب</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {orders.map((order: any, i: number) => {
+            const status = statusConfig[order.status || 'pending'];
+            return (
+              <div key={i} className="bg-card rounded-2xl p-4 border border-border/30 active:scale-[0.98] transition-transform">
                 <div className="flex items-center justify-between mb-2">
-                  <code className="text-sm font-mono text-primary font-bold">{order.trackingNumber}</code>
-                  <div className="flex items-center gap-1.5 text-xs">
-                    {statusIcons[order.status || 'pending']}
-                    <span className="text-muted-foreground">{statusLabels[order.status || 'pending']}</span>
+                  <code className="text-xs font-mono text-primary font-bold bg-primary/5 px-2 py-0.5 rounded-md">
+                    {order.trackingNumber}
+                  </code>
+                  <div className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${status.color}`}>
+                    {status.icon}
+                    {status.label}
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">{order.date}</p>
-                <div className="flex justify-between mt-2 pt-2 border-t border-border">
-                  <span className="text-sm text-muted-foreground">{order.itemCount} عناصر</span>
+                <p className="text-[11px] text-muted-foreground">{order.date}</p>
+                <div className="flex justify-between mt-3 pt-3 border-t border-border/30">
+                  <span className="text-xs text-muted-foreground">{order.itemCount} عناصر</span>
                   <span className="text-sm font-bold text-foreground">{formatPrice(order.total?.toFixed(2))}</span>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </ClientLayout>
-    </>
+            );
+          })}
+        </div>
+      )}
+    </ClientLayout>
   );
 };
 

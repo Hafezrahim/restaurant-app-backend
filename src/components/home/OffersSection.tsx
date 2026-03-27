@@ -1,68 +1,81 @@
 import React from 'react';
-
-const offers = [
-  {
-    id: 1,
-    title: 'خصم 20% على الشاورما',
-    description: 'استمتع بألذ شاورما مع خصم حصري',
-    code: 'SHAWARMA20',
-    validUntil: '31 ديسمبر',
-    image: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=600&h=400&fit=crop',
-  },
-  {
-    id: 2,
-    title: 'وجبة عائلية مجانية',
-    description: 'اطلب 3 وجبات واحصل على الرابعة مجاناً',
-    code: 'FAMILY4',
-    validUntil: '25 ديسمبر',
-    image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&h=400&fit=crop',
-  },
-  {
-    id: 3,
-    title: 'توصيل مجاني',
-    description: 'توصيل مجاني للطلبات فوق 100 ر.س',
-    code: 'FREESHIP',
-    validUntil: '1 يناير',
-    image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop',
-  },
-];
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useCurrency } from '@/context/CurrencyContext';
+import { Tag, Copy, Clock } from 'lucide-react';
+import { toast } from 'sonner';
 
 export const OffersSection: React.FC = () => {
+  const { formatPrice } = useCurrency();
+
+  const { data: coupons = [] } = useQuery({
+    queryKey: ['activeCoupons'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('coupons')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(6);
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  if (coupons.length === 0) return null;
+
+  const copyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast.success('تم نسخ كود الخصم!');
+  };
+
   return (
-    <section className="hidden md:block py-12 px-6 bg-muted/30">
-      <div className="container mx-auto">
-        <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-8 text-center">
-          العروض الحصرية
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {offers.map((offer) => (
-            <div
-              key={offer.id}
-              className="relative overflow-hidden rounded-2xl group cursor-pointer transform hover:scale-[1.02] transition-transform duration-300"
-            >
-              <div className="aspect-[4/3] relative">
-                <img
-                  src={offer.image}
-                  alt={offer.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/50 to-transparent" />
+    <section className="mt-8">
+      <h3 className="text-lg font-bold text-foreground mb-4 text-center">🎁 العروض الحصرية</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {coupons.map((coupon) => (
+          <div
+            key={coupon.id}
+            className="bg-gradient-to-br from-primary/5 via-card to-secondary/5 rounded-2xl p-4 border border-border/50 shadow-card hover:shadow-elevated transition-all duration-300 group"
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                <Tag className="w-5 h-5 text-primary" />
               </div>
-              <div className="absolute inset-0 p-6 flex flex-col justify-end text-primary-foreground">
-                <h3 className="text-xl lg:text-2xl font-bold mb-2">{offer.title}</h3>
-                <p className="text-sm opacity-90 mb-4">{offer.description}</p>
-                <div className="flex items-center justify-between">
-                  <span className="bg-primary px-4 py-2 rounded-full text-sm font-mono font-bold">
-                    {offer.code}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-lg font-bold text-primary">
+                    {coupon.type === 'percentage' ? `${coupon.value}%` : formatPrice(coupon.value)}
                   </span>
-                  <span className="text-sm opacity-75 bg-background/20 px-3 py-1 rounded-full">
-                    حتى {offer.validUntil}
-                  </span>
+                  <span className="text-xs text-muted-foreground">خصم</span>
                 </div>
+                <p className="text-sm text-foreground font-medium line-clamp-1">{coupon.description}</p>
+                {coupon.min_order > 0 && (
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    حد أدنى {formatPrice(coupon.min_order)}
+                  </p>
+                )}
               </div>
             </div>
-          ))}
-        </div>
+
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
+              <button
+                onClick={() => copyCode(coupon.code)}
+                className="flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-mono font-bold px-3 py-1.5 rounded-lg transition-colors"
+              >
+                <Copy className="w-3 h-3" />
+                {coupon.code}
+              </button>
+              {coupon.expires_at && (
+                <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <Clock className="w-3 h-3" />
+                  {new Date(coupon.expires_at).toLocaleDateString('ar-SA', { month: 'short', day: 'numeric' })}
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );
