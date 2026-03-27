@@ -34,6 +34,8 @@ const Menu: React.FC = () => {
 
   const { isListening, transcript, startListening, stopListening, isSupported, language, setLanguage } = useSpeechRecognition();
   const { currency } = useCurrency();
+  const { data: menuItems = [] } = useMenuItems();
+  const { data: categories = [] } = useCategories();
 
   // Update search query when voice transcript changes
   useEffect(() => {

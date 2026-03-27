@@ -20,6 +20,7 @@ const Compare: React.FC = () => {
   const { addItem } = useCart();
   const { formatPrice } = useCurrency();
   const [sortBy, setSortBy] = useState<SortOption>('default');
+  const { data: categories = [] } = useCategories();
 
   const getCategoryName = (categoryId: string) => {
     const category = categories.find(c => c.id === categoryId);
