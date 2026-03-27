@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import type { User, Session } from '@supabase/supabase-js';
 
 export interface ClientUser {
   id: string;
@@ -14,90 +16,121 @@ export interface ClientUser {
 interface ClientAuthContextType {
   user: ClientUser | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => boolean;
-  register: (data: { name: string; email: string; phone: string; password: string }) => boolean;
-  logout: () => void;
-  updateProfile: (data: Partial<ClientUser>) => void;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (data: { name: string; email: string; phone: string; password: string }) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
+  updateProfile: (data: Partial<ClientUser>) => Promise<void>;
 }
-
-const CLIENT_AUTH_KEY = 'mazaj_client_auth';
-const CLIENT_USERS_KEY = 'mazaj_client_users';
 
 const ClientAuthContext = createContext<ClientAuthContextType | undefined>(undefined);
 
+const mapProfile = (profile: any, userId: string): ClientUser => ({
+  id: userId,
+  name: profile?.name ?? '',
+  email: profile?.email ?? '',
+  phone: profile?.phone ?? '',
+  address: profile?.address ?? undefined,
+  lat: profile?.lat ?? undefined,
+  lng: profile?.lng ?? undefined,
+  createdAt: profile?.created_at ?? new Date().toISOString(),
+});
+
 export const ClientAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<ClientUser | null>(() => {
-    const stored = localStorage.getItem(CLIENT_AUTH_KEY);
-    return stored ? JSON.parse(stored) : null;
-  });
+  const [user, setUser] = useState<ClientUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchProfile = async (userId: string) => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    return data;
+  };
 
   useEffect(() => {
-    if (user) {
-      localStorage.setItem(CLIENT_AUTH_KEY, JSON.stringify(user));
-    } else {
-      localStorage.removeItem(CLIENT_AUTH_KEY);
-    }
-  }, [user]);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          // Use setTimeout to avoid Supabase client deadlock
+          setTimeout(async () => {
+            const profile = await fetchProfile(session.user.id);
+            setUser(mapProfile(profile, session.user.id));
+            setIsLoading(false);
+          }, 0);
+        } else {
+          setUser(null);
+          setIsLoading(false);
+        }
+      }
+    );
 
-  const getUsers = (): Record<string, { user: ClientUser; password: string }> => {
-    const stored = localStorage.getItem(CLIENT_USERS_KEY);
-    return stored ? JSON.parse(stored) : {};
-  };
+    // THEN check existing session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const profile = await fetchProfile(session.user.id);
+        setUser(mapProfile(profile, session.user.id));
+      }
+      setIsLoading(false);
+    });
 
-  const saveUsers = (users: Record<string, { user: ClientUser; password: string }>) => {
-    localStorage.setItem(CLIENT_USERS_KEY, JSON.stringify(users));
-  };
-
-  const login = useCallback((email: string, password: string): boolean => {
-    const users = getUsers();
-    const entry = users[email];
-    if (entry && entry.password === password) {
-      setUser(entry.user);
-      return true;
-    }
-    return false;
+    return () => subscription.unsubscribe();
   }, []);
 
-  const register = useCallback((data: { name: string; email: string; phone: string; password: string }): boolean => {
-    const users = getUsers();
-    if (users[data.email]) return false;
-    const newUser: ClientUser = {
-      id: Date.now().toString(36),
-      name: data.name,
+  const login = useCallback(async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  }, []);
+
+  const register = useCallback(async (data: { name: string; email: string; phone: string; password: string }) => {
+    const { error } = await supabase.auth.signUp({
       email: data.email,
-      phone: data.phone,
-      createdAt: new Date().toISOString(),
-    };
-    users[data.email] = { user: newUser, password: data.password };
-    saveUsers(users);
-    setUser(newUser);
-    return true;
+      password: data.password,
+      options: {
+        data: {
+          name: data.name,
+          phone: data.phone,
+        },
+      },
+    });
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true };
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
     setUser(null);
   }, []);
 
-  const updateProfile = useCallback((data: Partial<ClientUser>) => {
-    setUser(prev => {
-      if (!prev) return null;
-      const updated = { ...prev, ...data };
-      // Also update in users store
-      const users = getUsers();
-      if (users[prev.email]) {
-        users[prev.email].user = updated;
-        if (data.email && data.email !== prev.email) {
-          users[data.email] = users[prev.email];
-          delete users[prev.email];
-        }
-        saveUsers(users);
-      }
-      return updated;
-    });
-  }, []);
+  const updateProfile = useCallback(async (data: Partial<ClientUser>) => {
+    if (!user) return;
+    const updates: Record<string, any> = {};
+    if (data.name !== undefined) updates.name = data.name;
+    if (data.email !== undefined) updates.email = data.email;
+    if (data.phone !== undefined) updates.phone = data.phone;
+    if (data.address !== undefined) updates.address = data.address;
+    if (data.lat !== undefined) updates.lat = data.lat;
+    if (data.lng !== undefined) updates.lng = data.lng;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', user.id);
+
+    if (!error) {
+      setUser(prev => prev ? { ...prev, ...data } : null);
+    }
+  }, [user]);
 
   return (
-    <ClientAuthContext.Provider value={{ user, isAuthenticated: !!user, login, register, logout, updateProfile }}>
+    <ClientAuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, register, logout, updateProfile }}>
       {children}
     </ClientAuthContext.Provider>
   );
