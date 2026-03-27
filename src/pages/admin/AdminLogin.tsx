@@ -6,10 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdminAuth } from "@/context/AdminAuthContext";
 import { toast } from "sonner";
-import { Lock, User, ChefHat } from "lucide-react";
+import { Lock, Mail, ChefHat } from "lucide-react";
 
 const AdminLogin = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAdminAuth();
@@ -19,16 +19,13 @@ const AdminLogin = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const success = login(username, password);
+    const result = await login(email, password);
     
-    if (success) {
+    if (result.success) {
       toast.success("تم تسجيل الدخول بنجاح");
       navigate("/admin");
     } else {
-      toast.error("اسم المستخدم أو كلمة المرور غير صحيحة");
+      toast.error(result.error || "فشل تسجيل الدخول");
     }
     
     setIsLoading(false);
@@ -36,7 +33,6 @@ const AdminLogin = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background flex items-center justify-center p-4" dir="rtl">
-      {/* Background Pattern */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
@@ -44,7 +40,6 @@ const AdminLogin = () => {
 
       <Card className="w-full max-w-md relative z-10 shadow-2xl border-border/50 bg-card/95 backdrop-blur-sm">
         <CardHeader className="text-center space-y-4 pb-2">
-          {/* Logo */}
           <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
             <ChefHat className="w-10 h-10 text-primary-foreground" />
           </div>
@@ -59,15 +54,15 @@ const AdminLogin = () => {
         <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-foreground">اسم المستخدم</Label>
+              <Label htmlFor="email" className="text-foreground">البريد الإلكتروني</Label>
               <div className="relative">
-                <User className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="أدخل اسم المستخدم"
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="أدخل البريد الإلكتروني"
                   className="pr-10 h-12 bg-muted/30 border-border/50 focus:border-primary"
                   required
                 />
@@ -106,14 +101,9 @@ const AdminLogin = () => {
             </Button>
           </form>
 
-          {/* Demo Credentials Hint */}
           <div className="mt-6 p-4 bg-muted/50 rounded-xl border border-border/50">
             <p className="text-sm text-muted-foreground text-center">
-              <span className="font-medium text-foreground">بيانات الدخول التجريبية:</span>
-              <br />
-              اسم المستخدم: <code className="bg-background px-1.5 py-0.5 rounded text-primary">admin</code>
-              <br />
-              كلمة المرور: <code className="bg-background px-1.5 py-0.5 rounded text-primary">admin123</code>
+              يجب أن يكون لحسابك صلاحية <code className="bg-background px-1.5 py-0.5 rounded text-primary">admin</code> في جدول الأدوار للوصول
             </p>
           </div>
         </CardContent>
