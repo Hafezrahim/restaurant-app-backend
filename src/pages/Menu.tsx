@@ -68,8 +68,9 @@ const Menu: React.FC = () => {
       if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
           !item.description.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       
-      // Price filter
-      if (item.price < priceRange[0] || item.price > priceRange[1]) return false;
+      // Price filter - only apply if user has changed from defaults
+      if (priceRange[0] > 0 && item.price < priceRange[0]) return false;
+      if (priceRange[1] < maxPrice && item.price > priceRange[1]) return false;
       
       // Rating filter
       if (item.rating < minRating) return false;
@@ -85,7 +86,7 @@ const Menu: React.FC = () => {
     }
 
     return items;
-  }, [activeCategory, searchQuery, priceRange, minRating, priceSort]);
+  }, [menuItems, activeCategory, searchQuery, priceRange, minRating, priceSort, maxPrice]);
 
   const handleCategoryChange = (cat: Category | 'all') => {
     setActiveCategory(cat);
