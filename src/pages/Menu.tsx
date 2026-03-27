@@ -27,7 +27,7 @@ const Menu: React.FC = () => {
   const categoryParam = searchParams.get('category') as Category | null;
   const [activeCategory, setActiveCategory] = useState<Category | 'all'>(categoryParam || 'all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
   const [minRating, setMinRating] = useState(0);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [priceSort, setPriceSort] = useState<'none' | 'asc' | 'desc'>('none');
