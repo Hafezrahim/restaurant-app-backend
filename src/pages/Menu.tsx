@@ -27,7 +27,7 @@ const Menu: React.FC = () => {
   const categoryParam = searchParams.get('category') as Category | null;
   const [activeCategory, setActiveCategory] = useState<Category | 'all'>(categoryParam || 'all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
   const [minRating, setMinRating] = useState(0);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [priceSort, setPriceSort] = useState<'none' | 'asc' | 'desc'>('none');
@@ -68,8 +68,9 @@ const Menu: React.FC = () => {
       if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
           !item.description.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       
-      // Price filter
-      if (item.price < priceRange[0] || item.price > priceRange[1]) return false;
+      // Price filter - only apply if user has changed from defaults
+      if (priceRange[0] > 0 && item.price < priceRange[0]) return false;
+      if (priceRange[1] < maxPrice && item.price > priceRange[1]) return false;
       
       // Rating filter
       if (item.rating < minRating) return false;
@@ -85,7 +86,7 @@ const Menu: React.FC = () => {
     }
 
     return items;
-  }, [activeCategory, searchQuery, priceRange, minRating, priceSort]);
+  }, [menuItems, activeCategory, searchQuery, priceRange, minRating, priceSort, maxPrice]);
 
   const handleCategoryChange = (cat: Category | 'all') => {
     setActiveCategory(cat);
@@ -306,11 +307,6 @@ const Menu: React.FC = () => {
             filteredItems.map((item, index) => (
               <div
                 key={item.id}
-                className="opacity-0 animate-slide-up"
-                style={{
-                  animationDelay: `${index * 0.05}s`,
-                  animationFillMode: 'forwards',
-                }}
               >
                 <FoodCard item={item} />
               </div>
