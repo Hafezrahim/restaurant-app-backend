@@ -80,17 +80,25 @@ export const useMenuItems = () => {
   return useQuery({
     queryKey: ['menuItems'],
     queryFn: async (): Promise<MenuItem[]> => {
-      const { data, error } = await supabase
-        .from('menu_items')
-        .select('*, categories!menu_items_category_id_fkey(slug)')
-        .eq('is_available', true)
-        .order('created_at');
+      try {
+        const { data, error } = await supabase
+          .from('menu_items')
+          .select('*, categories!menu_items_category_id_fkey(slug)')
+          .eq('is_available', true)
+          .order('created_at');
 
-      if (error || !data?.length) {
+        console.log('[useMenuItems] data:', data?.length, 'error:', error?.message);
+
+        if (error || !data?.length) {
+          console.log('[useMenuItems] using fallback, items:', fallbackMenuItems.length);
+          return fallbackMenuItems;
+        }
+
+        return data.map((item) => mapMenuItem(item as never));
+      } catch (e) {
+        console.error('[useMenuItems] exception:', e);
         return fallbackMenuItems;
       }
-
-      return data.map((item) => mapMenuItem(item as never));
     },
     staleTime: 5 * 60 * 1000,
   });
