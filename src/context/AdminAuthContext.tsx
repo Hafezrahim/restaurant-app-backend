@@ -18,15 +18,23 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
   const checkAdminRole = async (userId: string): Promise<boolean> => {
-    const { data, error } = await supabase.rpc('has_role', {
-      _user_id: userId,
-      _role: 'admin',
-    });
-    if (error) {
-      console.error('Error checking admin role:', error);
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      const { data, error } = await supabase.rpc('has_role', {
+        _user_id: userId,
+        _role: 'admin',
+      }, { signal: controller.signal } as any);
+      clearTimeout(timeout);
+      if (error) {
+        console.error('Error checking admin role:', error);
+        return false;
+      }
+      return data === true;
+    } catch (e) {
+      console.error('Admin role check failed/timed out:', e);
       return false;
     }
-    return data === true;
   };
 
   useEffect(() => {
