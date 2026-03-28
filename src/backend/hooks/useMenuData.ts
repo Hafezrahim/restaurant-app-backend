@@ -52,16 +52,24 @@ export const useCategories = () => {
   return useQuery({
     queryKey: ['categories'],
     queryFn: async (): Promise<CategoryInfo[]> => {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('sort_order');
+      try {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*')
+          .order('sort_order');
 
-      if (error || !data?.length) {
+        console.log('[useCategories] data:', data?.length, 'error:', error?.message);
+
+        if (error || !data?.length) {
+          console.log('[useCategories] using fallback');
+          return fallbackCategories;
+        }
+
+        return data.map(mapCategory);
+      } catch (e) {
+        console.error('[useCategories] exception:', e);
         return fallbackCategories;
       }
-
-      return data.map(mapCategory);
     },
     staleTime: 5 * 60 * 1000,
   });
