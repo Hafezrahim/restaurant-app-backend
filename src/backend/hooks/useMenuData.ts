@@ -53,25 +53,30 @@ export const useCategories = () => {
     queryKey: ['categories'],
     queryFn: async (): Promise<CategoryInfo[]> => {
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+
         const { data, error } = await supabase
           .from('categories')
           .select('*')
-          .order('sort_order');
+          .order('sort_order')
+          .abortSignal(controller.signal);
 
-        console.log('[useCategories] data:', data?.length, 'error:', error?.message);
+        clearTimeout(timeout);
 
         if (error || !data?.length) {
-          console.log('[useCategories] using fallback');
           return fallbackCategories;
         }
 
         return data.map(mapCategory);
       } catch (e) {
-        console.error('[useCategories] exception:', e);
+        console.warn('[useCategories] falling back to local data:', e);
         return fallbackCategories;
       }
     },
+    placeholderData: fallbackCategories,
     staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 };
 
@@ -81,26 +86,31 @@ export const useMenuItems = () => {
     queryKey: ['menuItems'],
     queryFn: async (): Promise<MenuItem[]> => {
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+
         const { data, error } = await supabase
           .from('menu_items')
           .select('*, categories!menu_items_category_id_fkey(slug)')
           .eq('is_available', true)
-          .order('created_at');
+          .order('created_at')
+          .abortSignal(controller.signal);
 
-        console.log('[useMenuItems] data:', data?.length, 'error:', error?.message);
+        clearTimeout(timeout);
 
         if (error || !data?.length) {
-          console.log('[useMenuItems] using fallback, items:', fallbackMenuItems.length);
           return fallbackMenuItems;
         }
 
         return data.map((item) => mapMenuItem(item as never));
       } catch (e) {
-        console.error('[useMenuItems] exception:', e);
+        console.warn('[useMenuItems] falling back to local data:', e);
         return fallbackMenuItems;
       }
     },
+    placeholderData: fallbackMenuItems,
     staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 };
 
@@ -111,19 +121,34 @@ export const useMenuItem = (id: string | undefined) => {
     queryFn: async (): Promise<MenuItem | null> => {
       if (!id) return null;
 
-      const { data, error } = await supabase
-        .from('menu_items')
-        .select('*, categories!menu_items_category_id_fkey(slug)')
-        .eq('id', id)
-        .single();
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
 
-      if (error || !data) {
+        const query = supabase
+          .from('menu_items')
+          .select('*, categories!menu_items_category_id_fkey(slug)')
+          .eq('id', id)
+          .single();
+
+        (query as any).abortSignal?.(controller.signal);
+        const { data, error } = await query;
+
+        clearTimeout(timeout);
+
+        if (error || !data) {
+          return fallbackMenuItems.find((item) => item.id === id) ?? null;
+        }
+
+        return mapMenuItem(data as never);
+      } catch (e) {
+        console.warn('[useMenuItem] falling back to local data:', e);
         return fallbackMenuItems.find((item) => item.id === id) ?? null;
       }
-
-      return mapMenuItem(data as never);
     },
     enabled: !!id,
+    placeholderData: () => fallbackMenuItems.find((item) => item.id === id) ?? null,
     staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 };
