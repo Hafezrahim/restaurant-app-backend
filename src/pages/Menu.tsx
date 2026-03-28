@@ -34,8 +34,10 @@ const Menu: React.FC = () => {
 
   const { isListening, transcript, startListening, stopListening, isSupported, language, setLanguage } = useSpeechRecognition();
   const { currency } = useCurrency();
-  const { data: menuItems = [] } = useMenuItems();
-  const { data: categories = [] } = useCategories();
+  const { data: menuItems = [], isLoading: isLoadingItems } = useMenuItems();
+  const { data: categories = [], isLoading: isLoadingCats } = useCategories();
+
+  console.log('[Menu] items:', menuItems.length, 'loading:', isLoadingItems, 'cats:', categories.length, 'loadingCats:', isLoadingCats);
 
   // Update search query when voice transcript changes
   useEffect(() => {
