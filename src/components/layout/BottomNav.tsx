@@ -12,13 +12,13 @@ const navItems = [
   { path: '/more', icon: Menu, label: 'المزيد' },
 ];
 
-export const BottomNav: React.FC = () => {
+export const BottomNav = React.forwardRef<HTMLElement>((_, ref) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { totalItems } = useCart();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/50 px-2 pb-safe md:hidden">
+    <nav ref={ref} className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/50 px-2 pb-safe md:hidden">
       <div className="flex items-end justify-around h-[var(--nav-height)]">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
@@ -55,4 +55,6 @@ export const BottomNav: React.FC = () => {
       </div>
     </nav>
   );
-};
+});
+
+BottomNav.displayName = 'BottomNav';
