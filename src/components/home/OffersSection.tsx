@@ -4,6 +4,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCurrency } from '@/context/CurrencyContext';
 import { Tag, Copy, Clock } from 'lucide-react';
 import { toast } from 'sonner';
+import { AVAILABLE_COUPONS } from '@/data/coupons';
+
+const fallbackCoupons = AVAILABLE_COUPONS.map((coupon, index) => ({
+  id: `fallback-${coupon.code}-${index}`,
+  code: coupon.code,
+  type: coupon.type,
+  value: coupon.value,
+  min_order: coupon.minOrder,
+  description: coupon.description,
+  expires_at: coupon.expiresAt,
+}));
 
 export const OffersSection: React.FC = () => {
   const { formatPrice } = useCurrency();
@@ -17,13 +28,12 @@ export const OffersSection: React.FC = () => {
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(6);
-      if (error) throw error;
-      return data ?? [];
+
+      if (error || !data?.length) return fallbackCoupons;
+      return data;
     },
     staleTime: 5 * 60 * 1000,
   });
-
-  if (coupons.length === 0) return null;
 
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
