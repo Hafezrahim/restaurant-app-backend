@@ -125,12 +125,14 @@ export const useMenuItem = (id: string | undefined) => {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 5000);
 
-        const { data, error } = await supabase
+        const query = supabase
           .from('menu_items')
           .select('*, categories!menu_items_category_id_fkey(slug)')
           .eq('id', id)
-          .single()
-          .abortSignal(controller.signal);
+          .single();
+
+        (query as any).abortSignal?.(controller.signal);
+        const { data, error } = await query;
 
         clearTimeout(timeout);
 
