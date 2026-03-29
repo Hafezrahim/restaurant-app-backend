@@ -3,27 +3,42 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdminAuth } from "@/context/AdminAuthContext";
 import { toast } from "sonner";
-import { Lock, Mail, ChefHat } from "lucide-react";
+import { Lock, Mail, ChefHat, Eye, EyeOff } from "lucide-react";
 
 const AdminLogin = () => {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => localStorage.getItem("admin_email") || "");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => !!localStorage.getItem("admin_email"));
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAdminAuth();
+  const { login, isAuthenticated } = useAdminAuth();
   const navigate = useNavigate();
+
+  // If already authenticated, redirect
+  if (isAuthenticated) {
+    navigate("/admin", { replace: true });
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
+    if (rememberMe) {
+      localStorage.setItem("admin_email", email);
+    } else {
+      localStorage.removeItem("admin_email");
+    }
+
     const result = await login(email, password);
     
     if (result.success) {
       toast.success("تم تسجيل الدخول بنجاح");
-      navigate("/admin");
+      navigate("/admin", { replace: true });
     } else {
       toast.error(result.error || "فشل تسجيل الدخول");
     }
@@ -75,14 +90,32 @@ const AdminLogin = () => {
                 <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="أدخل كلمة المرور"
-                  className="pr-10 h-12 bg-muted/30 border-border/50 focus:border-primary"
+                  className="pr-10 pl-10 h-12 bg-muted/30 border-border/50 focus:border-primary"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="remember"
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(checked === true)}
+              />
+              <Label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">
+                تذكرني
+              </Label>
             </div>
 
             <Button
