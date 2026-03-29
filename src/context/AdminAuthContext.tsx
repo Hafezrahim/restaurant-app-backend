@@ -38,28 +38,49 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    let mounted = true;
+
+    // First restore session, then listen for changes
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!mounted) return;
       if (session?.user) {
         const isAdmin = await checkAdminRole(session.user.id);
+        if (!mounted) return;
         setUser(isAdmin ? session.user : null);
         setIsAuthenticated(isAdmin);
-      } else {
+      }
+      setIsLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      if (event === 'SIGNED_OUT') {
         setUser(null);
         setIsAuthenticated(false);
+        setIsLoading(false);
+        return;
       }
-      setIsLoading(false);
-    });
-
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
+      if (session?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
         const isAdmin = await checkAdminRole(session.user.id);
+        if (!mounted) return;
         setUser(isAdmin ? session.user : null);
         setIsAuthenticated(isAdmin);
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // Safety timeout
+    const safetyTimer = setTimeout(() => {
+      if (mounted && isLoading) {
+        setIsLoading(false);
+      }
+    }, 6000);
+
+    return () => {
+      mounted = false;
+      clearTimeout(safetyTimer);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
