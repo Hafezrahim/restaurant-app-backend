@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { Bell, Package, Calendar, MessageSquare, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,88 +9,19 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
-
-interface Notification {
-  id: string;
-  type: "order" | "reservation" | "review";
-  title: string;
-  message: string;
-  time: Date;
-  read: boolean;
-}
-
-const initialNotifications: Notification[] = [
-  {
-    id: "1",
-    type: "order",
-    title: "طلب جديد #1234",
-    message: "طلب جديد بقيمة 150 ر.س",
-    time: new Date(Date.now() - 2 * 60000),
-    read: false,
-  },
-  {
-    id: "2",
-    type: "reservation",
-    title: "حجز جديد",
-    message: "حجز لـ 4 أشخاص الساعة 8:00 مساءً",
-    time: new Date(Date.now() - 15 * 60000),
-    read: false,
-  },
-  {
-    id: "3",
-    type: "review",
-    title: "تقييم جديد",
-    message: "تقييم 5 نجوم من أحمد",
-    time: new Date(Date.now() - 30 * 60000),
-    read: true,
-  },
-];
+import { useRealtimeAdmin, type RealtimeNotification } from "@/hooks/useRealtimeAdmin";
 
 export const NotificationsDropdown = () => {
-  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+  const [notifications, setNotifications] = useState<RealtimeNotification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const { toast } = useToast();
+
+  const handleNewNotification = useCallback((n: RealtimeNotification) => {
+    setNotifications((prev) => [n, ...prev.slice(0, 19)]);
+  }, []);
+
+  useRealtimeAdmin(handleNewNotification);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
-
-  // Simulate real-time notifications
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const randomNotifications = [
-        {
-          type: "order" as const,
-          title: `طلب جديد #${Math.floor(Math.random() * 9000) + 1000}`,
-          message: `طلب جديد بقيمة ${Math.floor(Math.random() * 200) + 50} ر.س`,
-        },
-        {
-          type: "reservation" as const,
-          title: "حجز جديد",
-          message: `حجز لـ ${Math.floor(Math.random() * 8) + 2} أشخاص`,
-        },
-      ];
-
-      const shouldNotify = Math.random() > 0.7;
-      if (shouldNotify) {
-        const randomNotif = randomNotifications[Math.floor(Math.random() * randomNotifications.length)];
-        const newNotification: Notification = {
-          id: Date.now().toString(),
-          ...randomNotif,
-          time: new Date(),
-          read: false,
-        };
-
-        setNotifications((prev) => [newNotification, ...prev.slice(0, 9)]);
-
-        toast({
-          title: randomNotif.title,
-          description: randomNotif.message,
-        });
-      }
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [toast]);
 
   const markAsRead = (id: string) => {
     setNotifications((prev) =>
@@ -106,7 +37,7 @@ export const NotificationsDropdown = () => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
-  const getIcon = (type: Notification["type"]) => {
+  const getIcon = (type: RealtimeNotification["type"]) => {
     switch (type) {
       case "order":
         return <Package className="w-4 h-4 text-primary" />;
@@ -158,7 +89,7 @@ export const NotificationsDropdown = () => {
         <ScrollArea className="h-[300px]">
           {notifications.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground">
-              لا توجد إشعارات
+              لا توجد إشعارات بعد — ستظهر هنا فوراً عند وصول طلب جديد
             </div>
           ) : (
             notifications.map((notification) => (
