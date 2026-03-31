@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useCurrency, CURRENCIES } from "@/context/CurrencyContext";
-import { useRestaurantSettings, useSaveSettings, useDeliveryZones, useUpsertDeliveryZone, useDeleteDeliveryZone } from "@/hooks/useSettingsData";
+import { useRestaurantSettings, useSaveSettings, useDeliveryZones, useUpsertDeliveryZone, useDeleteDeliveryZone, useUsersWithRoles } from "@/hooks/useSettingsData";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
