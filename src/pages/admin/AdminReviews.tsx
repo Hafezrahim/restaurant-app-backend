@@ -13,15 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Search,
-  Star,
-  MessageSquare,
-  ThumbsUp,
-  Filter,
-  Reply,
-  CheckCircle,
-  Clock,
-  TrendingUp,
+  Search, Star, MessageSquare, ThumbsUp, Filter, Reply,
+  CheckCircle, Clock, TrendingUp, Trash2, ShieldCheck,
 } from "lucide-react";
 import { useAdminReviews, useUpdateReviewApproval, useDeleteReview } from "@/hooks/useAdminData";
 import { format } from "date-fns";
