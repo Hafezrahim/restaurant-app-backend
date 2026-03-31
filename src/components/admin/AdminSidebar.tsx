@@ -81,6 +81,13 @@ const menuItems = [
 export const AdminSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAdminAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/admin/login");
+  };
 
   return (
     <aside 
