@@ -16,6 +16,7 @@ import { useRewards, MIN_REDEEM, SAR_PER_POINT } from '@/context/RewardsContext'
 import { useNotifications } from '@/context/NotificationsContext';
 import { validateCoupon, recordCouponUsage } from '@/data/coupons';
 import { useCurrency } from '@/context/CurrencyContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const CUSTOMER_STORAGE_KEY = 'mazaj_customer_data';
 
