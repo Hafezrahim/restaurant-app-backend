@@ -111,6 +111,28 @@ export const useAdminReviews = () => {
   });
 };
 
+export const useUpdateReviewApproval = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, is_approved }: { id: string; is_approved: boolean }) => {
+      const { error } = await supabase.from('reviews').update({ is_approved }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-reviews'] }),
+  });
+};
+
+export const useDeleteReview = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('reviews').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-reviews'] }),
+  });
+};
+
 // ==================== COUPONS ====================
 export const useAdminCoupons = () => {
   return useQuery({

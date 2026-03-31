@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,21 +13,16 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Search,
-  Star,
-  MessageSquare,
-  ThumbsUp,
-  Filter,
-  Reply,
-  CheckCircle,
-  Clock,
-  TrendingUp,
+  Search, Star, MessageSquare, ThumbsUp, Filter, Reply,
+  CheckCircle, Clock, TrendingUp, Trash2, ShieldCheck,
 } from "lucide-react";
-import { useAdminReviews } from "@/hooks/useAdminData";
+import { useAdminReviews, useUpdateReviewApproval, useDeleteReview } from "@/hooks/useAdminData";
 import { format } from "date-fns";
 
 const AdminReviews = () => {
   const { data: reviews = [], isLoading } = useAdminReviews();
+  const approveReview = useUpdateReviewApproval();
+  const deleteReviewMut = useDeleteReview();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRating, setFilterRating] = useState<number | null>(null);
   const [filterApproved, setFilterApproved] = useState<boolean | null>(null);
@@ -164,6 +160,34 @@ const AdminReviews = () => {
               </div>
 
               <p className="text-foreground mb-4">{review.comment || 'بدون تعليق'}</p>
+              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                {!review.is_approved && (
+                  <Button size="sm" variant="outline" className="gap-1" onClick={() => {
+                    approveReview.mutate({ id: review.id, is_approved: true }, {
+                      onSuccess: () => toast.success("تم اعتماد التقييم"),
+                    });
+                  }}>
+                    <ShieldCheck className="w-4 h-4" />اعتماد
+                  </Button>
+                )}
+                {review.is_approved && (
+                  <Button size="sm" variant="outline" className="gap-1" onClick={() => {
+                    approveReview.mutate({ id: review.id, is_approved: false }, {
+                      onSuccess: () => toast.success("تم إلغاء الاعتماد"),
+                    });
+                  }}>
+                    إلغاء الاعتماد
+                  </Button>
+                )}
+                <Button size="sm" variant="ghost" className="text-destructive gap-1" onClick={() => {
+                  deleteReviewMut.mutate(review.id, {
+                    onSuccess: () => toast.success("تم حذف التقييم"),
+                    onError: () => toast.error("فشل حذف التقييم"),
+                  });
+                }}>
+                  <Trash2 className="w-4 h-4" />حذف
+                </Button>
+              </div>
             </div>
           ))}
 
