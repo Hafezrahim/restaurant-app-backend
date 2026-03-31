@@ -22,7 +22,7 @@ import {
   Clock,
   TrendingUp,
 } from "lucide-react";
-import { useAdminReviews } from "@/hooks/useAdminData";
+import { useAdminReviews, useUpdateReviewApproval, useDeleteReview } from "@/hooks/useAdminData";
 import { format } from "date-fns";
 
 const AdminReviews = () => {
