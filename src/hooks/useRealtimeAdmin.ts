@@ -14,6 +14,14 @@ export interface RealtimeNotification {
 
 type OnNotification = (n: RealtimeNotification) => void;
 
+const playNotificationSound = () => {
+  try {
+    const audio = new Audio("/notification-sound.wav");
+    audio.volume = 0.7;
+    audio.play().catch(() => {});
+  } catch {}
+};
+
 export const useRealtimeAdmin = (onNotification: OnNotification) => {
   const qc = useQueryClient();
   const { toast } = useToast();
