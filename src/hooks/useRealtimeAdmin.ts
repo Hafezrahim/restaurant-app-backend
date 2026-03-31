@@ -14,6 +14,14 @@ export interface RealtimeNotification {
 
 type OnNotification = (n: RealtimeNotification) => void;
 
+const playNotificationSound = () => {
+  try {
+    const audio = new Audio("/notification-sound.wav");
+    audio.volume = 0.7;
+    audio.play().catch(() => {});
+  } catch {}
+};
+
 export const useRealtimeAdmin = (onNotification: OnNotification) => {
   const qc = useQueryClient();
   const { toast } = useToast();
@@ -37,6 +45,7 @@ export const useRealtimeAdmin = (onNotification: OnNotification) => {
             read: false,
           };
           cbRef.current(notif);
+          playNotificationSound();
           toast({ title: notif.title, description: notif.message });
           qc.invalidateQueries({ queryKey: ["admin-orders"] });
           qc.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
