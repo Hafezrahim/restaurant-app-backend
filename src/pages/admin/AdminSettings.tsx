@@ -646,20 +646,30 @@ const AdminSettings = () => {
               </h2>
               <p className="text-muted-foreground">إدارة حسابات المستخدمين والصلاحيات للوصول إلى لوحة التحكم.</p>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-10 h-10"><AvatarFallback className="bg-primary/10 text-primary">أ</AvatarFallback></Avatar>
-                    <div><h4 className="font-medium text-foreground">أحمد محمد</h4><p className="text-sm text-muted-foreground">مدير النظام</p></div>
-                  </div>
-                  <Badge>مالك</Badge>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-10 h-10"><AvatarFallback className="bg-secondary/10 text-secondary">س</AvatarFallback></Avatar>
-                    <div><h4 className="font-medium text-foreground">سارة خالد</h4><p className="text-sm text-muted-foreground">مدير الطلبات</p></div>
-                  </div>
-                  <Badge variant="outline">مشرف</Badge>
-                </div>
+                {(usersWithRoles || []).map((user) => {
+                  const isAdmin = user.roles.includes('admin');
+                  const isMod = user.roles.includes('moderator');
+                  const initials = user.name ? user.name.charAt(0) : user.email?.charAt(0) || '?';
+                  const roleLabel = isAdmin ? 'مدير' : isMod ? 'مشرف' : 'مستخدم';
+                  return (
+                    <div key={user.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="w-10 h-10">
+                          {user.avatar_url && <AvatarImage src={user.avatar_url} />}
+                          <AvatarFallback className="bg-primary/10 text-primary">{initials}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h4 className="font-medium text-foreground">{user.name || 'بدون اسم'}</h4>
+                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                        </div>
+                      </div>
+                      <Badge variant={isAdmin ? 'default' : 'outline'}>{roleLabel}</Badge>
+                    </div>
+                  );
+                })}
+                {(!usersWithRoles || usersWithRoles.length === 0) && (
+                  <p className="text-sm text-muted-foreground text-center py-4">لا يوجد مستخدمين</p>
+                )}
               </div>
               <Button variant="outline"><Users className="w-4 h-4 ml-2" />إضافة مستخدم</Button>
             </div>
