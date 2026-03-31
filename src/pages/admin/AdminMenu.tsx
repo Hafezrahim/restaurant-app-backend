@@ -83,11 +83,11 @@ const AdminMenu = () => {
   };
 
   const saveProduct = () => {
-    if (!productForm.name || !productForm.price) return toast.error("يرجى ملء الحقول المطلوبة");
+    if (!productForm.name_ar || !productForm.price) return toast.error("يرجى ملء الحقول المطلوبة");
     
     const payload: any = {
-      name: productForm.name,
-      name_ar: productForm.name_ar || null,
+      name: productForm.name || productForm.name_ar,
+      name_ar: productForm.name_ar,
       description: productForm.description,
       price: Number(productForm.price),
       category_id: productForm.category_id || null,
