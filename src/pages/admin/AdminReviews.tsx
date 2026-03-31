@@ -188,6 +188,8 @@ const AdminReviews = () => {
                   <Trash2 className="w-4 h-4" />حذف
                 </Button>
               </div>
+            </div>
+          ))}
 
           {filteredReviews.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">لا توجد تقييمات</div>
