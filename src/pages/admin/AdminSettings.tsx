@@ -56,6 +56,7 @@ const AdminSettings = () => {
   const { data: dbZones, isLoading: zonesLoading } = useDeliveryZones();
   const upsertZone = useUpsertDeliveryZone();
   const deleteZone = useDeleteDeliveryZone();
+  const { data: usersWithRoles } = useUsersWithRoles();
 
   // Local form state
   const [restaurantName, setRestaurantName] = useState("");
