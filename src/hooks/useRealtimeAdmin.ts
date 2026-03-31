@@ -45,6 +45,7 @@ export const useRealtimeAdmin = (onNotification: OnNotification) => {
             read: false,
           };
           cbRef.current(notif);
+          playNotificationSound();
           toast({ title: notif.title, description: notif.message });
           qc.invalidateQueries({ queryKey: ["admin-orders"] });
           qc.invalidateQueries({ queryKey: ["admin-dashboard-stats"] });
