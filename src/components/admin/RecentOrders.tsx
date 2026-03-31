@@ -10,52 +10,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const orders = [
-  { 
-    id: "#1234", 
-    customer: "محمد أحمد", 
-    items: "برجر كلاسيك، بيتزا مارغريتا", 
-    total: 85.00, 
-    status: "جاري التحضير",
-    statusColor: "bg-secondary text-secondary-foreground" 
-  },
-  { 
-    id: "#1233", 
-    customer: "فاطمة علي", 
-    items: "سوشي رولز، رامن", 
-    total: 120.00, 
-    status: "في الطريق",
-    statusColor: "bg-primary text-primary-foreground" 
-  },
-  { 
-    id: "#1232", 
-    customer: "خالد محمود", 
-    items: "شاورما لحم، فتوش", 
-    total: 65.00, 
-    status: "تم التسليم",
-    statusColor: "bg-accent text-accent-foreground" 
-  },
-  { 
-    id: "#1231", 
-    customer: "سارة عمر", 
-    items: "كباب مشوي، حمص", 
-    total: 95.00, 
-    status: "جاري التحضير",
-    statusColor: "bg-secondary text-secondary-foreground" 
-  },
-  { 
-    id: "#1230", 
-    customer: "عبدالله حسن", 
-    items: "ستيك ريب آي، سلطة سيزر", 
-    total: 180.00, 
-    status: "طلب جديد",
-    statusColor: "bg-destructive text-destructive-foreground" 
-  },
-];
+const statusMap: Record<string, { label: string; color: string }> = {
+  pending: { label: "طلب جديد", color: "bg-destructive text-destructive-foreground" },
+  confirmed: { label: "مؤكد", color: "bg-primary text-primary-foreground" },
+  preparing: { label: "جاري التحضير", color: "bg-secondary text-secondary-foreground" },
+  out_for_delivery: { label: "في الطريق", color: "bg-primary text-primary-foreground" },
+  delivered: { label: "تم التسليم", color: "bg-accent text-accent-foreground" },
+  cancelled: { label: "ملغي", color: "bg-muted text-muted-foreground" },
+};
 
-export const RecentOrders = () => {
+interface RecentOrdersProps {
+  orders?: any[];
+}
+
+export const RecentOrders = ({ orders }: RecentOrdersProps) => {
   const navigate = useNavigate();
   const { formatPrice } = useCurrency();
+  const displayOrders = orders || [];
+
   return (
     <div className="bg-card rounded-2xl shadow-card border border-border/50">
       <div className="p-6 border-b border-border flex items-center justify-between">
@@ -63,7 +35,7 @@ export const RecentOrders = () => {
           <h3 className="text-lg font-bold text-foreground">آخر الطلبات</h3>
           <p className="text-sm text-muted-foreground">متابعة الطلبات الأخيرة</p>
         </div>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" onClick={() => navigate("/admin/orders")}>
           عرض الكل
         </Button>
       </div>
@@ -81,38 +53,50 @@ export const RecentOrders = () => {
             </tr>
           </thead>
           <tbody>
-            {orders.map((order) => (
-              <tr key={order.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors cursor-pointer" onClick={() => navigate("/admin/orders")}>
-                <td className="p-4 font-medium text-foreground">{order.id}</td>
-                <td className="p-4 text-foreground">{order.customer}</td>
-                <td className="p-4 text-muted-foreground text-sm hidden md:table-cell max-w-[200px] truncate">
-                  {order.items}
-                </td>
-                <td className="p-4 font-semibold text-foreground">{formatPrice(order.total)}</td>
-                <td className="p-4">
-                  <Badge className={order.statusColor}>
-                    {order.status}
-                  </Badge>
-                </td>
-                <td className="p-4">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
-                      <DropdownMenuItem>
-                        <Eye className="w-4 h-4 ml-2" />
-                        عرض التفاصيل
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>تحديث الحالة</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">إلغاء الطلب</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+            {displayOrders.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                  لا توجد طلبات بعد
                 </td>
               </tr>
-            ))}
+            ) : (
+              displayOrders.map((order) => {
+                const status = statusMap[order.status] || statusMap.pending;
+                const itemNames = order.order_items?.map((i: any) => i.name).join('، ') || '';
+                return (
+                  <tr key={order.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors cursor-pointer" onClick={() => navigate("/admin/orders")}>
+                    <td className="p-4 font-medium text-foreground">#{order.order_number}</td>
+                    <td className="p-4 text-foreground">{order.customer_name}</td>
+                    <td className="p-4 text-muted-foreground text-sm hidden md:table-cell max-w-[200px] truncate">
+                      {itemNames}
+                    </td>
+                    <td className="p-4 font-semibold text-foreground">{formatPrice(Number(order.total))}</td>
+                    <td className="p-4">
+                      <Badge className={status.color}>
+                        {status.label}
+                      </Badge>
+                    </td>
+                    <td className="p-4">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                          <DropdownMenuItem>
+                            <Eye className="w-4 h-4 ml-2" />
+                            عرض التفاصيل
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>تحديث الحالة</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive">إلغاء الطلب</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>

@@ -1,18 +1,24 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useCurrency } from '@/context/CurrencyContext';
 
-const data = [
-  { day: 'السبت', sales: 4000, orders: 24 },
-  { day: 'الأحد', sales: 3000, orders: 18 },
-  { day: 'الإثنين', sales: 5000, orders: 32 },
-  { day: 'الثلاثاء', sales: 4500, orders: 28 },
-  { day: 'الأربعاء', sales: 6000, orders: 38 },
-  { day: 'الخميس', sales: 5500, orders: 35 },
-  { day: 'الجمعة', sales: 7000, orders: 45 },
+const fallbackData = [
+  { day: 'السبت', sales: 0, orders: 0 },
+  { day: 'الأحد', sales: 0, orders: 0 },
+  { day: 'الإثنين', sales: 0, orders: 0 },
+  { day: 'الثلاثاء', sales: 0, orders: 0 },
+  { day: 'الأربعاء', sales: 0, orders: 0 },
+  { day: 'الخميس', sales: 0, orders: 0 },
+  { day: 'الجمعة', sales: 0, orders: 0 },
 ];
 
-export const SalesChart = () => {
+interface SalesChartProps {
+  data?: { day: string; sales: number; orders: number }[];
+}
+
+export const SalesChart = ({ data }: SalesChartProps) => {
   const { currency } = useCurrency();
+  const chartData = data?.length ? data : fallbackData;
+
   return (
     <div className="bg-card rounded-2xl shadow-card border border-border/50 p-6">
       <div className="flex items-center justify-between mb-6">
@@ -30,7 +36,7 @@ export const SalesChart = () => {
 
       <div className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+          <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />

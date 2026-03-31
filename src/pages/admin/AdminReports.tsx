@@ -1,14 +1,6 @@
-import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   ChartContainer,
   ChartTooltip,
@@ -30,105 +22,113 @@ import {
 } from "recharts";
 import {
   TrendingUp,
-  TrendingDown,
   DollarSign,
   ShoppingBag,
   Users,
   Calendar,
   Download,
-  FileText,
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/context/CurrencyContext";
-
-const salesData = [
-  { month: "يناير", sales: 45000, orders: 120 },
-  { month: "فبراير", sales: 52000, orders: 145 },
-  { month: "مارس", sales: 48000, orders: 132 },
-  { month: "أبريل", sales: 61000, orders: 168 },
-  { month: "مايو", sales: 55000, orders: 152 },
-  { month: "يونيو", sales: 67000, orders: 185 },
-];
-
-const dailySalesData = [
-  { day: "السبت", sales: 8500 },
-  { day: "الأحد", sales: 9200 },
-  { day: "الإثنين", sales: 7800 },
-  { day: "الثلاثاء", sales: 8100 },
-  { day: "الأربعاء", sales: 9500 },
-  { day: "الخميس", sales: 11200 },
-  { day: "الجمعة", sales: 12500 },
-];
-
-const categoryData = [
-  { name: "المشاوي", value: 35, color: "hsl(var(--primary))" },
-  { name: "المقبلات", value: 20, color: "hsl(var(--chart-2))" },
-  { name: "المشروبات", value: 15, color: "hsl(var(--chart-3))" },
-  { name: "الحلويات", value: 18, color: "hsl(var(--chart-4))" },
-  { name: "الأطباق الرئيسية", value: 12, color: "hsl(var(--chart-5))" },
-];
-
-const topProducts = [
-  { name: "مشاوي مشكلة", sales: 245, revenue: 12250 },
-  { name: "كباب لحم", sales: 189, revenue: 7560 },
-  { name: "شاورما عربي", sales: 167, revenue: 5010 },
-  { name: "فتة حمص", sales: 145, revenue: 2900 },
-  { name: "كنافة نابلسية", sales: 132, revenue: 3960 },
-];
+import { useAdminOrders, useAdminCustomers, useAdminReservations } from "@/hooks/useAdminData";
+import { useMemo } from "react";
+import * as XLSX from "xlsx";
+import { toast } from "sonner";
 
 const chartConfig = {
-  sales: {
-    label: "المبيعات",
-    color: "hsl(var(--primary))",
-  },
-  orders: {
-    label: "الطلبات",
-    color: "hsl(var(--chart-2))",
-  },
+  sales: { label: "المبيعات", color: "hsl(var(--primary))" },
+  orders: { label: "الطلبات", color: "hsl(var(--chart-2))" },
 };
 
 const AdminReports = () => {
-  const [period, setPeriod] = useState("month");
-  const { toast } = useToast();
   const { formatPrice } = useCurrency();
+  const { data: orders = [] } = useAdminOrders();
+  const { data: customers = [] } = useAdminCustomers();
+  const { data: reservations = [] } = useAdminReservations();
 
-  const exportReport = (format: string) => {
-    toast({
-      title: "جاري التصدير",
-      description: `جاري تصدير التقرير بصيغة ${format}...`,
+  const stats = useMemo(() => {
+    const totalSales = orders.reduce((s: number, o: any) => s + Number(o.total), 0);
+    const totalOrders = orders.length;
+    const totalCustomers = customers.length;
+    const totalReservations = reservations.length;
+
+    // Monthly sales
+    const monthlyData: Record<string, { month: string; sales: number; orders: number }> = {};
+    const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+    
+    orders.forEach((o: any) => {
+      const d = new Date(o.created_at);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      if (!monthlyData[key]) {
+        monthlyData[key] = { month: monthNames[d.getMonth()], sales: 0, orders: 0 };
+      }
+      monthlyData[key].sales += Number(o.total);
+      monthlyData[key].orders++;
     });
+
+    // Category distribution from order items
+    const catData: Record<string, number> = {};
+    orders.forEach((o: any) => {
+      o.order_items?.forEach((item: any) => {
+        const name = item.name;
+        catData[name] = (catData[name] || 0) + Number(item.price) * item.quantity;
+      });
+    });
+    
+    const topItems = Object.entries(catData)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([name, revenue]) => ({ name, revenue }));
+
+    // Status distribution  
+    const statusCounts: Record<string, number> = {};
+    orders.forEach((o: any) => {
+      statusCounts[o.status] = (statusCounts[o.status] || 0) + 1;
+    });
+    const statusLabels: Record<string, string> = {
+      pending: 'جديد', confirmed: 'مؤكد', preparing: 'تحضير', 
+      out_for_delivery: 'توصيل', delivered: 'مسلم', cancelled: 'ملغي'
+    };
+    const statusData = Object.entries(statusCounts).map(([status, count]) => ({
+      name: statusLabels[status] || status,
+      value: count,
+    }));
+
+    return {
+      totalSales, totalOrders, totalCustomers, totalReservations,
+      monthlyChart: Object.values(monthlyData).slice(-6),
+      topItems, statusData,
+    };
+  }, [orders, customers, reservations]);
+
+  const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))", "hsl(var(--accent))"];
+
+  const handleExport = () => {
+    const data = orders.map((o: any) => ({
+      "رقم الطلب": o.order_number,
+      "العميل": o.customer_name,
+      "المجموع": o.total,
+      "الحالة": o.status,
+      "التاريخ": o.created_at,
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "التقرير");
+    XLSX.writeFile(wb, "report.xlsx");
+    toast.success("تم تصدير التقرير");
   };
 
   return (
     <AdminLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold">التقارير والإحصائيات</h1>
             <p className="text-muted-foreground">تحليل شامل لأداء المطعم</p>
           </div>
-          <div className="flex items-center gap-3">
-            <Select value={period} onValueChange={setPeriod}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="week">هذا الأسبوع</SelectItem>
-                <SelectItem value="month">هذا الشهر</SelectItem>
-                <SelectItem value="quarter">هذا الربع</SelectItem>
-                <SelectItem value="year">هذا العام</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={() => exportReport("PDF")}>
-              <Download className="w-4 h-4 ml-2" />
-              تصدير PDF
-            </Button>
-            <Button variant="outline" onClick={() => exportReport("Excel")}>
-              <FileText className="w-4 h-4 ml-2" />
-              تصدير Excel
-            </Button>
-          </div>
+          <Button variant="outline" onClick={handleExport}>
+            <Download className="w-4 h-4 ml-2" />
+            تصدير Excel
+          </Button>
         </div>
 
         {/* Summary Stats */}
@@ -138,11 +138,7 @@ const AdminReports = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">إجمالي المبيعات</p>
-                  <p className="text-2xl font-bold">{formatPrice(328000)}</p>
-                  <div className="flex items-center gap-1 text-green-500 text-sm">
-                    <TrendingUp className="w-4 h-4" />
-                    <span>+12.5%</span>
-                  </div>
+                  <p className="text-2xl font-bold">{formatPrice(stats.totalSales)}</p>
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
                   <DollarSign className="w-6 h-6 text-primary" />
@@ -155,14 +151,10 @@ const AdminReports = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">إجمالي الطلبات</p>
-                  <p className="text-2xl font-bold">902</p>
-                  <div className="flex items-center gap-1 text-green-500 text-sm">
-                    <TrendingUp className="w-4 h-4" />
-                    <span>+8.3%</span>
-                  </div>
+                  <p className="text-2xl font-bold">{stats.totalOrders}</p>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                  <ShoppingBag className="w-6 h-6 text-blue-500" />
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <ShoppingBag className="w-6 h-6 text-primary" />
                 </div>
               </div>
             </CardContent>
@@ -171,15 +163,11 @@ const AdminReports = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">عملاء جدد</p>
-                  <p className="text-2xl font-bold">156</p>
-                  <div className="flex items-center gap-1 text-red-500 text-sm">
-                    <TrendingDown className="w-4 h-4" />
-                    <span>-3.2%</span>
-                  </div>
+                  <p className="text-sm text-muted-foreground">العملاء</p>
+                  <p className="text-2xl font-bold">{stats.totalCustomers}</p>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
-                  <Users className="w-6 h-6 text-green-500" />
+                <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+                  <Users className="w-6 h-6 text-accent" />
                 </div>
               </div>
             </CardContent>
@@ -189,165 +177,79 @@ const AdminReports = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">الحجوزات</p>
-                  <p className="text-2xl font-bold">89</p>
-                  <div className="flex items-center gap-1 text-green-500 text-sm">
-                    <TrendingUp className="w-4 h-4" />
-                    <span>+15.7%</span>
-                  </div>
+                  <p className="text-2xl font-bold">{stats.totalReservations}</p>
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center">
-                  <Calendar className="w-6 h-6 text-yellow-500" />
+                <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center">
+                  <Calendar className="w-6 h-6 text-secondary-foreground" />
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Charts Row 1 */}
+        {/* Charts */}
         <div className="grid lg:grid-cols-2 gap-6">
-          {/* Monthly Sales Chart */}
           <Card>
-            <CardHeader>
-              <CardTitle>المبيعات الشهرية</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>المبيعات الشهرية</CardTitle></CardHeader>
             <CardContent>
-              <ChartContainer config={chartConfig} className="h-[300px]">
-                <BarChart data={salesData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="sales" fill="var(--color-sales)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ChartContainer>
+              {stats.monthlyChart.length > 0 ? (
+                <ChartContainer config={chartConfig} className="h-[300px]">
+                  <BarChart data={stats.monthlyChart}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="sales" fill="var(--color-sales)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ChartContainer>
+              ) : (
+                <p className="text-center py-12 text-muted-foreground">لا توجد بيانات</p>
+              )}
             </CardContent>
           </Card>
 
-          {/* Daily Sales Trend */}
           <Card>
-            <CardHeader>
-              <CardTitle>مبيعات الأسبوع</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>توزيع حالات الطلبات</CardTitle></CardHeader>
             <CardContent>
-              <ChartContainer config={chartConfig} className="h-[300px]">
-                <LineChart data={dailySalesData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="day" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line
-                    type="monotone"
-                    dataKey="sales"
-                    stroke="var(--color-sales)"
-                    strokeWidth={3}
-                    dot={{ fill: "var(--color-sales)", strokeWidth: 2 }}
-                  />
-                </LineChart>
-              </ChartContainer>
+              {stats.statusData.length > 0 ? (
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={stats.statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">
+                        {stats.statusData.map((_: any, index: number) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Legend layout="vertical" align="right" verticalAlign="middle" formatter={(value: string) => <span className="text-foreground text-sm">{value}</span>} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <p className="text-center py-12 text-muted-foreground">لا توجد بيانات</p>
+              )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Charts Row 2 */}
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Category Distribution */}
-          <Card>
-            <CardHeader>
-              <CardTitle>توزيع المبيعات حسب الفئة</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {categoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Legend
-                      layout="vertical"
-                      align="right"
-                      verticalAlign="middle"
-                      formatter={(value: string) => (
-                        <span className="text-foreground text-sm">{value}</span>
-                      )}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Top Products */}
-          <Card>
-            <CardHeader>
-              <CardTitle>الأطباق الأكثر مبيعاً</CardTitle>
-            </CardHeader>
-            <CardContent>
+        {/* Top Products */}
+        <Card>
+          <CardHeader><CardTitle>الأصناف الأكثر مبيعاً</CardTitle></CardHeader>
+          <CardContent>
+            {stats.topItems.length > 0 ? (
               <div className="space-y-4">
-                {topProducts.map((product, index) => (
-                  <div key={product.name} className="flex items-center gap-4">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                      {index + 1}
-                    </div>
+                {stats.topItems.map((item: any, index: number) => (
+                  <div key={item.name} className="flex items-center gap-4">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">{index + 1}</div>
                     <div className="flex-1">
-                      <p className="font-medium">{product.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {product.sales} طلب
-                      </p>
+                      <p className="font-medium">{item.name}</p>
                     </div>
-                    <div className="text-left">
-                      <p className="font-bold text-primary">
-                        {formatPrice(product.revenue)}
-                      </p>
-                    </div>
+                    <p className="font-bold text-primary">{formatPrice(item.revenue)}</p>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Orders Trend */}
-        <Card>
-          <CardHeader>
-            <CardTitle>اتجاه الطلبات والمبيعات</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[300px]">
-              <LineChart data={salesData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="month" />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Legend />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="sales"
-                  name="المبيعات"
-                  stroke="var(--color-sales)"
-                  strokeWidth={2}
-                />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="orders"
-                  name="الطلبات"
-                  stroke="var(--color-orders)"
-                  strokeWidth={2}
-                />
-              </LineChart>
-            </ChartContainer>
+            ) : (
+              <p className="text-center py-8 text-muted-foreground">لا توجد بيانات</p>
+            )}
           </CardContent>
         </Card>
       </div>
