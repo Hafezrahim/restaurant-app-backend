@@ -195,6 +195,7 @@ export const AdminSidebar = () => {
             "w-full mt-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10",
             collapsed ? "px-0" : "justify-start"
           )}
+          onClick={handleLogout}
         >
           <LogOut className={cn("w-5 h-5", !collapsed && "ml-2")} />
           {!collapsed && "تسجيل الخروج"}
