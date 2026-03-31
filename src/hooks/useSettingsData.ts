@@ -80,3 +80,37 @@ export const useDeleteDeliveryZone = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['delivery-zones'] }),
   });
 };
+
+// ==================== USERS WITH ROLES ====================
+export const useUsersWithRoles = () => {
+  return useQuery({
+    queryKey: ['users-with-roles'],
+    queryFn: async () => {
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+      if (rolesError) throw rolesError;
+
+      const userIds = [...new Set((roles || []).map((r) => r.user_id))];
+      if (userIds.length === 0) return [];
+
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name, email, avatar_url')
+        .in('id', userIds);
+      if (profilesError) throw profilesError;
+
+      const rolesByUser: Record<string, string[]> = {};
+      (roles || []).forEach((r) => {
+        if (!rolesByUser[r.user_id]) rolesByUser[r.user_id] = [];
+        rolesByUser[r.user_id].push(r.role);
+      });
+
+      return (profiles || []).map((p) => ({
+        ...p,
+        roles: rolesByUser[p.id] || ['user'],
+      }));
+    },
+    staleTime: 60_000,
+  });
+};
