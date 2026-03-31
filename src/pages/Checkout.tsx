@@ -16,6 +16,7 @@ import { useRewards, MIN_REDEEM, SAR_PER_POINT } from '@/context/RewardsContext'
 import { useNotifications } from '@/context/NotificationsContext';
 import { validateCoupon, recordCouponUsage } from '@/data/coupons';
 import { useCurrency } from '@/context/CurrencyContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const CUSTOMER_STORAGE_KEY = 'mazaj_customer_data';
 
@@ -157,7 +158,7 @@ const Checkout: React.FC = () => {
     return `${prefix}-${timestamp}-${random}`;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.phone || !formData.address) {
       toast.error('يرجى ملء جميع الحقول المطلوبة');
@@ -186,10 +187,72 @@ const Checkout: React.FC = () => {
     setOrderTotal(totalPrice);
     setOrderPaymentMethod(paymentMethod);
     setTrackingNumber(tracking);
-    
-    // Save order to client orders if authenticated
+
+    const orderGrandTotal = totalPrice + deliveryFee + tax - pointsDiscount - couponDiscount;
+
+    // Map payment method to DB enum
+    const dbPaymentMethod = paymentMethod === 'card_on_delivery' ? 'card' : paymentMethod;
+
+    // Insert order into Supabase
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      const userId = session?.session?.user?.id || null;
+
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          order_number: tracking,
+          customer_name: formData.name,
+          customer_phone: formData.phone,
+          customer_email: user?.email || null,
+          delivery_address: formData.address,
+          delivery_lat: formData.lat || null,
+          delivery_lng: formData.lng || null,
+          notes: formData.notes || null,
+          payment_method: dbPaymentMethod as any,
+          subtotal: totalPrice,
+          delivery_fee: deliveryFee,
+          discount: pointsDiscount + couponDiscount,
+          total: orderGrandTotal,
+          coupon_code: couponApplied ? couponCode : null,
+          user_id: userId,
+          status: 'pending' as any,
+        })
+        .select('id')
+        .single();
+
+      if (orderError) {
+        console.error('Order insert error:', orderError);
+        toast.error('حدث خطأ أثناء حفظ الطلب');
+        return;
+      }
+
+      // Insert order items
+      if (orderData) {
+        const orderItemsData = items.map((item) => ({
+          order_id: orderData.id,
+          menu_item_id: item.id || null,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+        }));
+
+        const { error: itemsError } = await supabase
+          .from('order_items')
+          .insert(orderItemsData);
+
+        if (itemsError) {
+          console.error('Order items insert error:', itemsError);
+        }
+      }
+    } catch (err) {
+      console.error('Order save error:', err);
+      toast.error('حدث خطأ أثناء حفظ الطلب');
+      return;
+    }
+
+    // Save order to client orders in localStorage too
     if (isAuthenticated) {
-      const orderGrandTotal = totalPrice + deliveryFee + tax - pointsDiscount - couponDiscount;
       const existingOrders = JSON.parse(localStorage.getItem('mazaj_client_orders') || '[]');
       existingOrders.unshift({
         trackingNumber: tracking,
