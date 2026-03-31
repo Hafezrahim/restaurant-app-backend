@@ -27,6 +27,8 @@ import { format } from "date-fns";
 
 const AdminReviews = () => {
   const { data: reviews = [], isLoading } = useAdminReviews();
+  const approveReview = useUpdateReviewApproval();
+  const deleteReviewMut = useDeleteReview();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRating, setFilterRating] = useState<number | null>(null);
   const [filterApproved, setFilterApproved] = useState<boolean | null>(null);
