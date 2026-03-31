@@ -17,9 +17,22 @@ type OnNotification = (n: RealtimeNotification) => void;
 
 const playNotificationSound = () => {
   try {
-    const audio = new Audio("/notification-sound.wav");
-    audio.volume = 0.7;
-    audio.play().catch(() => {});
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const playTone = (freq: number, startTime: number, duration: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.5, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    };
+    const now = ctx.currentTime;
+    playTone(523.25, now, 0.3);
+    playTone(659.25, now + 0.15, 0.35);
   } catch {}
 };
 
