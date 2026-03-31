@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useAdminAuth } from "@/context/AdminAuthContext";
 import { 
   LayoutDashboard, 
   ShoppingBag, 
@@ -80,6 +81,13 @@ const menuItems = [
 export const AdminSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAdminAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/admin/login");
+  };
 
   return (
     <aside 
@@ -187,6 +195,7 @@ export const AdminSidebar = () => {
             "w-full mt-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10",
             collapsed ? "px-0" : "justify-start"
           )}
+          onClick={handleLogout}
         >
           <LogOut className={cn("w-5 h-5", !collapsed && "ml-2")} />
           {!collapsed && "تسجيل الخروج"}
