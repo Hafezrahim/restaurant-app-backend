@@ -83,11 +83,11 @@ const AdminMenu = () => {
   };
 
   const saveProduct = () => {
-    if (!productForm.name || !productForm.price) return toast.error("يرجى ملء الحقول المطلوبة");
+    if (!productForm.name_ar || !productForm.price) return toast.error("يرجى ملء الحقول المطلوبة");
     
     const payload: any = {
-      name: productForm.name,
-      name_ar: productForm.name_ar || null,
+      name: productForm.name || productForm.name_ar,
+      name_ar: productForm.name_ar,
       description: productForm.description,
       price: Number(productForm.price),
       category_id: productForm.category_id || null,
@@ -316,11 +316,11 @@ const AdminMenu = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>اسم المنتج (عربي) *</Label>
-                <Input placeholder="مثال: برجر كلاسيك" value={productForm.name} onChange={(e) => setProductForm(p => ({ ...p, name: e.target.value }))} />
+                <Input placeholder="مثال: برجر كلاسيك" value={productForm.name_ar} onChange={(e) => setProductForm(p => ({ ...p, name_ar: e.target.value }))} />
               </div>
               <div className="space-y-2">
                 <Label>اسم المنتج (إنجليزي)</Label>
-                <Input placeholder="Classic Burger" value={productForm.name_ar} onChange={(e) => setProductForm(p => ({ ...p, name_ar: e.target.value }))} />
+                <Input placeholder="Classic Burger" value={productForm.name} onChange={(e) => setProductForm(p => ({ ...p, name: e.target.value }))} />
               </div>
             </div>
             <div className="space-y-2">
