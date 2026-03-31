@@ -316,11 +316,11 @@ const AdminMenu = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>اسم المنتج (عربي) *</Label>
-                <Input placeholder="مثال: برجر كلاسيك" value={productForm.name} onChange={(e) => setProductForm(p => ({ ...p, name: e.target.value }))} />
+                <Input placeholder="مثال: برجر كلاسيك" value={productForm.name_ar} onChange={(e) => setProductForm(p => ({ ...p, name_ar: e.target.value }))} />
               </div>
               <div className="space-y-2">
                 <Label>اسم المنتج (إنجليزي)</Label>
-                <Input placeholder="Classic Burger" value={productForm.name_ar} onChange={(e) => setProductForm(p => ({ ...p, name_ar: e.target.value }))} />
+                <Input placeholder="Classic Burger" value={productForm.name} onChange={(e) => setProductForm(p => ({ ...p, name: e.target.value }))} />
               </div>
             </div>
             <div className="space-y-2">
