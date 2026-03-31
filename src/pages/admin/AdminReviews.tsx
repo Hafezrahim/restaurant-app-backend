@@ -160,8 +160,34 @@ const AdminReviews = () => {
               </div>
 
               <p className="text-foreground mb-4">{review.comment || 'بدون تعليق'}</p>
-            </div>
-          ))}
+              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                {!review.is_approved && (
+                  <Button size="sm" variant="outline" className="gap-1" onClick={() => {
+                    approveReview.mutate({ id: review.id, is_approved: true }, {
+                      onSuccess: () => toast.success("تم اعتماد التقييم"),
+                    });
+                  }}>
+                    <ShieldCheck className="w-4 h-4" />اعتماد
+                  </Button>
+                )}
+                {review.is_approved && (
+                  <Button size="sm" variant="outline" className="gap-1" onClick={() => {
+                    approveReview.mutate({ id: review.id, is_approved: false }, {
+                      onSuccess: () => toast.success("تم إلغاء الاعتماد"),
+                    });
+                  }}>
+                    إلغاء الاعتماد
+                  </Button>
+                )}
+                <Button size="sm" variant="ghost" className="text-destructive gap-1" onClick={() => {
+                  deleteReviewMut.mutate(review.id, {
+                    onSuccess: () => toast.success("تم حذف التقييم"),
+                    onError: () => toast.error("فشل حذف التقييم"),
+                  });
+                }}>
+                  <Trash2 className="w-4 h-4" />حذف
+                </Button>
+              </div>
 
           {filteredReviews.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">لا توجد تقييمات</div>
