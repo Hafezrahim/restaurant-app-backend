@@ -364,7 +364,21 @@ const AdminMenu = () => {
                 )}
               </div>
             </div>
-            <div className="flex items-center justify-between py-2">
+            <div className="space-y-2">
+              <Label>المكونات</Label>
+              <Textarea
+                placeholder="أدخل المكونات مفصولة بفاصلة (مثال: لحم، خس، طماطم، جبنة)"
+                value={productForm.ingredients}
+                onChange={(e) => setProductForm(p => ({ ...p, ingredients: e.target.value }))}
+                rows={2}
+              />
+              <p className="text-[11px] text-muted-foreground">افصل بين المكونات بفاصلة عربية (،) أو إنجليزية (,)</p>
+            </div>
+            <div className="space-y-2">
+              <Label>التقييم (0 - 5)</Label>
+              <Input type="number" min="0" max="5" step="0.1" placeholder="4.5" value={productForm.rating} onChange={(e) => setProductForm(p => ({ ...p, rating: e.target.value }))} />
+            </div>
+            <div className="flex items-center justify-between py-2 flex-wrap gap-3">
               <div className="flex items-center gap-2">
                 <Switch checked={productForm.is_available} onCheckedChange={(v) => setProductForm(p => ({ ...p, is_available: v }))} />
                 <Label>متاح للطلب</Label>
@@ -372,6 +386,10 @@ const AdminMenu = () => {
               <div className="flex items-center gap-2">
                 <Switch checked={productForm.is_popular} onCheckedChange={(v) => setProductForm(p => ({ ...p, is_popular: v }))} />
                 <Label>الأكثر طلباً</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={productForm.is_new} onCheckedChange={(v) => setProductForm(p => ({ ...p, is_new: v }))} />
+                <Label>منتج جديد</Label>
               </div>
             </div>
             <div className="flex gap-3 pt-4">
