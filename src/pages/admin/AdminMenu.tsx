@@ -366,13 +366,53 @@ const AdminMenu = () => {
             </div>
             <div className="space-y-2">
               <Label>المكونات</Label>
+              <div className="space-y-2">
+                {[
+                  { label: '🥩 لحوم', items: ['لحم بقري', 'دجاج', 'لحم غنم', 'سمك', 'روبيان'] },
+                  { label: '🥬 خضروات', items: ['خس', 'طماطم', 'بصل', 'خيار', 'فلفل', 'جزر', 'بروكلي'] },
+                  { label: '🧀 ألبان وصلصات', items: ['جبنة', 'لبنة', 'مايونيز', 'كاتشب', 'صلصة حارة', 'طحينة'] },
+                  { label: '🌾 حبوب ونشويات', items: ['أرز', 'خبز', 'معكرونة', 'نودلز', 'بطاطس'] },
+                  { label: '🌿 توابل', items: ['ملح', 'فلفل أسود', 'كمون', 'بهارات مشكلة', 'زعتر', 'سماق'] },
+                ].map(group => {
+                  const currentIngredients = productForm.ingredients ? productForm.ingredients.split(/[,،]+/).map(s => s.trim()).filter(Boolean) : [];
+                  return (
+                    <div key={group.label}>
+                      <p className="text-[11px] font-semibold text-muted-foreground mb-1">{group.label}</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {group.items.map(item => {
+                          const isSelected = currentIngredients.includes(item);
+                          return (
+                            <button
+                              key={item}
+                              type="button"
+                              onClick={() => {
+                                const updated = isSelected
+                                  ? currentIngredients.filter(i => i !== item)
+                                  : [...currentIngredients, item];
+                                setProductForm(p => ({ ...p, ingredients: updated.join('، ') }));
+                              }}
+                              className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
+                                isSelected
+                                  ? 'bg-primary text-primary-foreground border-primary'
+                                  : 'bg-muted/50 text-muted-foreground border-border/50 hover:border-primary/30'
+                              }`}
+                            >
+                              {item}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
               <Textarea
-                placeholder="أدخل المكونات مفصولة بفاصلة (مثال: لحم، خس، طماطم، جبنة)"
+                placeholder="أو اكتب مكونات إضافية هنا..."
                 value={productForm.ingredients}
                 onChange={(e) => setProductForm(p => ({ ...p, ingredients: e.target.value }))}
                 rows={2}
+                className="mt-2"
               />
-              <p className="text-[11px] text-muted-foreground">افصل بين المكونات بفاصلة عربية (،) أو إنجليزية (,)</p>
             </div>
             <div className="space-y-2">
               <Label>التقييم (0 - 5)</Label>
