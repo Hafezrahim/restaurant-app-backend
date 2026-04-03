@@ -258,10 +258,19 @@ const Checkout: React.FC = () => {
       const existingOrders = JSON.parse(localStorage.getItem('mazaj_client_orders') || '[]');
       existingOrders.unshift({
         trackingNumber: tracking,
-        date: new Date().toLocaleDateString('ar-SA'),
+        date: new Date().toISOString(),
+        dateFormatted: new Date().toLocaleDateString('ar-SA'),
         itemCount: items.reduce((s, i) => s + i.quantity, 0),
         total: orderGrandTotal,
+        subtotal: totalPrice,
+        deliveryFee,
+        tax: totalPrice * 0.15,
         status: 'pending',
+        items: items.map(i => ({ name: i.name, price: i.price, quantity: i.quantity, image: i.image })),
+        customer: { name: formData.name, phone: formData.phone, address: formData.address },
+        paymentMethod: paymentMethodLabels[paymentMethod],
+        deliveryZone: selectedZone?.name || '',
+        estimatedTime: selectedZone?.estimatedTime || '30 - 45',
       });
       localStorage.setItem('mazaj_client_orders', JSON.stringify(existingOrders));
 
