@@ -44,6 +44,7 @@ import AdminLogin from "./pages/admin/AdminLogin";
 import ClientLogin from "./pages/client/ClientLogin";
 import ClientDashboard from "./pages/client/ClientDashboard";
 import ClientOrders from "./pages/client/ClientOrders";
+import ClientOrderDetails from "./pages/client/ClientOrderDetails";
 import ClientWishlist from "./pages/client/ClientWishlist";
 import ClientSupport from "./pages/client/ClientSupport";
 import ClientProfile from "./pages/client/ClientProfile";
