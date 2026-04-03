@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Headphones, Send, Bot, User, MessageCircle } from 'lucide-react';
+import { Headphones, Send, Bot, User } from 'lucide-react';
 import { ClientLayout } from '@/components/client/ClientLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,35 +33,35 @@ const ClientSupport: React.FC = () => {
 
   return (
     <ClientLayout title="الدعم">
-      <div className="bg-card rounded-2xl border border-border/30 overflow-hidden flex flex-col shadow-sm" style={{ height: 'calc(100vh - 200px)', maxHeight: '600px' }}>
+      <div className="bg-white dark:bg-card rounded-2xl border border-border/15 overflow-hidden flex flex-col shadow-sm" style={{ height: 'calc(100vh - 200px)', maxHeight: '600px' }}>
         {/* Header */}
-        <div className="p-4 border-b border-border/30 flex items-center gap-3 bg-card">
-          <div className="w-10 h-10 bg-gradient-to-br from-accent/20 to-accent/10 rounded-full flex items-center justify-center relative">
-            <Headphones className="w-5 h-5 text-accent" />
-            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-card" />
+        <div className="p-4 border-b border-border/15 flex items-center gap-3 bg-gradient-to-l from-accent/5 to-transparent">
+          <div className="w-11 h-11 bg-gradient-to-br from-accent to-accent/80 rounded-2xl flex items-center justify-center relative shadow-md">
+            <Headphones className="w-5 h-5 text-white" />
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-card" />
           </div>
           <div className="flex-1">
             <p className="font-bold text-foreground text-sm">دعم مطعم مزاج</p>
-            <p className="text-[11px] text-emerald-600 font-medium">متصل الآن • يرد عادةً خلال دقائق</p>
+            <p className="text-[11px] text-emerald-600 font-medium">متصل الآن</p>
           </div>
         </div>
 
         {/* Messages */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-[hsl(220,20%,97%)] dark:bg-background/50">
           {messages.map((msg, i) => (
-            <div key={i} className={`flex gap-2 ${msg.from === 'user' ? 'flex-row' : 'flex-row-reverse'}`}>
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-                msg.from === 'user' ? 'bg-primary/10' : 'bg-accent/10'
+            <div key={i} className={`flex gap-2.5 ${msg.from === 'user' ? 'flex-row' : 'flex-row-reverse'}`}>
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                msg.from === 'user' ? 'bg-primary text-white' : 'bg-accent/15 text-accent'
               }`}>
-                {msg.from === 'user' ? <User className="w-3.5 h-3.5 text-primary" /> : <Bot className="w-3.5 h-3.5 text-accent" />}
+                {msg.from === 'user' ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
               </div>
-              <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${
+              <div className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm shadow-sm ${
                 msg.from === 'user'
-                  ? 'bg-primary text-primary-foreground rounded-br-md'
-                  : 'bg-muted text-foreground rounded-bl-md'
+                  ? 'bg-primary text-white rounded-br-md'
+                  : 'bg-white dark:bg-card text-foreground rounded-bl-md border border-border/10'
               }`}>
                 <p className="leading-relaxed">{msg.text}</p>
-                <p className={`text-[9px] mt-1 ${msg.from === 'user' ? 'text-primary-foreground/50' : 'text-muted-foreground'}`}>{msg.time}</p>
+                <p className={`text-[9px] mt-1.5 ${msg.from === 'user' ? 'text-white/50' : 'text-muted-foreground'}`}>{msg.time}</p>
               </div>
             </div>
           ))}
@@ -69,12 +69,12 @@ const ClientSupport: React.FC = () => {
 
         {/* Quick Replies */}
         {messages.length <= 2 && (
-          <div className="px-4 pb-2 flex gap-2 overflow-x-auto scrollbar-hide">
+          <div className="px-4 pb-2 flex gap-2 overflow-x-auto hide-scrollbar bg-[hsl(220,20%,97%)] dark:bg-background/50">
             {quickReplies.map((reply, i) => (
               <button
                 key={i}
                 onClick={() => sendMessage(reply)}
-                className="whitespace-nowrap text-xs px-3 py-1.5 rounded-full border border-primary/20 text-primary bg-primary/5 hover:bg-primary/10 transition-colors shrink-0"
+                className="whitespace-nowrap text-xs px-3.5 py-2 rounded-full border border-primary/20 text-primary bg-white dark:bg-card hover:bg-primary/5 transition-colors shrink-0 font-medium shadow-sm"
               >
                 {reply}
               </button>
@@ -83,15 +83,15 @@ const ClientSupport: React.FC = () => {
         )}
 
         {/* Input */}
-        <div className="p-3 border-t border-border/30 flex gap-2 bg-card">
+        <div className="p-3 border-t border-border/15 flex gap-2 bg-white dark:bg-card">
           <Input
             value={message}
             onChange={e => setMessage(e.target.value)}
             placeholder="اكتب رسالتك..."
-            className="rounded-full flex-1 h-11 text-sm bg-muted/50 border-border/30"
+            className="rounded-xl flex-1 h-11 text-sm bg-muted/30 border-border/15"
             onKeyDown={e => e.key === 'Enter' && sendMessage(message)}
           />
-          <Button onClick={() => sendMessage(message)} size="icon" className="rounded-full h-11 w-11 shrink-0">
+          <Button onClick={() => sendMessage(message)} size="icon" className="rounded-xl h-11 w-11 shrink-0 shadow-md shadow-primary/20">
             <Send className="w-4 h-4" />
           </Button>
         </div>
