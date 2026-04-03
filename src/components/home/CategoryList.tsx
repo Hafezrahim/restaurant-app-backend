@@ -1,35 +1,103 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCategories } from '@/backend/hooks/useMenuData';
-import { cn } from '@/lib/utils';
+import useEmblaCarousel from 'embla-carousel-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const CategoryList: React.FC = () => {
   const navigate = useNavigate();
   const { data: categories = [] } = useCategories();
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    direction: 'rtl', 
+    align: 'start', 
+    loop: true,
+    slidesToScroll: 1,
+    containScroll: 'trimSnaps',
+  });
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setCanScrollPrev(emblaApi.canScrollPrev());
+    setCanScrollNext(emblaApi.canScrollNext());
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on('select', onSelect);
+    emblaApi.on('reInit', onSelect);
+    return () => { emblaApi.off('select', onSelect); emblaApi.off('reInit', onSelect); };
+  }, [emblaApi, onSelect]);
 
   if (categories.length === 0) return null;
 
   return (
     <section className="mt-6">
-      <h3 className="text-lg font-bold text-foreground mb-4 text-center">التصنيفات</h3>
-      <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-2 justify-center">
-        {categories.map((cat, index) => (
+      <div className="flex items-center justify-between mb-4 px-1">
+        <h3 className="text-lg font-bold text-foreground">التصنيفات</h3>
+        <div className="hidden md:flex items-center gap-1.5">
           <button
-            key={cat.id}
-            onClick={() => navigate(`/menu?category=${cat.id}`)}
-            className="flex flex-col items-center gap-2 min-w-[4.5rem] transition-transform duration-200"
+            onClick={() => emblaApi?.scrollPrev()}
+            disabled={!canScrollPrev}
+            className="w-8 h-8 rounded-full bg-muted hover:bg-primary/10 flex items-center justify-center transition-colors disabled:opacity-30"
           >
-            <div className="w-16 h-16 rounded-full overflow-hidden shadow-card transition-all duration-200 hover:shadow-elevated hover:scale-105 ring-2 ring-primary/20">
-              <img 
-                src={cat.image} 
-                alt={cat.nameAr}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <span className="text-xs font-medium text-foreground">{cat.nameAr}</span>
+            <ChevronRight className="w-4 h-4 text-foreground" />
           </button>
-        ))}
+          <button
+            onClick={() => emblaApi?.scrollNext()}
+            disabled={!canScrollNext}
+            className="w-8 h-8 rounded-full bg-muted hover:bg-primary/10 flex items-center justify-center transition-colors disabled:opacity-30"
+          >
+            <ChevronLeft className="w-4 h-4 text-foreground" />
+          </button>
+        </div>
       </div>
+
+      <div className="overflow-hidden" ref={emblaRef}>
+        <div className="flex gap-3">
+          {categories.map((cat) => (
+            <div key={cat.id} className="flex-[0_0_28%] min-w-0 md:flex-[0_0_16%] lg:flex-[0_0_12%]">
+              <button
+                onClick={() => navigate(`/menu?category=${cat.id}`)}
+                className="flex flex-col items-center gap-2 w-full group"
+              >
+                <div className="w-[4.5rem] h-[4.5rem] md:w-20 md:h-20 rounded-full overflow-hidden shadow-card transition-all duration-300 group-hover:shadow-elevated group-hover:scale-110 ring-2 ring-primary/20 group-hover:ring-primary/40">
+                  <img 
+                    src={cat.image} 
+                    alt={cat.nameAr}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate max-w-full">
+                  {cat.nameAr}
+                </span>
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Dots */}
+      {categories.length > 3 && (
+        <div className="flex items-center justify-center gap-1.5 mt-3 md:hidden">
+          {Array.from({ length: Math.ceil(categories.length / 3) }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => emblaApi?.scrollTo(i * 3)}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                Math.floor(selectedIndex / 3) === i
+                  ? 'w-5 bg-primary'
+                  : 'w-1.5 bg-border'
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 };
