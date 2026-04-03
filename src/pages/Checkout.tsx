@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, Receipt, MapPin, Phone, Clock, Truck, Copy, Check, Map, CreditCard, User, UserPlus, LogIn, Tag, ChevronDown } from 'lucide-react';
+import { CheckCircle, Receipt, MapPin, Phone, Clock, Truck, Copy, Check, Map, CreditCard, User, UserPlus, LogIn, Tag, ChevronDown, Download } from 'lucide-react';
+import html2canvas from 'html2canvas';
 import { getDeliveryZones, DeliveryZone } from '@/data/deliveryZones';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useCart } from '@/context/CartContext';
@@ -42,6 +43,7 @@ const Checkout: React.FC = () => {
   const [step, setStep] = useState<'mode' | 'form' | 'receipt'>('mode');
   const [trackingNumber, setTrackingNumber] = useState('');
   const [copied, setCopied] = useState(false);
+  const receiptCardRef = useRef<HTMLDivElement>(null);
   const [orderItems, setOrderItems] = useState<CartItem[]>([]);
   const [orderTotal, setOrderTotal] = useState(0);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
@@ -314,6 +316,25 @@ const Checkout: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleDownloadPNG = useCallback(async () => {
+    if (!receiptCardRef.current) return;
+    try {
+      const canvas = await html2canvas(receiptCardRef.current, {
+        scale: 3,
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        logging: false,
+      });
+      const link = document.createElement('a');
+      link.download = `فاتورة-${trackingNumber}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      toast.success('تم تحميل الفاتورة بنجاح');
+    } catch {
+      toast.error('فشل تحميل الفاتورة');
+    }
+  }, [trackingNumber]);
+
   const currentDate = new Date().toLocaleDateString('ar-SA', {
     year: 'numeric',
     month: 'long',
@@ -340,7 +361,7 @@ const Checkout: React.FC = () => {
             </div>
 
             {/* Receipt Card */}
-            <div className="bg-card rounded-3xl shadow-elegant overflow-hidden animate-fade-in">
+            <div ref={receiptCardRef} className="bg-card rounded-3xl shadow-elegant overflow-hidden animate-fade-in" dir="rtl" style={{ fontFamily: "'Segoe UI', Tahoma, Arial, sans-serif" }}>
               {/* Receipt Header */}
               <div className="bg-gradient-to-br from-primary to-primary/80 p-6 text-center">
                 <div className="w-12 h-12 mx-auto bg-white/20 rounded-xl flex items-center justify-center mb-3">
@@ -458,6 +479,15 @@ const Checkout: React.FC = () => {
 
             {/* Actions */}
             <div className="mt-6 space-y-3">
+              <Button
+                onClick={handleDownloadPNG}
+                variant="outline"
+                className="w-full rounded-full"
+                size="lg"
+              >
+                <Download className="w-4 h-4 ml-2" />
+                تحميل الفاتورة كصورة
+              </Button>
               <Button
                 onClick={() => navigate(`/track-order?order=${trackingNumber}`)}
                 className="w-full btn-primary rounded-full"
