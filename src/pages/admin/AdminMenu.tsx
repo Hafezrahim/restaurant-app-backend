@@ -78,6 +78,9 @@ const AdminMenu = () => {
       name: item.name, name_ar: item.name_ar || "", description: item.description,
       price: String(item.price), category_id: item.category_id || "",
       image: item.image || "", is_available: item.is_available, is_popular: item.is_popular,
+      is_new: item.is_new || false,
+      ingredients: (item.ingredients || []).join('، '),
+      rating: item.rating ? String(item.rating) : "",
     });
     setIsProductDialogOpen(true);
   };
