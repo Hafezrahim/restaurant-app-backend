@@ -68,8 +68,13 @@ export const CategoryList: React.FC = () => {
       </div>
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex gap-3">
-          {categories.map((cat) => (
-            <div key={cat.id} className="flex-[0_0_28%] min-w-0 md:flex-[0_0_16%] lg:flex-[0_0_12%]">
+          {categories.map((cat, idx) => (
+            <div key={cat.id} className="flex-[0_0_28%] min-w-0 md:flex-[0_0_16%] lg:flex-[0_0_12%] transition-all duration-500"
+              style={{ 
+                opacity: emblaApi ? 1 : 0,
+                transform: emblaApi ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.95)',
+                transitionDelay: `${idx * 60}ms`,
+              }}>
               <button onClick={() => navigate(`/menu?category=${cat.id}`)} className="flex flex-col items-center gap-2 w-full group">
                 <div className="w-[4.5rem] h-[4.5rem] md:w-20 md:h-20 rounded-full overflow-hidden shadow-card transition-all duration-300 group-hover:shadow-elevated group-hover:scale-110 ring-2 ring-primary/20 group-hover:ring-primary/40">
                   <img src={cat.image} alt={cat.nameAr} className="w-full h-full object-cover" loading="lazy" />
