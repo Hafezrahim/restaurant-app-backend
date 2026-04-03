@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, Receipt, MapPin, Phone, Clock, Truck, Copy, Check, Map, CreditCard, User, UserPlus, LogIn, Tag, ChevronDown } from 'lucide-react';
+import { CheckCircle, Receipt, MapPin, Phone, Clock, Truck, Copy, Check, Map, CreditCard, User, UserPlus, LogIn, Tag, ChevronDown, Download } from 'lucide-react';
+import html2canvas from 'html2canvas';
 import { getDeliveryZones, DeliveryZone } from '@/data/deliveryZones';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useCart } from '@/context/CartContext';
