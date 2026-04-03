@@ -189,15 +189,15 @@ const ClientOrderDetails: React.FC = () => {
       {/* Progress Steps */}
       {order.status !== 'cancelled' && (
         <div className="bg-white dark:bg-card rounded-2xl p-5 border border-border/15 mb-5 shadow-sm">
-          <h3 className="font-bold text-foreground text-sm mb-5">تقدم الطلب</h3>
-          <div className="space-y-0">
+          <h3 className="font-bold text-foreground text-sm mb-4">تقدم الطلب</h3>
+          <div className="flex items-start justify-between">
             {progressSteps.map((step, idx) => {
               const isCompleted = currentStep > idx + 1;
               const isCurrent = currentStep === idx + 1;
               const isLast = idx === progressSteps.length - 1;
               return (
-                <div key={step.key} className="flex gap-3">
-                  <div className="flex flex-col items-center">
+                <div key={step.key} className="flex flex-1 items-center">
+                  <div className="flex flex-col items-center gap-1.5">
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all ${
                       isCompleted ? 'bg-primary text-white shadow-md shadow-primary/20' :
                       isCurrent ? 'bg-primary text-white ring-4 ring-primary/15 shadow-md' :
@@ -205,17 +205,15 @@ const ClientOrderDetails: React.FC = () => {
                     }`}>
                       {step.icon}
                     </div>
-                    {!isLast && (
-                      <div className={`w-0.5 h-8 my-1 rounded-full transition-colors ${
-                        isCompleted ? 'bg-primary' : 'bg-border/50'
-                      }`} />
-                    )}
-                  </div>
-                  <div className="pt-2">
-                    <p className={`text-sm font-semibold ${
+                    <p className={`text-[10px] font-semibold text-center whitespace-nowrap ${
                       isCurrent ? 'text-primary' : isCompleted ? 'text-foreground' : 'text-muted-foreground'
                     }`}>{step.label}</p>
                   </div>
+                  {!isLast && (
+                    <div className={`h-0.5 flex-1 mx-1 mt-[-18px] rounded-full transition-colors ${
+                      isCompleted ? 'bg-primary' : 'bg-border/50'
+                    }`} />
+                  )}
                 </div>
               );
             })}
