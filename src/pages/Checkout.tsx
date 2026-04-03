@@ -361,7 +361,7 @@ const Checkout: React.FC = () => {
             </div>
 
             {/* Receipt Card */}
-            <div className="bg-card rounded-3xl shadow-elegant overflow-hidden animate-fade-in">
+            <div ref={receiptCardRef} className="bg-card rounded-3xl shadow-elegant overflow-hidden animate-fade-in" dir="rtl" style={{ fontFamily: "'Segoe UI', Tahoma, Arial, sans-serif" }}>
               {/* Receipt Header */}
               <div className="bg-gradient-to-br from-primary to-primary/80 p-6 text-center">
                 <div className="w-12 h-12 mx-auto bg-white/20 rounded-xl flex items-center justify-center mb-3">
