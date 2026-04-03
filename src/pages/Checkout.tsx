@@ -316,7 +316,26 @@ const Checkout: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const currentDate = new Date().toLocaleDateString('ar-SA', {
+  const handleDownloadPNG = useCallback(async () => {
+    if (!receiptCardRef.current) return;
+    try {
+      const canvas = await html2canvas(receiptCardRef.current, {
+        scale: 3,
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        logging: false,
+      });
+      const link = document.createElement('a');
+      link.download = `فاتورة-${trackingNumber}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      toast.success('تم تحميل الفاتورة بنجاح');
+    } catch {
+      toast.error('فشل تحميل الفاتورة');
+    }
+  }, [trackingNumber]);
+
+
     year: 'numeric',
     month: 'long',
     day: 'numeric',
