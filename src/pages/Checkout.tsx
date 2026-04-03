@@ -480,6 +480,15 @@ const Checkout: React.FC = () => {
             {/* Actions */}
             <div className="mt-6 space-y-3">
               <Button
+                onClick={handleDownloadPNG}
+                variant="outline"
+                className="w-full rounded-full"
+                size="lg"
+              >
+                <Download className="w-4 h-4 ml-2" />
+                تحميل الفاتورة كصورة
+              </Button>
+              <Button
                 onClick={() => navigate(`/track-order?order=${trackingNumber}`)}
                 className="w-full btn-primary rounded-full"
                 size="lg"
