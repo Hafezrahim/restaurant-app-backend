@@ -335,7 +335,7 @@ const Checkout: React.FC = () => {
     }
   }, [trackingNumber]);
 
-
+  const currentDate = new Date().toLocaleDateString('ar-SA', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
