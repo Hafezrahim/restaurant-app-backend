@@ -97,6 +97,9 @@ const AdminMenu = () => {
       image: productForm.image || null,
       is_available: productForm.is_available,
       is_popular: productForm.is_popular,
+      is_new: productForm.is_new,
+      ingredients: productForm.ingredients ? productForm.ingredients.split(/[,،\n]+/).map(s => s.trim()).filter(Boolean) : [],
+      rating: productForm.rating ? Number(productForm.rating) : 0,
     };
     if (editingProduct) payload.id = editingProduct.id;
 
