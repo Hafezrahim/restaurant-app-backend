@@ -18,6 +18,7 @@ import { useNotifications } from '@/context/NotificationsContext';
 import { validateCoupon, recordCouponUsage } from '@/data/coupons';
 import { useCurrency } from '@/context/CurrencyContext';
 import { supabase } from '@/integrations/supabase/client';
+import logo from '@/assets/logo.png';
 
 const CUSTOMER_STORAGE_KEY = 'mazaj_customer_data';
 
