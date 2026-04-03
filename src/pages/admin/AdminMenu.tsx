@@ -50,7 +50,7 @@ const AdminMenu = () => {
   // Product dialog state
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [productForm, setProductForm] = useState({ name: "", name_ar: "", description: "", price: "", category_id: "", image: "", is_available: true, is_popular: false });
+  const [productForm, setProductForm] = useState({ name: "", name_ar: "", description: "", price: "", category_id: "", image: "", is_available: true, is_popular: false, is_new: false, ingredients: "", rating: "" });
 
   // Category dialog state
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
@@ -68,7 +68,7 @@ const AdminMenu = () => {
   // Product CRUD
   const openAddProduct = () => {
     setEditingProduct(null);
-    setProductForm({ name: "", name_ar: "", description: "", price: "", category_id: categories[0]?.id || "", image: "", is_available: true, is_popular: false });
+    setProductForm({ name: "", name_ar: "", description: "", price: "", category_id: categories[0]?.id || "", image: "", is_available: true, is_popular: false, is_new: false, ingredients: "", rating: "" });
     setIsProductDialogOpen(true);
   };
 
@@ -78,6 +78,9 @@ const AdminMenu = () => {
       name: item.name, name_ar: item.name_ar || "", description: item.description,
       price: String(item.price), category_id: item.category_id || "",
       image: item.image || "", is_available: item.is_available, is_popular: item.is_popular,
+      is_new: item.is_new || false,
+      ingredients: (item.ingredients || []).join('، '),
+      rating: item.rating ? String(item.rating) : "",
     });
     setIsProductDialogOpen(true);
   };
@@ -94,6 +97,9 @@ const AdminMenu = () => {
       image: productForm.image || null,
       is_available: productForm.is_available,
       is_popular: productForm.is_popular,
+      is_new: productForm.is_new,
+      ingredients: productForm.ingredients ? productForm.ingredients.split(/[,،\n]+/).map(s => s.trim()).filter(Boolean) : [],
+      rating: productForm.rating ? Number(productForm.rating) : 0,
     };
     if (editingProduct) payload.id = editingProduct.id;
 
@@ -358,7 +364,21 @@ const AdminMenu = () => {
                 )}
               </div>
             </div>
-            <div className="flex items-center justify-between py-2">
+            <div className="space-y-2">
+              <Label>المكونات</Label>
+              <Textarea
+                placeholder="أدخل المكونات مفصولة بفاصلة (مثال: لحم، خس، طماطم، جبنة)"
+                value={productForm.ingredients}
+                onChange={(e) => setProductForm(p => ({ ...p, ingredients: e.target.value }))}
+                rows={2}
+              />
+              <p className="text-[11px] text-muted-foreground">افصل بين المكونات بفاصلة عربية (،) أو إنجليزية (,)</p>
+            </div>
+            <div className="space-y-2">
+              <Label>التقييم (0 - 5)</Label>
+              <Input type="number" min="0" max="5" step="0.1" placeholder="4.5" value={productForm.rating} onChange={(e) => setProductForm(p => ({ ...p, rating: e.target.value }))} />
+            </div>
+            <div className="flex items-center justify-between py-2 flex-wrap gap-3">
               <div className="flex items-center gap-2">
                 <Switch checked={productForm.is_available} onCheckedChange={(v) => setProductForm(p => ({ ...p, is_available: v }))} />
                 <Label>متاح للطلب</Label>
@@ -366,6 +386,10 @@ const AdminMenu = () => {
               <div className="flex items-center gap-2">
                 <Switch checked={productForm.is_popular} onCheckedChange={(v) => setProductForm(p => ({ ...p, is_popular: v }))} />
                 <Label>الأكثر طلباً</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={productForm.is_new} onCheckedChange={(v) => setProductForm(p => ({ ...p, is_new: v }))} />
+                <Label>منتج جديد</Label>
               </div>
             </div>
             <div className="flex gap-3 pt-4">
