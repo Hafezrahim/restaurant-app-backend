@@ -43,6 +43,7 @@ const Checkout: React.FC = () => {
   const [step, setStep] = useState<'mode' | 'form' | 'receipt'>('mode');
   const [trackingNumber, setTrackingNumber] = useState('');
   const [copied, setCopied] = useState(false);
+  const receiptCardRef = useRef<HTMLDivElement>(null);
   const [orderItems, setOrderItems] = useState<CartItem[]>([]);
   const [orderTotal, setOrderTotal] = useState(0);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
