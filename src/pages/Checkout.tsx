@@ -374,11 +374,10 @@ const Checkout: React.FC = () => {
             <div ref={receiptCardRef} className="bg-card rounded-3xl shadow-elegant overflow-hidden animate-fade-in" dir="rtl" style={{ fontFamily: "'Segoe UI', Tahoma, Arial, sans-serif" }}>
               {/* Receipt Header */}
               <div className="bg-gradient-to-br from-primary to-primary/80 p-6 text-center">
-                <div className="w-12 h-12 mx-auto bg-white/20 rounded-xl flex items-center justify-center mb-3">
-                  <Receipt className="w-6 h-6 text-white" />
-                </div>
+                <img src={logo} alt="مزاج" className="w-14 h-14 rounded-full object-cover mx-auto mb-2 border-2 border-white/30" />
                 <h2 className="text-white font-bold text-lg">مطعم مزاج</h2>
-                <p className="text-white/80 text-sm">فاتورة الطلب</p>
+                <p className="text-white/70 text-xs mt-1">MAZAG Restaurant</p>
+                <p className="text-white/80 text-sm mt-2">فاتورة الطلب</p>
               </div>
 
               {/* Tracking Number */}
