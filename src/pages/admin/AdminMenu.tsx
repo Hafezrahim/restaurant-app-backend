@@ -50,7 +50,7 @@ const AdminMenu = () => {
   // Product dialog state
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [productForm, setProductForm] = useState({ name: "", name_ar: "", description: "", price: "", category_id: "", image: "", is_available: true, is_popular: false });
+  const [productForm, setProductForm] = useState({ name: "", name_ar: "", description: "", price: "", category_id: "", image: "", is_available: true, is_popular: false, is_new: false, ingredients: "", rating: "" });
 
   // Category dialog state
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
