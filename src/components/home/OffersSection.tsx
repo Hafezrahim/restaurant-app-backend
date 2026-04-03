@@ -90,8 +90,13 @@ export const OffersSection: React.FC = () => {
 
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex gap-3">
-          {coupons.map((coupon) => (
-            <div key={coupon.id} className="flex-[0_0_85%] min-w-0 sm:flex-[0_0_48%] lg:flex-[0_0_32%]">
+          {coupons.map((coupon, idx) => (
+            <div key={coupon.id} className="flex-[0_0_85%] min-w-0 sm:flex-[0_0_48%] lg:flex-[0_0_32%] transition-all duration-500"
+              style={{
+                opacity: emblaApi ? 1 : 0,
+                transform: emblaApi ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.96)',
+                transitionDelay: `${idx * 80}ms`,
+              }}>
               <div className="bg-gradient-to-br from-primary/5 via-card to-secondary/5 rounded-2xl p-4 border border-border/50 shadow-card hover:shadow-elevated transition-all duration-300 group h-full">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
