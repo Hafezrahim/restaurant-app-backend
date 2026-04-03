@@ -44,6 +44,7 @@ import AdminLogin from "./pages/admin/AdminLogin";
 import ClientLogin from "./pages/client/ClientLogin";
 import ClientDashboard from "./pages/client/ClientDashboard";
 import ClientOrders from "./pages/client/ClientOrders";
+import ClientOrderDetails from "./pages/client/ClientOrderDetails";
 import ClientWishlist from "./pages/client/ClientWishlist";
 import ClientSupport from "./pages/client/ClientSupport";
 import ClientProfile from "./pages/client/ClientProfile";
@@ -82,6 +83,7 @@ const App = () => (
                     <Route path="/client/login" element={<ClientLogin />} />
                     <Route path="/client/dashboard" element={<ClientProtectedRoute><ClientDashboard /></ClientProtectedRoute>} />
                     <Route path="/client/orders" element={<ClientProtectedRoute><ClientOrders /></ClientProtectedRoute>} />
+                    <Route path="/client/orders/:id" element={<ClientProtectedRoute><ClientOrderDetails /></ClientProtectedRoute>} />
                     <Route path="/client/wishlist" element={<ClientProtectedRoute><ClientWishlist /></ClientProtectedRoute>} />
                     <Route path="/client/support" element={<ClientProtectedRoute><ClientSupport /></ClientProtectedRoute>} />
                     <Route path="/client/profile" element={<ClientProtectedRoute><ClientProfile /></ClientProtectedRoute>} />
