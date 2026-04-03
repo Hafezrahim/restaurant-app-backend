@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Clock, CheckCircle, Truck, Package, XCircle, ChevronLeft, Search, CalendarDays } from 'lucide-react';
+import { ShoppingBag, Clock, CheckCircle, Truck, Package, XCircle, ChevronLeft, Search, CalendarDays, Loader2 } from 'lucide-react';
 import { ClientLayout } from '@/components/client/ClientLayout';
 import { useCurrency } from '@/context/CurrencyContext';
+import { useClientAuth } from '@/context/ClientAuthContext';
 import { Input } from '@/components/ui/input';
+import { supabase } from '@/integrations/supabase/client';
 
 const statusConfig: Record<string, { icon: React.ReactNode; label: string; color: string; bgClass: string }> = {
   pending: { icon: <Clock className="w-3.5 h-3.5" />, label: 'قيد الانتظار', color: 'text-amber-600', bgClass: 'bg-amber-100 dark:bg-amber-500/15' },
@@ -22,18 +24,75 @@ const filterTabs = [
   { key: 'cancelled', label: 'ملغية' },
 ];
 
+interface OrderWithItems {
+  id: string;
+  order_number: string;
+  status: string;
+  total: number;
+  created_at: string;
+  order_items: { name: string; quantity: number }[];
+}
+
 const ClientOrders: React.FC = () => {
-  const orders = JSON.parse(localStorage.getItem('mazaj_client_orders') || '[]');
+  const { user } = useClientAuth();
   const { formatPrice } = useCurrency();
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [orders, setOrders] = useState<OrderWithItems[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredOrders = orders.filter((order: any) => {
+  const fetchOrders = async () => {
+    if (!user) { setOrders([]); setIsLoading(false); return; }
+    const { data, error } = await supabase
+      .from('orders')
+      .select('id, order_number, status, total, created_at, order_items(name, quantity)')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    
+    if (!error && data) {
+      setOrders(data as OrderWithItems[]);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, [user]);
+
+  // Realtime subscription for status updates
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel('client-orders-realtime')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'orders',
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        setOrders(prev => prev.map(o => 
+          o.id === payload.new.id ? { ...o, ...payload.new } : o
+        ));
+      })
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'orders',
+        filter: `user_id=eq.${user.id}`,
+      }, () => {
+        fetchOrders();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
+  const filteredOrders = orders.filter((order) => {
     const matchesFilter = activeFilter === 'all' || order.status === activeFilter;
     const matchesSearch = !searchQuery || 
-      order.trackingNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.items?.some((item: any) => item.name?.includes(searchQuery));
+      order.order_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.order_items?.some((item) => item.name?.includes(searchQuery));
     return matchesFilter && matchesSearch;
   });
 
@@ -57,8 +116,8 @@ const ClientOrders: React.FC = () => {
   };
 
   const totalOrders = orders.length;
-  const deliveredCount = orders.filter((o: any) => o.status === 'delivered').length;
-  const activeCount = orders.filter((o: any) => ['pending', 'confirmed', 'preparing', 'out_for_delivery'].includes(o.status)).length;
+  const deliveredCount = orders.filter((o) => o.status === 'delivered').length;
+  const activeCount = orders.filter((o) => ['pending', 'confirmed', 'preparing', 'out_for_delivery'].includes(o.status)).length;
 
   return (
     <ClientLayout title="طلباتي">
@@ -105,7 +164,11 @@ const ClientOrders: React.FC = () => {
       </div>
 
       {/* Orders List */}
-      {filteredOrders.length === 0 ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      ) : filteredOrders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20">
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center mb-4">
             <ShoppingBag className="w-9 h-9 text-muted-foreground/40" />
@@ -121,25 +184,26 @@ const ClientOrders: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredOrders.map((order: any, i: number) => {
+          {filteredOrders.map((order) => {
             const status = statusConfig[order.status || 'pending'];
-            const itemNames = order.items?.slice(0, 2).map((item: any) => item.name).join('، ') || '';
-            const moreCount = (order.items?.length || 0) - 2;
+            const itemNames = order.order_items?.slice(0, 2).map((item) => item.name).join('، ') || '';
+            const moreCount = (order.order_items?.length || 0) - 2;
+            const totalItems = order.order_items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
             
             return (
               <button
-                key={i}
-                onClick={() => navigate(`/client/orders/${i}`)}
+                key={order.id}
+                onClick={() => navigate(`/client/orders/${order.id}`)}
                 className="w-full text-right bg-white dark:bg-card rounded-2xl p-4 border border-border/15 hover:border-primary/25 hover:shadow-lg active:scale-[0.98] transition-all duration-200 group shadow-sm"
               >
                 {/* Top Row */}
                 <div className="flex items-center justify-between mb-3">
                   <code className="text-[11px] font-mono text-primary font-bold bg-primary/8 px-2.5 py-1 rounded-lg">
-                    {order.trackingNumber}
+                    {order.order_number}
                   </code>
-                  <div className={`flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ${status.color} ${status.bgClass}`}>
-                    {status.icon}
-                    {status.label}
+                  <div className={`flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ${status?.color} ${status?.bgClass}`}>
+                    {status?.icon}
+                    {status?.label}
                   </div>
                 </div>
 
@@ -153,7 +217,7 @@ const ClientOrders: React.FC = () => {
                 <div className="flex items-center gap-1.5 mb-3">
                   <CalendarDays className="w-3 h-3 text-muted-foreground" />
                   <p className="text-[11px] text-muted-foreground">
-                    {getTimeAgo(order.date || order.dateFormatted)}
+                    {getTimeAgo(order.created_at)}
                   </p>
                 </div>
 
@@ -161,7 +225,7 @@ const ClientOrders: React.FC = () => {
                 <div className="flex items-center justify-between pt-3 border-t border-border/15">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Package className="w-3.5 h-3.5" />
-                    <span>{order.itemCount} عناصر</span>
+                    <span>{totalItems} عناصر</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-primary">{formatPrice(order.total?.toFixed(2))}</span>
