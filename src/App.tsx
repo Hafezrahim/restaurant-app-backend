@@ -83,6 +83,7 @@ const App = () => (
                     <Route path="/client/login" element={<ClientLogin />} />
                     <Route path="/client/dashboard" element={<ClientProtectedRoute><ClientDashboard /></ClientProtectedRoute>} />
                     <Route path="/client/orders" element={<ClientProtectedRoute><ClientOrders /></ClientProtectedRoute>} />
+                    <Route path="/client/orders/:id" element={<ClientProtectedRoute><ClientOrderDetails /></ClientProtectedRoute>} />
                     <Route path="/client/wishlist" element={<ClientProtectedRoute><ClientWishlist /></ClientProtectedRoute>} />
                     <Route path="/client/support" element={<ClientProtectedRoute><ClientSupport /></ClientProtectedRoute>} />
                     <Route path="/client/profile" element={<ClientProtectedRoute><ClientProfile /></ClientProtectedRoute>} />
