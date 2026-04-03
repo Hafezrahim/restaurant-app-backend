@@ -1,11 +1,13 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ClientLayout } from '@/components/client/ClientLayout';
 import { useCurrency } from '@/context/CurrencyContext';
+import { useClientAuth } from '@/context/ClientAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { 
   Clock, CheckCircle, Truck, Package, XCircle, MapPin, Phone, CreditCard, 
-  Download, ArrowRight, User, CalendarDays, Hash, ShoppingBag, Receipt
+  Download, ArrowRight, User, CalendarDays, Hash, ShoppingBag, Receipt, Loader2
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
@@ -28,15 +30,72 @@ const progressSteps = [
   { key: 'delivered', label: 'تم التوصيل', icon: <CheckCircle className="w-3.5 h-3.5" /> },
 ];
 
+const paymentMethodLabels: Record<string, string> = {
+  cash: 'نقداً عند الاستلام',
+  card: 'بطاقة ائتمان',
+  bank_transfer: 'تحويل بنكي',
+};
+
+interface OrderData {
+  id: string;
+  order_number: string;
+  status: string;
+  total: number;
+  subtotal: number;
+  delivery_fee: number;
+  discount: number;
+  created_at: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_email: string | null;
+  delivery_address: string | null;
+  payment_method: string;
+  notes: string | null;
+  order_items: { name: string; quantity: number; price: number }[];
+}
+
 const ClientOrderDetails: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { formatPrice } = useCurrency();
+  const { user } = useClientAuth();
   const invoiceRef = useRef<HTMLDivElement>(null);
+  const [order, setOrder] = useState<OrderData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const orders = JSON.parse(localStorage.getItem('mazaj_client_orders') || '[]');
-  const orderIndex = parseInt(id || '0', 10);
-  const order = orders[orderIndex];
+  useEffect(() => {
+    if (!id || !user) { setIsLoading(false); return; }
+
+    const fetchOrder = async () => {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*, order_items(name, quantity, price)')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .single();
+
+      if (!error && data) {
+        setOrder(data as OrderData);
+      }
+      setIsLoading(false);
+    };
+    fetchOrder();
+
+    // Realtime for status changes
+    const channel = supabase
+      .channel(`order-detail-${id}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'orders',
+        filter: `id=eq.${id}`,
+      }, (payload) => {
+        setOrder(prev => prev ? { ...prev, ...payload.new } : prev);
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [id, user]);
 
   const handleDownloadPNG = useCallback(async () => {
     if (!invoiceRef.current) return;
@@ -45,14 +104,24 @@ const ClientOrderDetails: React.FC = () => {
         scale: 3, backgroundColor: '#ffffff', useCORS: true, logging: false,
       });
       const link = document.createElement('a');
-      link.download = `فاتورة-${order?.trackingNumber || 'order'}.png`;
+      link.download = `فاتورة-${order?.order_number || 'order'}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
       toast.success('تم تحميل الفاتورة بنجاح');
     } catch {
       toast.error('فشل تحميل الفاتورة');
     }
-  }, [order?.trackingNumber]);
+  }, [order?.order_number]);
+
+  if (isLoading) {
+    return (
+      <ClientLayout title="تفاصيل الطلب">
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </ClientLayout>
+    );
+  }
 
   if (!order) {
     return (
@@ -83,12 +152,11 @@ const ClientOrderDetails: React.FC = () => {
     } catch { return dateStr; }
   };
 
-  const orderDate = formatOrderDate(order.date || order.dateFormatted || '');
-  const itemsSubtotal = order.items?.reduce((s: number, i: any) => s + (i.price * i.quantity), 0) || 0;
-  const subtotal = order.subtotal ?? itemsSubtotal;
-  const deliveryFee = order.deliveryFee ?? 0;
-  const tax = order.tax ?? subtotal * 0.15;
-  const total = order.total ?? (subtotal + deliveryFee + tax);
+  const orderDate = formatOrderDate(order.created_at);
+  const subtotal = order.subtotal ?? 0;
+  const deliveryFee = order.delivery_fee ?? 0;
+  const tax = subtotal * 0.15;
+  const total = order.total ?? 0;
 
   return (
     <ClientLayout title="تفاصيل الطلب">
@@ -114,7 +182,7 @@ const ClientOrderDetails: React.FC = () => {
               <p className="text-[11px] text-muted-foreground">{orderDate}</p>
             </div>
           </div>
-          <code className="text-[11px] font-mono text-primary font-bold bg-white/60 dark:bg-background/40 px-3 py-1.5 rounded-lg">{order.trackingNumber}</code>
+          <code className="text-[11px] font-mono text-primary font-bold bg-white/60 dark:bg-background/40 px-3 py-1.5 rounded-lg">{order.order_number}</code>
         </div>
       </div>
 
@@ -166,7 +234,7 @@ const ClientOrderDetails: React.FC = () => {
             <p className="text-white/50 text-[10px] mt-0.5 tracking-widest font-medium">MAZAG RESTAURANT</p>
             <div className="mt-4 bg-white/12 backdrop-blur-sm rounded-xl px-5 py-2.5 inline-block">
               <p className="text-white/60 text-[10px] mb-0.5">رقم الفاتورة</p>
-              <p className="text-white font-mono font-bold text-sm tracking-widest">{order.trackingNumber}</p>
+              <p className="text-white font-mono font-bold text-sm tracking-widest">{order.order_number}</p>
             </div>
           </div>
         </div>
@@ -178,26 +246,24 @@ const ClientOrderDetails: React.FC = () => {
         </div>
 
         {/* Customer Info */}
-        {order.customer && (
-          <div className="p-5 border-b border-dashed border-border/30">
-            <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3">معلومات العميل</h4>
-            <div className="space-y-2.5">
-              {[
-                { icon: User, text: order.customer.name },
-                { icon: Phone, text: order.customer.phone, dir: 'ltr' },
-                order.customer.address && { icon: MapPin, text: order.customer.address },
-                order.paymentMethod && { icon: CreditCard, text: order.paymentMethod },
-              ].filter(Boolean).map((item: any, idx) => (
-                <div key={idx} className="flex items-center gap-3 text-sm">
-                  <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
-                    <item.icon className="w-3.5 h-3.5 text-primary" />
-                  </div>
-                  <span className={`${idx === 0 ? 'text-foreground font-medium' : 'text-muted-foreground'}`} dir={item.dir}>{item.text}</span>
+        <div className="p-5 border-b border-dashed border-border/30">
+          <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3">معلومات العميل</h4>
+          <div className="space-y-2.5">
+            {[
+              { icon: User, text: order.customer_name },
+              { icon: Phone, text: order.customer_phone, dir: 'ltr' },
+              order.delivery_address && { icon: MapPin, text: order.delivery_address },
+              { icon: CreditCard, text: paymentMethodLabels[order.payment_method] || order.payment_method },
+            ].filter(Boolean).map((item: any, idx) => (
+              <div key={idx} className="flex items-center gap-3 text-sm">
+                <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
+                  <item.icon className="w-3.5 h-3.5 text-primary" />
                 </div>
-              ))}
-            </div>
+                <span className={`${idx === 0 ? 'text-foreground font-medium' : 'text-muted-foreground'}`} dir={item.dir}>{item.text}</span>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
 
         {/* Items Table */}
         <div className="p-5 border-b border-dashed border-border/30">
@@ -209,7 +275,7 @@ const ClientOrderDetails: React.FC = () => {
             <span className="w-20 text-left">الإجمالي</span>
           </div>
           <div className="divide-y divide-border/10">
-            {order.items?.map((item: any, idx: number) => (
+            {order.order_items?.map((item, idx) => (
               <div key={idx} className="flex items-center py-3 text-sm">
                 <span className="flex-1 text-foreground font-medium truncate pl-2">{item.name}</span>
                 <span className="w-12 text-center">
@@ -218,9 +284,7 @@ const ClientOrderDetails: React.FC = () => {
                 <span className="w-16 text-center text-muted-foreground text-xs">{formatPrice(item.price.toFixed(2))}</span>
                 <span className="w-20 text-left font-semibold text-foreground text-xs">{formatPrice((item.price * item.quantity).toFixed(2))}</span>
               </div>
-            )) || (
-              <div className="py-3 text-sm text-muted-foreground text-center">{order.itemCount} عناصر</div>
-            )}
+            ))}
           </div>
         </div>
 
@@ -229,8 +293,9 @@ const ClientOrderDetails: React.FC = () => {
           <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3">ملخص الفاتورة</h4>
           {[
             { label: 'المجموع الفرعي', value: subtotal },
-            { label: `رسوم التوصيل${order.deliveryZone ? ` (${order.deliveryZone})` : ''}`, value: deliveryFee },
+            { label: 'رسوم التوصيل', value: deliveryFee },
             { label: 'ضريبة القيمة المضافة (15%)', value: tax },
+            ...(order.discount > 0 ? [{ label: 'الخصم', value: -order.discount }] : []),
           ].map((row, i) => (
             <div key={i} className="flex justify-between text-sm">
               <span className="text-muted-foreground">{row.label}</span>
@@ -259,7 +324,7 @@ const ClientOrderDetails: React.FC = () => {
           تحميل الفاتورة كصورة
         </Button>
         {order.status !== 'delivered' && order.status !== 'cancelled' && (
-          <Button onClick={() => navigate(`/track-order?order=${order.trackingNumber}`)} className="w-full rounded-xl h-12 shadow-lg shadow-primary/20" size="lg">
+          <Button onClick={() => navigate(`/track-order?order=${order.order_number}`)} className="w-full rounded-xl h-12 shadow-lg shadow-primary/20" size="lg">
             <Truck className="w-4 h-4 ml-2" />
             تتبع الطلب
           </Button>
