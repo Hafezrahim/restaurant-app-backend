@@ -68,7 +68,7 @@ const AdminMenu = () => {
   // Product CRUD
   const openAddProduct = () => {
     setEditingProduct(null);
-    setProductForm({ name: "", name_ar: "", description: "", price: "", category_id: categories[0]?.id || "", image: "", is_available: true, is_popular: false });
+    setProductForm({ name: "", name_ar: "", description: "", price: "", category_id: categories[0]?.id || "", image: "", is_available: true, is_popular: false, is_new: false, ingredients: "", rating: "" });
     setIsProductDialogOpen(true);
   };
 
