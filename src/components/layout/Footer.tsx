@@ -87,26 +87,33 @@ export const Footer: React.FC = () => {
           {/* Hours */}
           <div>
             <h3 className="text-lg font-bold text-gold mb-4">ساعات العمل</h3>
-            <ul className="space-y-2">
-              {hourEntries.length === 0 ? (
-                <li className="flex items-center gap-3 text-cream/80 text-sm">
-                  <Clock className="w-4 h-4 text-gold" />
-                  <span className="text-cream/60">لم يتم تحديد ساعات العمل</span>
-                </li>
-              ) : (
-                hourEntries.map(([day, hours]) => (
-                  <li key={day} className="flex items-center gap-3 text-cream/80 text-sm">
+            {(() => {
+              const openHours = hourEntries
+                .filter(([, h]) => h && !h.closed && h.open && h.close)
+                .map(([, h]) => ({ open: h.open as string, close: h.close as string }));
+
+              if (openHours.length === 0) {
+                return (
+                  <div className="flex items-center gap-3 text-cream/80 text-sm">
                     <Clock className="w-4 h-4 text-gold" />
-                    <div>
-                      <p>{dayLabels[day] || day}</p>
-                      <p className="text-cream/60" dir="ltr">
-                        {hours?.closed ? 'مغلق' : `${hours?.open || '--'} - ${hours?.close || '--'}`}
-                      </p>
-                    </div>
-                  </li>
-                ))
-              )}
-            </ul>
+                    <span className="text-cream/60">لم يتم تحديد ساعات العمل</span>
+                  </div>
+                );
+              }
+
+              const earliestOpen = openHours.reduce((a, b) => (a.open < b.open ? a : b)).open;
+              const latestClose = openHours.reduce((a, b) => (a.close > b.close ? a : b)).close;
+
+              return (
+                <div className="flex items-center gap-3 text-cream/80 text-sm">
+                  <Clock className="w-4 h-4 text-gold" />
+                  <div>
+                    <p>يومياً</p>
+                    <p className="text-cream/60" dir="ltr">{earliestOpen} - {latestClose}</p>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
 
