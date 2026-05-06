@@ -631,10 +631,10 @@ const AdminSettings = () => {
                 تغيير كلمة المرور
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2"><Label>كلمة المرور الحالية</Label><Input type="password" placeholder="••••••••" /></div>
+                <div className="space-y-2"><Label>كلمة المرور الحالية</Label><Input type="password" placeholder="••••••••" className="text-right" dir="rtl" /></div>
                 <div></div>
-                <div className="space-y-2"><Label>كلمة المرور الجديدة</Label><Input type="password" placeholder="••••••••" /></div>
-                <div className="space-y-2"><Label>تأكيد كلمة المرور الجديدة</Label><Input type="password" placeholder="••••••••" /></div>
+                <div className="space-y-2"><Label>كلمة المرور الجديدة</Label><Input type="password" placeholder="••••••••" className="text-right" dir="rtl" /></div>
+                <div className="space-y-2"><Label>تأكيد كلمة المرور الجديدة</Label><Input type="password" placeholder="••••••••" className="text-right" dir="rtl" /></div>
               </div>
               <Button variant="outline">تحديث كلمة المرور</Button>
             </div>
