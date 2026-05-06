@@ -252,7 +252,7 @@ const AdminSettings = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="name">اسم المطعم</Label>
-                <Input id="name" value={restaurantName} onChange={(e) => setRestaurantName(e.target.value)} />
+                <Input id="name" value={restaurantName} onChange={(e) => setRestaurantName(e.target.value)} className="text-right" dir="rtl" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">البريد الإلكتروني</Label>
