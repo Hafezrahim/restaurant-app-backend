@@ -252,7 +252,7 @@ const AdminSettings = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="name">اسم المطعم</Label>
-                <Input id="name" value={restaurantName} onChange={(e) => setRestaurantName(e.target.value)} />
+                <Input id="name" value={restaurantName} onChange={(e) => setRestaurantName(e.target.value)} className="text-right" dir="rtl" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">البريد الإلكتروني</Label>
@@ -277,7 +277,7 @@ const AdminSettings = () => {
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="description">وصف المطعم</Label>
-                <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+                <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="text-right" dir="rtl" />
               </div>
             </div>
           </div>
@@ -341,11 +341,11 @@ const AdminSettings = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label>الحد الأدنى للطلب ({currency.symbol})</Label>
-                    <Input type="number" value={minimumOrder} onChange={(e) => setMinimumOrder(e.target.value)} />
+                    <Input type="number" value={minimumOrder} onChange={(e) => setMinimumOrder(e.target.value)} className="text-right" dir="rtl" />
                   </div>
                   <div className="space-y-2">
                     <Label>الوقت الافتراضي للتوصيل (دقيقة)</Label>
-                    <Input value={estimatedTime} onChange={(e) => setEstimatedTime(e.target.value)} placeholder="مثال: 30-45" />
+                    <Input value={estimatedTime} onChange={(e) => setEstimatedTime(e.target.value)} placeholder="مثال: 30-45" className="text-right" dir="rtl" />
                   </div>
                 </div>
 
@@ -386,15 +386,15 @@ const AdminSettings = () => {
                       <div className="space-y-4 mt-2">
                         <div className="space-y-2">
                           <Label>اسم المنطقة *</Label>
-                          <Input value={newZoneName} onChange={(e) => setNewZoneName(e.target.value)} placeholder="مثال: حي النخيل، شمال الرياض" />
+                          <Input value={newZoneName} onChange={(e) => setNewZoneName(e.target.value)} placeholder="مثال: حي النخيل، شمال الرياض" className="text-right" dir="rtl" />
                         </div>
                         <div className="space-y-2">
                           <Label>رسوم التوصيل ({currency.symbol}) *</Label>
-                          <Input type="number" value={newZonePrice} onChange={(e) => setNewZonePrice(e.target.value)} placeholder="مثال: 15" />
+                          <Input type="number" value={newZonePrice} onChange={(e) => setNewZonePrice(e.target.value)} placeholder="مثال: 15" className="text-right" dir="rtl" />
                         </div>
                         <div className="space-y-2">
                           <Label>الوقت المتوقع (دقيقة)</Label>
-                          <Input value={newZoneTime} onChange={(e) => setNewZoneTime(e.target.value)} placeholder="مثال: 20-30" />
+                          <Input value={newZoneTime} onChange={(e) => setNewZoneTime(e.target.value)} placeholder="مثال: 20-30" className="text-right" dir="rtl" />
                         </div>
                         <Button onClick={handleAddZone} className="w-full" disabled={upsertZone.isPending}>
                           {upsertZone.isPending ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : null}
@@ -514,11 +514,11 @@ const AdminSettings = () => {
                     </div>
                     <div className="space-y-2">
                       <Label>اسم طريقة الدفع *</Label>
-                      <Input value={newMethodName} onChange={(e) => setNewMethodName(e.target.value)} placeholder="مثال: محفظة إلكترونية، InstaPay" />
+                      <Input value={newMethodName} onChange={(e) => setNewMethodName(e.target.value)} placeholder="مثال: محفظة إلكترونية، InstaPay" className="text-right" dir="rtl" />
                     </div>
                     <div className="space-y-2">
                       <Label>الوصف</Label>
-                      <Input value={newMethodDesc} onChange={(e) => setNewMethodDesc(e.target.value)} placeholder="مثال: الدفع عبر المحفظة الإلكترونية" />
+                      <Input value={newMethodDesc} onChange={(e) => setNewMethodDesc(e.target.value)} placeholder="مثال: الدفع عبر المحفظة الإلكترونية" className="text-right" dir="rtl" />
                     </div>
                     <Button onClick={handleAddPaymentMethod} className="w-full">إضافة</Button>
                   </div>
@@ -631,10 +631,10 @@ const AdminSettings = () => {
                 تغيير كلمة المرور
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2"><Label>كلمة المرور الحالية</Label><Input type="password" placeholder="••••••••" /></div>
+                <div className="space-y-2"><Label>كلمة المرور الحالية</Label><Input type="password" placeholder="••••••••" className="text-right" dir="rtl" /></div>
                 <div></div>
-                <div className="space-y-2"><Label>كلمة المرور الجديدة</Label><Input type="password" placeholder="••••••••" /></div>
-                <div className="space-y-2"><Label>تأكيد كلمة المرور الجديدة</Label><Input type="password" placeholder="••••••••" /></div>
+                <div className="space-y-2"><Label>كلمة المرور الجديدة</Label><Input type="password" placeholder="••••••••" className="text-right" dir="rtl" /></div>
+                <div className="space-y-2"><Label>تأكيد كلمة المرور الجديدة</Label><Input type="password" placeholder="••••••••" className="text-right" dir="rtl" /></div>
               </div>
               <Button variant="outline">تحديث كلمة المرور</Button>
             </div>
