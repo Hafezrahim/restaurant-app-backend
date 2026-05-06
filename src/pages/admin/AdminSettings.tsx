@@ -341,11 +341,11 @@ const AdminSettings = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label>الحد الأدنى للطلب ({currency.symbol})</Label>
-                    <Input type="number" value={minimumOrder} onChange={(e) => setMinimumOrder(e.target.value)} />
+                    <Input type="number" value={minimumOrder} onChange={(e) => setMinimumOrder(e.target.value)} className="text-right" dir="rtl" />
                   </div>
                   <div className="space-y-2">
                     <Label>الوقت الافتراضي للتوصيل (دقيقة)</Label>
-                    <Input value={estimatedTime} onChange={(e) => setEstimatedTime(e.target.value)} placeholder="مثال: 30-45" />
+                    <Input value={estimatedTime} onChange={(e) => setEstimatedTime(e.target.value)} placeholder="مثال: 30-45" className="text-right" dir="rtl" />
                   </div>
                 </div>
 
