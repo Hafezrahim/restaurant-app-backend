@@ -206,20 +206,21 @@ const AdminSettings = () => {
 
   return (
     <AdminLayout>
+      <div dir="rtl" className="space-y-6 text-right">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-right">
           <h1 className="text-2xl font-bold text-foreground">الإعدادات</h1>
           <p className="text-muted-foreground">إدارة إعدادات المطعم والنظام</p>
         </div>
-        <Button onClick={handleSave} disabled={saveSettings.isPending}>
-          {saveSettings.isPending ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <Save className="w-4 h-4 ml-2" />}
+        <Button onClick={handleSave} disabled={saveSettings.isPending} className="gap-2 self-start sm:self-auto">
+          {saveSettings.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           حفظ التغييرات
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-card border border-border/50 p-1 rounded-xl flex-wrap h-auto gap-1">
+      <Tabs value={activeTab} onValueChange={setActiveTab} dir="rtl" className="space-y-6">
+        <TabsList dir="rtl" className="bg-card border border-border/50 p-1 rounded-xl flex flex-wrap h-auto gap-1 justify-start w-full">
           <TabsTrigger value="general" className="flex items-center gap-2"><Store className="w-4 h-4" />عام</TabsTrigger>
           <TabsTrigger value="hours" className="flex items-center gap-2"><Clock className="w-4 h-4" />ساعات العمل</TabsTrigger>
           <TabsTrigger value="delivery" className="flex items-center gap-2"><Truck className="w-4 h-4" />التوصيل</TabsTrigger>
@@ -245,7 +246,7 @@ const AdminSettings = () => {
               <div>
                 <h3 className="font-medium text-foreground mb-2">شعار المطعم</h3>
                 <p className="text-sm text-muted-foreground mb-3">يُفضل صورة بحجم 200x200 بكسل</p>
-                <Button variant="outline" size="sm"><Upload className="w-4 h-4 ml-2" />تغيير الشعار</Button>
+                <Button variant="outline" size="sm" className="gap-2"><Upload className="w-4 h-4" />تغيير الشعار</Button>
               </div>
             </div>
 
@@ -676,6 +677,7 @@ const AdminSettings = () => {
           </div>
         </TabsContent>
       </Tabs>
+      </div>
     </AdminLayout>
   );
 };
