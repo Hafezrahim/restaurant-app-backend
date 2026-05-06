@@ -206,20 +206,21 @@ const AdminSettings = () => {
 
   return (
     <AdminLayout>
+      <div dir="rtl" className="space-y-6 text-right">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-right">
           <h1 className="text-2xl font-bold text-foreground">الإعدادات</h1>
           <p className="text-muted-foreground">إدارة إعدادات المطعم والنظام</p>
         </div>
-        <Button onClick={handleSave} disabled={saveSettings.isPending}>
-          {saveSettings.isPending ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <Save className="w-4 h-4 ml-2" />}
+        <Button onClick={handleSave} disabled={saveSettings.isPending} className="gap-2 self-start sm:self-auto">
+          {saveSettings.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           حفظ التغييرات
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-card border border-border/50 p-1 rounded-xl flex-wrap h-auto gap-1">
+      <Tabs value={activeTab} onValueChange={setActiveTab} dir="rtl" className="space-y-6">
+        <TabsList dir="rtl" className="bg-card border border-border/50 p-1 rounded-xl flex flex-wrap h-auto gap-1 justify-start w-full">
           <TabsTrigger value="general" className="flex items-center gap-2"><Store className="w-4 h-4" />عام</TabsTrigger>
           <TabsTrigger value="hours" className="flex items-center gap-2"><Clock className="w-4 h-4" />ساعات العمل</TabsTrigger>
           <TabsTrigger value="delivery" className="flex items-center gap-2"><Truck className="w-4 h-4" />التوصيل</TabsTrigger>
@@ -245,7 +246,7 @@ const AdminSettings = () => {
               <div>
                 <h3 className="font-medium text-foreground mb-2">شعار المطعم</h3>
                 <p className="text-sm text-muted-foreground mb-3">يُفضل صورة بحجم 200x200 بكسل</p>
-                <Button variant="outline" size="sm"><Upload className="w-4 h-4 ml-2" />تغيير الشعار</Button>
+                <Button variant="outline" size="sm" className="gap-2"><Upload className="w-4 h-4" />تغيير الشعار</Button>
               </div>
             </div>
 
@@ -292,8 +293,8 @@ const AdminSettings = () => {
             </h2>
             <div className="space-y-4">
               {Object.entries(workingHours).map(([day, hours]) => (
-                <div key={day} className="flex items-center gap-4 p-4 bg-muted/30 rounded-xl">
-                  <div className="w-24 font-medium text-foreground">{dayNames[day]}</div>
+                <div key={day} className="flex flex-col gap-4 p-4 bg-muted/30 rounded-xl sm:flex-row sm:items-center">
+                  <div className="w-24 font-medium text-foreground text-right">{dayNames[day]}</div>
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={!hours.closed}
@@ -304,7 +305,7 @@ const AdminSettings = () => {
                     <span className="text-sm text-muted-foreground">{hours.closed ? "مغلق" : "مفتوح"}</span>
                   </div>
                   {!hours.closed && (
-                    <>
+                    <div className="flex flex-wrap items-center gap-3">
                       <div className="flex items-center gap-2">
                         <Label className="text-sm">من</Label>
                         <Input type="time" value={hours.open} onChange={(e) => setWorkingHours({ ...workingHours, [day]: { ...hours, open: e.target.value } })} className="w-32" />
@@ -313,7 +314,7 @@ const AdminSettings = () => {
                         <Label className="text-sm">إلى</Label>
                         <Input type="time" value={hours.close} onChange={(e) => setWorkingHours({ ...workingHours, [day]: { ...hours, close: e.target.value } })} className="w-32" />
                       </div>
-                    </>
+                    </div>
                   )}
                 </div>
               ))}
@@ -356,7 +357,7 @@ const AdminSettings = () => {
                     مناطق التوصيل والأسعار
                   </h3>
                   {(dbZones || []).map((zone) => (
-                    <div key={zone.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
+                    <div key={zone.id} className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-xl">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                           <MapPin className="w-5 h-5 text-primary" />
@@ -417,8 +418,8 @@ const AdminSettings = () => {
               طرق الدفع
             </h2>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-xl">
+                <div className="flex items-center gap-3 text-right">
                   <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">💵</div>
                   <div>
                     <h3 className="font-medium text-foreground">الدفع نقداً</h3>
@@ -427,8 +428,8 @@ const AdminSettings = () => {
                 </div>
                 <Switch checked={payments.cashEnabled} onCheckedChange={(v) => setPayments((p) => ({ ...p, cashEnabled: v }))} />
               </div>
-              <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-xl">
+                <div className="flex items-center gap-3 text-right">
                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">💳</div>
                   <div>
                     <h3 className="font-medium text-foreground">البطاقة البنكية</h3>
@@ -437,8 +438,8 @@ const AdminSettings = () => {
                 </div>
                 <Switch checked={payments.cardEnabled} onCheckedChange={(v) => setPayments((p) => ({ ...p, cardEnabled: v }))} />
               </div>
-              <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-xl">
+                <div className="flex items-center gap-3 text-right">
                   <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">🍎</div>
                   <div>
                     <h3 className="font-medium text-foreground">Apple Pay</h3>
@@ -447,8 +448,8 @@ const AdminSettings = () => {
                 </div>
                 <Switch checked={payments.applePayEnabled} onCheckedChange={(v) => setPayments((p) => ({ ...p, applePayEnabled: v }))} />
               </div>
-              <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-xl">
+                <div className="flex items-center gap-3 text-right">
                   <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">📱</div>
                   <div>
                     <h3 className="font-medium text-foreground">STC Pay</h3>
@@ -460,15 +461,15 @@ const AdminSettings = () => {
 
               {/* Custom Payment Methods */}
               {payments.customMethods.map((method) => (
-                <div key={method.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
-                  <div className="flex items-center gap-3">
+                <div key={method.id} className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-xl">
+                  <div className="flex items-center gap-3 text-right">
                     <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center text-lg">{method.emoji}</div>
                     <div>
                       <h3 className="font-medium text-foreground">{method.name}</h3>
                       <p className="text-sm text-muted-foreground">{method.description}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <Switch
                       checked={method.enabled}
                       onCheckedChange={(checked) =>
@@ -497,7 +498,7 @@ const AdminSettings = () => {
                   <div className="space-y-4 mt-2">
                     <div className="space-y-2">
                       <Label>الرمز التعبيري</Label>
-                      <div className="flex gap-2 flex-wrap">
+                    <div className="flex gap-2 flex-wrap justify-start">
                         {["💰", "👛", "💸", "🏦", "📲", "💳", "🪙", "💵"].map((emoji) => (
                           <button
                             key={emoji}
@@ -598,7 +599,7 @@ const AdminSettings = () => {
                     currency.code === c.code ? 'border-primary bg-primary/5 shadow-md' : 'border-border hover:border-primary/50 bg-card'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="font-bold text-foreground">{c.symbol}</p>
                       <p className="text-sm text-foreground mt-1">{c.nameAr}</p>
@@ -614,7 +615,7 @@ const AdminSettings = () => {
               ))}
             </div>
             <div className="p-4 bg-muted/30 rounded-xl">
-              <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                 العملة الحالية: <span className="font-bold text-foreground">{currency.nameAr} ({currency.symbol})</span>
               </p>
               <p className="text-xs text-muted-foreground mt-1">سيتم تطبيق هذه العملة على جميع الأسعار والمبالغ في التطبيق</p>
@@ -652,8 +653,8 @@ const AdminSettings = () => {
                   const initials = user.name ? user.name.charAt(0) : user.email?.charAt(0) || '?';
                   const roleLabel = isAdmin ? 'مدير' : isMod ? 'مشرف' : 'مستخدم';
                   return (
-                    <div key={user.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
-                      <div className="flex items-center gap-3">
+                    <div key={user.id} className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-xl">
+                      <div className="flex items-center gap-3 text-right">
                         <Avatar className="w-10 h-10">
                           {user.avatar_url && <AvatarImage src={user.avatar_url} />}
                           <AvatarFallback className="bg-primary/10 text-primary">{initials}</AvatarFallback>
@@ -671,11 +672,12 @@ const AdminSettings = () => {
                   <p className="text-sm text-muted-foreground text-center py-4">لا يوجد مستخدمين</p>
                 )}
               </div>
-              <Button variant="outline"><Users className="w-4 h-4 ml-2" />إضافة مستخدم</Button>
+              <Button variant="outline" className="gap-2"><Users className="w-4 h-4" />إضافة مستخدم</Button>
             </div>
           </div>
         </TabsContent>
       </Tabs>
+      </div>
     </AdminLayout>
   );
 };
