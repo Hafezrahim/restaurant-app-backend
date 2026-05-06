@@ -599,7 +599,7 @@ const AdminSettings = () => {
                     currency.code === c.code ? 'border-primary bg-primary/5 shadow-md' : 'border-border hover:border-primary/50 bg-card'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="font-bold text-foreground">{c.symbol}</p>
                       <p className="text-sm text-foreground mt-1">{c.nameAr}</p>
@@ -615,7 +615,7 @@ const AdminSettings = () => {
               ))}
             </div>
             <div className="p-4 bg-muted/30 rounded-xl">
-              <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                 العملة الحالية: <span className="font-bold text-foreground">{currency.nameAr} ({currency.symbol})</span>
               </p>
               <p className="text-xs text-muted-foreground mt-1">سيتم تطبيق هذه العملة على جميع الأسعار والمبالغ في التطبيق</p>
@@ -653,8 +653,8 @@ const AdminSettings = () => {
                   const initials = user.name ? user.name.charAt(0) : user.email?.charAt(0) || '?';
                   const roleLabel = isAdmin ? 'مدير' : isMod ? 'مشرف' : 'مستخدم';
                   return (
-                    <div key={user.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
-                      <div className="flex items-center gap-3">
+                    <div key={user.id} className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-xl">
+                      <div className="flex items-center gap-3 text-right">
                         <Avatar className="w-10 h-10">
                           {user.avatar_url && <AvatarImage src={user.avatar_url} />}
                           <AvatarFallback className="bg-primary/10 text-primary">{initials}</AvatarFallback>
@@ -672,7 +672,7 @@ const AdminSettings = () => {
                   <p className="text-sm text-muted-foreground text-center py-4">لا يوجد مستخدمين</p>
                 )}
               </div>
-              <Button variant="outline"><Users className="w-4 h-4 ml-2" />إضافة مستخدم</Button>
+              <Button variant="outline" className="gap-2"><Users className="w-4 h-4" />إضافة مستخدم</Button>
             </div>
           </div>
         </TabsContent>
