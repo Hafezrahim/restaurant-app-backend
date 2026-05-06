@@ -293,8 +293,8 @@ const AdminSettings = () => {
             </h2>
             <div className="space-y-4">
               {Object.entries(workingHours).map(([day, hours]) => (
-                <div key={day} className="flex items-center gap-4 p-4 bg-muted/30 rounded-xl">
-                  <div className="w-24 font-medium text-foreground">{dayNames[day]}</div>
+                <div key={day} className="flex flex-col gap-4 p-4 bg-muted/30 rounded-xl sm:flex-row sm:items-center">
+                  <div className="w-24 font-medium text-foreground text-right">{dayNames[day]}</div>
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={!hours.closed}
@@ -305,7 +305,7 @@ const AdminSettings = () => {
                     <span className="text-sm text-muted-foreground">{hours.closed ? "مغلق" : "مفتوح"}</span>
                   </div>
                   {!hours.closed && (
-                    <>
+                    <div className="flex flex-wrap items-center gap-3">
                       <div className="flex items-center gap-2">
                         <Label className="text-sm">من</Label>
                         <Input type="time" value={hours.open} onChange={(e) => setWorkingHours({ ...workingHours, [day]: { ...hours, open: e.target.value } })} className="w-32" />
@@ -314,7 +314,7 @@ const AdminSettings = () => {
                         <Label className="text-sm">إلى</Label>
                         <Input type="time" value={hours.close} onChange={(e) => setWorkingHours({ ...workingHours, [day]: { ...hours, close: e.target.value } })} className="w-32" />
                       </div>
-                    </>
+                    </div>
                   )}
                 </div>
               ))}
@@ -357,7 +357,7 @@ const AdminSettings = () => {
                     مناطق التوصيل والأسعار
                   </h3>
                   {(dbZones || []).map((zone) => (
-                    <div key={zone.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
+                    <div key={zone.id} className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-xl">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                           <MapPin className="w-5 h-5 text-primary" />
@@ -498,7 +498,7 @@ const AdminSettings = () => {
                   <div className="space-y-4 mt-2">
                     <div className="space-y-2">
                       <Label>الرمز التعبيري</Label>
-                      <div className="flex gap-2 flex-wrap">
+                    <div className="flex gap-2 flex-wrap justify-start">
                         {["💰", "👛", "💸", "🏦", "📲", "💳", "🪙", "💵"].map((emoji) => (
                           <button
                             key={emoji}
