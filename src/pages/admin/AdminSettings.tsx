@@ -514,11 +514,11 @@ const AdminSettings = () => {
                     </div>
                     <div className="space-y-2">
                       <Label>اسم طريقة الدفع *</Label>
-                      <Input value={newMethodName} onChange={(e) => setNewMethodName(e.target.value)} placeholder="مثال: محفظة إلكترونية، InstaPay" />
+                      <Input value={newMethodName} onChange={(e) => setNewMethodName(e.target.value)} placeholder="مثال: محفظة إلكترونية، InstaPay" className="text-right" dir="rtl" />
                     </div>
                     <div className="space-y-2">
                       <Label>الوصف</Label>
-                      <Input value={newMethodDesc} onChange={(e) => setNewMethodDesc(e.target.value)} placeholder="مثال: الدفع عبر المحفظة الإلكترونية" />
+                      <Input value={newMethodDesc} onChange={(e) => setNewMethodDesc(e.target.value)} placeholder="مثال: الدفع عبر المحفظة الإلكترونية" className="text-right" dir="rtl" />
                     </div>
                     <Button onClick={handleAddPaymentMethod} className="w-full">إضافة</Button>
                   </div>
