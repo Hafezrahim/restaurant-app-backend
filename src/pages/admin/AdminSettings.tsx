@@ -386,15 +386,15 @@ const AdminSettings = () => {
                       <div className="space-y-4 mt-2">
                         <div className="space-y-2">
                           <Label>اسم المنطقة *</Label>
-                          <Input value={newZoneName} onChange={(e) => setNewZoneName(e.target.value)} placeholder="مثال: حي النخيل، شمال الرياض" />
+                          <Input value={newZoneName} onChange={(e) => setNewZoneName(e.target.value)} placeholder="مثال: حي النخيل، شمال الرياض" className="text-right" dir="rtl" />
                         </div>
                         <div className="space-y-2">
                           <Label>رسوم التوصيل ({currency.symbol}) *</Label>
-                          <Input type="number" value={newZonePrice} onChange={(e) => setNewZonePrice(e.target.value)} placeholder="مثال: 15" />
+                          <Input type="number" value={newZonePrice} onChange={(e) => setNewZonePrice(e.target.value)} placeholder="مثال: 15" className="text-right" dir="rtl" />
                         </div>
                         <div className="space-y-2">
                           <Label>الوقت المتوقع (دقيقة)</Label>
-                          <Input value={newZoneTime} onChange={(e) => setNewZoneTime(e.target.value)} placeholder="مثال: 20-30" />
+                          <Input value={newZoneTime} onChange={(e) => setNewZoneTime(e.target.value)} placeholder="مثال: 20-30" className="text-right" dir="rtl" />
                         </div>
                         <Button onClick={handleAddZone} className="w-full" disabled={upsertZone.isPending}>
                           {upsertZone.isPending ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : null}
