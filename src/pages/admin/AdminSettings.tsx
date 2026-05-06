@@ -277,7 +277,7 @@ const AdminSettings = () => {
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="description">وصف المطعم</Label>
-                <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+                <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="text-right" dir="rtl" />
               </div>
             </div>
           </div>
