@@ -418,8 +418,8 @@ const AdminSettings = () => {
               طرق الدفع
             </h2>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-xl">
+                <div className="flex items-center gap-3 text-right">
                   <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">💵</div>
                   <div>
                     <h3 className="font-medium text-foreground">الدفع نقداً</h3>
@@ -428,8 +428,8 @@ const AdminSettings = () => {
                 </div>
                 <Switch checked={payments.cashEnabled} onCheckedChange={(v) => setPayments((p) => ({ ...p, cashEnabled: v }))} />
               </div>
-              <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-xl">
+                <div className="flex items-center gap-3 text-right">
                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">💳</div>
                   <div>
                     <h3 className="font-medium text-foreground">البطاقة البنكية</h3>
@@ -438,8 +438,8 @@ const AdminSettings = () => {
                 </div>
                 <Switch checked={payments.cardEnabled} onCheckedChange={(v) => setPayments((p) => ({ ...p, cardEnabled: v }))} />
               </div>
-              <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-xl">
+                <div className="flex items-center gap-3 text-right">
                   <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">🍎</div>
                   <div>
                     <h3 className="font-medium text-foreground">Apple Pay</h3>
@@ -448,8 +448,8 @@ const AdminSettings = () => {
                 </div>
                 <Switch checked={payments.applePayEnabled} onCheckedChange={(v) => setPayments((p) => ({ ...p, applePayEnabled: v }))} />
               </div>
-              <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-xl">
+                <div className="flex items-center gap-3 text-right">
                   <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">📱</div>
                   <div>
                     <h3 className="font-medium text-foreground">STC Pay</h3>
@@ -461,15 +461,15 @@ const AdminSettings = () => {
 
               {/* Custom Payment Methods */}
               {payments.customMethods.map((method) => (
-                <div key={method.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
-                  <div className="flex items-center gap-3">
+                <div key={method.id} className="flex items-center justify-between gap-3 p-4 bg-muted/30 rounded-xl">
+                  <div className="flex items-center gap-3 text-right">
                     <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center text-lg">{method.emoji}</div>
                     <div>
                       <h3 className="font-medium text-foreground">{method.name}</h3>
                       <p className="text-sm text-muted-foreground">{method.description}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <Switch
                       checked={method.enabled}
                       onCheckedChange={(checked) =>
