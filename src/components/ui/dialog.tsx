@@ -3,6 +3,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { focusFirstInteractive } from "@/lib/focus-utils";
 
 const Dialog = DialogPrimitive.Root;
 
