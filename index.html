@@ -11,6 +11,8 @@
     <meta property="og:title" content="مزاج - مطعم عربي شرقي آسيوي" />
     <meta property="og:description" content="استمتع بأشهى المأكولات العربية والشرقية والآسيوية في مطعم مزاج." />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://mazaj.lovable.app/" />
+    <meta property="og:locale" content="ar_SA" />
     <meta property="og:image" content="https://images.unsplash.com/photo-1544025162-d76694265947?w=1200" />
 
     <meta name="twitter:card" content="summary_large_image" />
@@ -22,17 +24,34 @@
       {
         "@context": "https://schema.org",
         "@type": "Restaurant",
+        "@id": "https://mazaj.lovable.app/#restaurant",
         "name": "مطعم مزاج",
+        "url": "https://mazaj.lovable.app/",
         "description": "مطعم مزاج يقدم أشهى المأكولات العربية والشرقية والآسيوية، من الشاورما والمشاوي إلى السوشي والنودلز.",
         "image": "https://images.unsplash.com/photo-1544025162-d76694265947?w=1200",
         "servesCuisine": ["Arabic", "Asian", "Middle Eastern"],
         "priceRange": "$$",
+        "telephone": "+966-11-000-0000",
         "address": {
           "@type": "PostalAddress",
           "addressCountry": "SA",
-          "addressRegion": "Riyadh"
+          "addressRegion": "Riyadh",
+          "addressLocality": "Riyadh"
         },
-        "openingHours": ["Sa-Th 10:00-24:00", "Fr 14:00-24:00"]
+        "openingHoursSpecification": [
+          {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
+            "opens": "10:00",
+            "closes": "23:59"
+          },
+          {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": "Friday",
+            "opens": "14:00",
+            "closes": "23:59"
+          }
+        ]
       }
     </script>
   </head>
