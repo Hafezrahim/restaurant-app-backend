@@ -79,6 +79,32 @@ const DishDetails: React.FC = () => {
       <Helmet>
         <title>{dish.name} - مطعم مزاج</title>
         <meta name="description" content={dish.description} />
+        <link rel="canonical" href={`/dish/${dish.id}`} />
+        <meta property="og:title" content={`${dish.name} - مطعم مزاج`} />
+        <meta property="og:description" content={dish.description} />
+        <meta property="og:url" content={`/dish/${dish.id}`} />
+        <meta property="og:type" content="product" />
+        {dish.image && <meta property="og:image" content={dish.image} />}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: dish.name,
+          description: dish.description,
+          image: dish.image,
+          offers: {
+            "@type": "Offer",
+            price: dish.price,
+            priceCurrency: "SAR",
+            availability: "https://schema.org/InStock"
+          },
+          ...(dish.rating ? {
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: dish.rating,
+              reviewCount: dish.reviewCount || 1
+            }
+          } : {})
+        })}</script>
       </Helmet>
 
       {/* Mobile Layout */}
