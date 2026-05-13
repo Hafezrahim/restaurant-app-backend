@@ -7,6 +7,7 @@ import { useCategories, useMenuItems } from '@/backend/hooks/useMenuData';
 import { cn } from '@/lib/utils';
 import { Category } from '@/types';
 import { Helmet } from 'react-helmet-async';
+import { SeoLinks } from '@/components/seo/SeoLinks';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Search, Filter, X, Star, TrendingUp, TrendingDown, Mic, MicOff, Globe } from 'lucide-react';
@@ -116,14 +117,13 @@ const Menu: React.FC = () => {
           name="description"
           content="تصفح قائمتنا الكاملة من الأطباق العربية والشرقية والآسيوية. من المشاوي إلى السوشي الطازج."
         />
-        <link rel="canonical" href="/menu" />
         <meta property="og:title" content="القائمة - مطعم مزاج" />
         <meta property="og:description" content="تصفح قائمتنا الكاملة من الأطباق العربية والشرقية والآسيوية." />
-        <meta property="og:url" content="/menu" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Menu",
           name: "قائمة مطعم مزاج",
+          inLanguage: "ar",
           hasMenuSection: (categories || []).map((c: any) => ({
             "@type": "MenuSection",
             name: c.nameAr || c.name,
@@ -134,11 +134,16 @@ const Menu: React.FC = () => {
                 name: m.name,
                 description: m.description,
                 image: m.image,
-                offers: { "@type": "Offer", price: m.price, priceCurrency: "SAR" }
+                offers: {
+                  "@type": "Offer",
+                  price: Number(m.price) || 0,
+                  priceCurrency: "SAR"
+                }
               }))
           }))
         })}</script>
       </Helmet>
+      <SeoLinks path="/menu" />
       <AppLayout title="القائمة">
         {/* Search and Filter Bar */}
         <div className="flex gap-2 mb-4">
