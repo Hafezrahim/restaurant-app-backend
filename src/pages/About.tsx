@@ -2,6 +2,7 @@ import React from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Footer } from '@/components/layout/Footer';
 import { Helmet } from 'react-helmet-async';
+import { SeoLinks } from '@/components/seo/SeoLinks';
 import { Award, Users, Clock, MapPin } from 'lucide-react';
 
 const teamMembers = [
@@ -48,11 +49,10 @@ const About: React.FC = () => {
       <Helmet>
         <title>من نحن - مطعم مزاج</title>
         <meta name="description" content="تعرف على قصة مطعم مزاج وفريقنا المميز الذي يحرص على تقديم أشهى المأكولات." />
-        <link rel="canonical" href="/about" />
         <meta property="og:title" content="من نحن - مطعم مزاج" />
         <meta property="og:description" content="تعرف على قصة مطعم مزاج وفريقنا المميز الذي يحرص على تقديم أشهى المأكولات." />
-        <meta property="og:url" content="/about" />
       </Helmet>
+      <SeoLinks path="/about" />
       <AppLayout title="من نحن" showSearch={false}>
         {/* Hero Section */}
         <div className="relative rounded-3xl overflow-hidden mb-8">
