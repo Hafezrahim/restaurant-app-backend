@@ -116,6 +116,28 @@ const Menu: React.FC = () => {
           name="description"
           content="تصفح قائمتنا الكاملة من الأطباق العربية والشرقية والآسيوية. من المشاوي إلى السوشي الطازج."
         />
+        <link rel="canonical" href="/menu" />
+        <meta property="og:title" content="القائمة - مطعم مزاج" />
+        <meta property="og:description" content="تصفح قائمتنا الكاملة من الأطباق العربية والشرقية والآسيوية." />
+        <meta property="og:url" content="/menu" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Menu",
+          name: "قائمة مطعم مزاج",
+          hasMenuSection: (categories || []).map((c: any) => ({
+            "@type": "MenuSection",
+            name: c.nameAr || c.name,
+            hasMenuItem: (menuItems || [])
+              .filter((m: any) => m.category === c.id)
+              .map((m: any) => ({
+                "@type": "MenuItem",
+                name: m.name,
+                description: m.description,
+                image: m.image,
+                offers: { "@type": "Offer", price: m.price, priceCurrency: "SAR" }
+              }))
+          }))
+        })}</script>
       </Helmet>
       <AppLayout title="القائمة">
         {/* Search and Filter Bar */}
