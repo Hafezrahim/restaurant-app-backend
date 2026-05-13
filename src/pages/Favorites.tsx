@@ -15,7 +15,11 @@ const Favorites: React.FC = () => {
     <>
       <Helmet>
         <title>المفضلة - مطعم مزاج</title>
-        <meta name="description" content="أطباقك المفضلة المحفوظة للطلب السريع." />
+        <meta name="description" content="استعرض قائمة أطباقك المفضلة المحفوظة في مطعم مزاج وأعد طلبها بسرعة في أي وقت." />
+        <link rel="canonical" href="/favorites" />
+        <meta property="og:title" content="المفضلة - مطعم مزاج" />
+        <meta property="og:description" content="قائمة أطباقك المفضلة المحفوظة في مطعم مزاج لطلب سريع ومتكرر." />
+        <meta property="og:url" content="/favorites" />
       </Helmet>
       <AppLayout title="المفضلة" showSearch={false}>
         {favorites.length === 0 ? (

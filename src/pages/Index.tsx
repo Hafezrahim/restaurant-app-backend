@@ -40,6 +40,10 @@ const Index: React.FC = () => {
           name="description"
           content="استمتع بأشهى المأكولات العربية والشرقية والآسيوية في مطعم مزاج. اطلب الشاورما والسوشي والنودلز والمزيد."
         />
+        <link rel="canonical" href="/" />
+        <meta property="og:title" content="مزاج - مطعم عربي شرقي آسيوي" />
+        <meta property="og:description" content="استمتع بأشهى المأكولات العربية والشرقية والآسيوية في مطعم مزاج. اطلب الشاورما والسوشي والنودلز والمزيد." />
+        <meta property="og:url" content="/" />
       </Helmet>
       <AppLayout>
         <HeroSlider />
