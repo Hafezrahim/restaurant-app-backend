@@ -1,6 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Helmet } from "react-helmet-async";
+import { SITE_URL } from "@/lib/seo";
 
 const NotFound = () => {
   const location = useLocation();
@@ -15,9 +16,13 @@ const NotFound = () => {
         <title>الصفحة غير موجودة - مطعم مزاج</title>
         <meta name="description" content="عذرًا، الصفحة التي تبحث عنها غير موجودة. عد إلى الصفحة الرئيسية لمطعم مزاج لاستكشاف القائمة والعروض." />
         <meta name="robots" content="noindex" />
-        <link rel="canonical" href="/not-found" />
+        <link rel="canonical" href={`${SITE_URL}/not-found`} />
+        <link rel="alternate" hrefLang="ar" href={`${SITE_URL}/not-found`} />
+        <link rel="alternate" hrefLang="x-default" href={`${SITE_URL}/not-found`} />
         <meta property="og:title" content="الصفحة غير موجودة - مطعم مزاج" />
         <meta property="og:description" content="الصفحة غير موجودة في موقع مطعم مزاج." />
+        <meta property="og:url" content={`${SITE_URL}/not-found`} />
+        <meta property="og:locale" content="ar_SA" />
       </Helmet>
       <div className="flex min-h-screen items-center justify-center bg-muted">
         <div className="text-center">

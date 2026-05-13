@@ -6,6 +6,7 @@ import { FoodCard } from '@/components/menu/FoodCard';
 import { useFavorites } from '@/context/FavoritesContext';
 import { Button } from '@/components/ui/button';
 import { Helmet } from 'react-helmet-async';
+import { SeoLinks } from '@/components/seo/SeoLinks';
 
 const Favorites: React.FC = () => {
   const { favorites } = useFavorites();
@@ -16,11 +17,10 @@ const Favorites: React.FC = () => {
       <Helmet>
         <title>المفضلة - مطعم مزاج</title>
         <meta name="description" content="استعرض قائمة أطباقك المفضلة المحفوظة في مطعم مزاج وأعد طلبها بسرعة في أي وقت." />
-        <link rel="canonical" href="/favorites" />
         <meta property="og:title" content="المفضلة - مطعم مزاج" />
         <meta property="og:description" content="قائمة أطباقك المفضلة المحفوظة في مطعم مزاج لطلب سريع ومتكرر." />
-        <meta property="og:url" content="/favorites" />
       </Helmet>
+      <SeoLinks path="/favorites" />
       <AppLayout title="المفضلة" showSearch={false}>
         {favorites.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">

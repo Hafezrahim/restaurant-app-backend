@@ -9,6 +9,7 @@ import { useCart } from '@/context/CartContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { Button } from '@/components/ui/button';
 import { Helmet } from 'react-helmet-async';
+import { SeoLinks } from '@/components/seo/SeoLinks';
 
 const Cart: React.FC = () => {
   const navigate = useNavigate();
@@ -20,11 +21,10 @@ const Cart: React.FC = () => {
       <Helmet>
         <title>سلة التسوق - مطعم مزاج</title>
         <meta name="description" content="راجع أصناف سلة التسوق الخاصة بك في مطعم مزاج وأكمل عملية الطلب بسهولة وأمان عبر طرق دفع متعددة." />
-        <link rel="canonical" href="/cart" />
         <meta property="og:title" content="سلة التسوق - مطعم مزاج" />
         <meta property="og:description" content="راجع أصناف سلة التسوق الخاصة بك في مطعم مزاج وأكمل عملية الطلب بسهولة وأمان." />
-        <meta property="og:url" content="/cart" />
       </Helmet>
+      <SeoLinks path="/cart" />
       <AppLayout title="سلة التسوق" showSearch={false}>
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">

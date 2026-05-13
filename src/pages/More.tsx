@@ -15,6 +15,7 @@ import {
 import { AppLayout } from '@/components/layout/AppLayout';
 import { cn } from '@/lib/utils';
 import { Helmet } from 'react-helmet-async';
+import { SeoLinks } from '@/components/seo/SeoLinks';
 
 const menuItems = [
   { icon: LogIn, label: 'تسجيل الدخول / إنشاء حساب', href: '#signin' },
@@ -69,10 +70,8 @@ const More: React.FC = () => {
       <Helmet>
         <title>المزيد - مطعم مزاج</title>
         <meta name="description" content="إعدادات الحساب، سجل الطلبات، الأسئلة الشائعة، حجز الطاولات، والاتصال بمطعم مزاج في مكان واحد." />
-        <link rel="canonical" href="/more" />
         <meta property="og:title" content="المزيد - مطعم مزاج" />
         <meta property="og:description" content="إعدادات الحساب، سجل الطلبات، الأسئلة الشائعة، وحجز الطاولات في مطعم مزاج." />
-        <meta property="og:url" content="/more" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "FAQPage",
@@ -83,6 +82,7 @@ const More: React.FC = () => {
           }))
         })}</script>
       </Helmet>
+      <SeoLinks path="/more" />
       <AppLayout title="المزيد" showSearch={false}>
         <div className="space-y-2 mb-8">
           {menuItems.map((item, index) => {
