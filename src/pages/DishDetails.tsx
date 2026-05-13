@@ -101,7 +101,7 @@ const DishDetails: React.FC = () => {
             aggregateRating: {
               "@type": "AggregateRating",
               ratingValue: dish.rating,
-              reviewCount: dish.reviewCount || 1
+              reviewCount: 1
             }
           } : {})
         })}</script>
