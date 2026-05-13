@@ -114,6 +114,7 @@ const Compare: React.FC = () => {
 
   return (
     <AppLayout>
+      <CompareHelmet />
       <div className="p-4" dir="rtl">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
