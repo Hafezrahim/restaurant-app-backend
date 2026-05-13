@@ -9,6 +9,8 @@ import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useCurrency } from '@/context/CurrencyContext';
 import { Helmet } from 'react-helmet-async';
+import { SeoLinks } from '@/components/seo/SeoLinks';
+import { absUrl } from '@/lib/seo';
 import { FoodCard } from '@/components/menu/FoodCard';
 import { DishReviews } from '@/components/dish/DishReviews';
 
@@ -79,10 +81,8 @@ const DishDetails: React.FC = () => {
       <Helmet>
         <title>{dish.name} - مطعم مزاج</title>
         <meta name="description" content={dish.description} />
-        <link rel="canonical" href={`/dish/${dish.id}`} />
         <meta property="og:title" content={`${dish.name} - مطعم مزاج`} />
         <meta property="og:description" content={dish.description} />
-        <meta property="og:url" content={`/dish/${dish.id}`} />
         <meta property="og:type" content="product" />
         {dish.image && <meta property="og:image" content={dish.image} />}
         <script type="application/ld+json">{JSON.stringify({
@@ -91,21 +91,28 @@ const DishDetails: React.FC = () => {
           name: dish.name,
           description: dish.description,
           image: dish.image,
+          url: absUrl(`/dish/${dish.id}`),
+          sku: String(dish.id),
+          brand: { "@type": "Brand", name: "مطعم مزاج" },
           offers: {
             "@type": "Offer",
-            price: dish.price,
+            url: absUrl(`/dish/${dish.id}`),
+            price: Number(dish.price) || 0,
             priceCurrency: "SAR",
             availability: "https://schema.org/InStock"
           },
           ...(dish.rating ? {
             aggregateRating: {
               "@type": "AggregateRating",
-              ratingValue: dish.rating,
-              reviewCount: 1
+              ratingValue: Number(dish.rating),
+              reviewCount: 1,
+              bestRating: 5,
+              worstRating: 1
             }
           } : {})
         })}</script>
       </Helmet>
+      <SeoLinks path={`/dish/${dish.id}`} />
 
       {/* Mobile Layout */}
       <div className="md:hidden min-h-screen bg-background pb-32" key={id}>
