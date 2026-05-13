@@ -11,6 +11,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useCategories } from '@/backend/hooks/useMenuData';
 import { toast } from 'sonner';
+import { Helmet } from 'react-helmet-async';
+
+const CompareHelmet = () => (
+  <Helmet>
+    <title>مقارنة الأصناف - مطعم مزاج</title>
+    <meta name="description" content="قارن بين أطباقك المختارة من قائمة مطعم مزاج جنبًا إلى جنب من حيث السعر والتقييم والمكونات." />
+    <link rel="canonical" href="/compare" />
+    <meta property="og:title" content="مقارنة الأصناف - مطعم مزاج" />
+    <meta property="og:description" content="قارن بين أطباق مطعم مزاج جنبًا إلى جنب لاختيار الأفضل لك." />
+    <meta property="og:url" content="/compare" />
+  </Helmet>
+);
 
 type SortOption = 'default' | 'price-asc' | 'price-desc' | 'rating-asc' | 'rating-desc';
 
@@ -76,6 +88,7 @@ const Compare: React.FC = () => {
   if (compareItems.length === 0) {
     return (
       <AppLayout>
+        <CompareHelmet />
         <div className="p-4" dir="rtl">
           <div className="flex items-center gap-3 mb-6">
             <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-muted">
