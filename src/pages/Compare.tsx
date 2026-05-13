@@ -12,16 +12,18 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useCategories } from '@/backend/hooks/useMenuData';
 import { toast } from 'sonner';
 import { Helmet } from 'react-helmet-async';
+import { SeoLinks } from '@/components/seo/SeoLinks';
 
 const CompareHelmet = () => (
-  <Helmet>
-    <title>مقارنة الأصناف - مطعم مزاج</title>
-    <meta name="description" content="قارن بين أطباقك المختارة من قائمة مطعم مزاج جنبًا إلى جنب من حيث السعر والتقييم والمكونات." />
-    <link rel="canonical" href="/compare" />
-    <meta property="og:title" content="مقارنة الأصناف - مطعم مزاج" />
-    <meta property="og:description" content="قارن بين أطباق مطعم مزاج جنبًا إلى جنب لاختيار الأفضل لك." />
-    <meta property="og:url" content="/compare" />
-  </Helmet>
+  <>
+    <Helmet>
+      <title>مقارنة الأصناف - مطعم مزاج</title>
+      <meta name="description" content="قارن بين أطباقك المختارة من قائمة مطعم مزاج جنبًا إلى جنب من حيث السعر والتقييم والمكونات." />
+      <meta property="og:title" content="مقارنة الأصناف - مطعم مزاج" />
+      <meta property="og:description" content="قارن بين أطباق مطعم مزاج جنبًا إلى جنب لاختيار الأفضل لك." />
+    </Helmet>
+    <SeoLinks path="/compare" />
+  </>
 );
 
 type SortOption = 'default' | 'price-asc' | 'price-desc' | 'rating-asc' | 'rating-desc';
