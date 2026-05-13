@@ -48,6 +48,10 @@ const About: React.FC = () => {
       <Helmet>
         <title>من نحن - مطعم مزاج</title>
         <meta name="description" content="تعرف على قصة مطعم مزاج وفريقنا المميز الذي يحرص على تقديم أشهى المأكولات." />
+        <link rel="canonical" href="/about" />
+        <meta property="og:title" content="من نحن - مطعم مزاج" />
+        <meta property="og:description" content="تعرف على قصة مطعم مزاج وفريقنا المميز الذي يحرص على تقديم أشهى المأكولات." />
+        <meta property="og:url" content="/about" />
       </Helmet>
       <AppLayout title="من نحن" showSearch={false}>
         {/* Hero Section */}

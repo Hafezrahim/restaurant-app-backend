@@ -68,7 +68,20 @@ const More: React.FC = () => {
     <>
       <Helmet>
         <title>المزيد - مطعم مزاج</title>
-        <meta name="description" content="إعدادات الحساب والطلبات والمزيد في مطعم مزاج." />
+        <meta name="description" content="إعدادات الحساب، سجل الطلبات، الأسئلة الشائعة، حجز الطاولات، والاتصال بمطعم مزاج في مكان واحد." />
+        <link rel="canonical" href="/more" />
+        <meta property="og:title" content="المزيد - مطعم مزاج" />
+        <meta property="og:description" content="إعدادات الحساب، سجل الطلبات، الأسئلة الشائعة، وحجز الطاولات في مطعم مزاج." />
+        <meta property="og:url" content="/more" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map(f => ({
+            "@type": "Question",
+            name: f.question,
+            acceptedAnswer: { "@type": "Answer", text: f.answer }
+          }))
+        })}</script>
       </Helmet>
       <AppLayout title="المزيد" showSearch={false}>
         <div className="space-y-2 mb-8">

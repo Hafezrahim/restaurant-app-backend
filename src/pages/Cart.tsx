@@ -19,7 +19,11 @@ const Cart: React.FC = () => {
     <>
       <Helmet>
         <title>سلة التسوق - مطعم مزاج</title>
-        <meta name="description" content="راجع طلبك وأكمل الشراء في مطعم مزاج." />
+        <meta name="description" content="راجع أصناف سلة التسوق الخاصة بك في مطعم مزاج وأكمل عملية الطلب بسهولة وأمان عبر طرق دفع متعددة." />
+        <link rel="canonical" href="/cart" />
+        <meta property="og:title" content="سلة التسوق - مطعم مزاج" />
+        <meta property="og:description" content="راجع أصناف سلة التسوق الخاصة بك في مطعم مزاج وأكمل عملية الطلب بسهولة وأمان." />
+        <meta property="og:url" content="/cart" />
       </Helmet>
       <AppLayout title="سلة التسوق" showSearch={false}>
         {items.length === 0 ? (
