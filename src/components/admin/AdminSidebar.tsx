@@ -15,7 +15,8 @@ import {
   ChevronRight,
   ChevronLeft,
   LogOut,
-  Bell
+  Bell,
+  Search
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,12 @@ const menuItems = [
     icon: Ticket, 
     path: "/admin/coupons",
     badge: null 
+  },
+  {
+    title: "تحسين محركات البحث",
+    icon: Search,
+    path: "/admin/seo",
+    badge: null
   },
   { 
     title: "الإعدادات", 

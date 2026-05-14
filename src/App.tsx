@@ -37,6 +37,8 @@ import AdminReports from "./pages/admin/AdminReports";
 import AdminReviews from "./pages/admin/AdminReviews";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminCoupons from "./pages/admin/AdminCoupons";
+import AdminSEO from "./pages/admin/AdminSEO";
+import { SeoFromSettings } from "./components/seo/SeoFromSettings";
 import AdminOrderDetails from "./pages/admin/AdminOrderDetails";
 import AdminCustomerDetails from "./pages/admin/AdminCustomerDetails";
 import AdminReservationDetails from "./pages/admin/AdminReservationDetails";
@@ -67,6 +69,7 @@ const App = () => (
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
+                <SeoFromSettings />
                 <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/menu" element={<Menu />} />
@@ -101,6 +104,7 @@ const App = () => (
                     <Route path="/admin/reviews" element={<ProtectedRoute><AdminReviews /></ProtectedRoute>} />
                     <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
                     <Route path="/admin/coupons" element={<ProtectedRoute><AdminCoupons /></ProtectedRoute>} />
+                    <Route path="/admin/seo" element={<ProtectedRoute><AdminSEO /></ProtectedRoute>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </BrowserRouter>
