@@ -48,7 +48,7 @@ describe("restaurant_settings RLS", () => {
 
 describe("reservations RLS (guest insert)", () => {
   it("anon can create a reservation with user_id = null", async () => {
-    const { data, error } = await anon
+    const { error, status } = await anon
       .from("reservations")
       .insert({
         name: "RLS Test Guest",
@@ -57,11 +57,11 @@ describe("reservations RLS (guest insert)", () => {
         time: "20:00",
         guests: 2,
         notes: "automated rls test - safe to delete",
-      })
-      .select()
-      .single();
+      });
+    // No .select() so PostgREST won't try to read back (SELECT policy hides guest rows)
     expect(error).toBeNull();
-    expect(data?.user_id).toBeNull();
+    expect(status).toBeGreaterThanOrEqual(200);
+    expect(status).toBeLessThan(300);
   });
 
   it("anon cannot insert a reservation with a forged user_id", async () => {
@@ -86,19 +86,16 @@ describe("reservations RLS (guest insert)", () => {
 describe("orders RLS (guest checkout)", () => {
   it("anon can create an order with user_id = null", async () => {
     const orderNumber = `RLS-${Date.now()}`;
-    const { data, error } = await anon
-      .from("orders")
-      .insert({
-        order_number: orderNumber,
-        customer_name: "RLS Guest",
-        customer_phone: "0000000000",
-        subtotal: 0,
-        total: 0,
-      })
-      .select()
-      .single();
+    const { error, status } = await anon.from("orders").insert({
+      order_number: orderNumber,
+      customer_name: "RLS Guest",
+      customer_phone: "0000000000",
+      subtotal: 0,
+      total: 0,
+    });
     expect(error).toBeNull();
-    expect(data?.user_id).toBeNull();
+    expect(status).toBeGreaterThanOrEqual(200);
+    expect(status).toBeLessThan(300);
   });
 
   it("anon cannot list orders", async () => {
@@ -131,12 +128,15 @@ describe("sensitive tables are not anon-readable", () => {
     expect(error).not.toBeNull();
   });
 
-  it("anon cannot update restaurant_settings", async () => {
-    const { error } = await anon
+  it("anon cannot update restaurant_settings (silently 0 rows or error)", async () => {
+    const { data, error } = await anon
       .from("restaurant_settings")
       .update({ value: { hacked: true } })
-      .eq("key", "delivery");
-    expect(error).not.toBeNull();
+      .eq("key", "delivery")
+      .select();
+    // RLS blocks: either an error, or update returns 0 rows
+    const blocked = !!error || (data ?? []).length === 0;
+    expect(blocked).toBe(true);
   });
 });
 
