@@ -13,10 +13,12 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { createClient } from "@supabase/supabase-js";
 
+declare const process: { env: Record<string, string | undefined> };
 const SUPABASE_URL =
-  process.env.VITE_SUPABASE_URL || "https://tbdhusuyokibidemwzcw.supabase.co";
+  (typeof process !== "undefined" && process.env.VITE_SUPABASE_URL) ||
+  "https://tbdhusuyokibidemwzcw.supabase.co";
 const SUPABASE_ANON_KEY =
-  process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  (typeof process !== "undefined" && process.env.VITE_SUPABASE_PUBLISHABLE_KEY) ||
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRiZGh1c3V5b2tpYmlkZW13emN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MjIwMDMsImV4cCI6MjA5MDE5ODAwM30.do0CrRu3ay5VsQxdJdvdkByRlz9WhcD7vu8XoRTvCPE";
 
 const anon = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
