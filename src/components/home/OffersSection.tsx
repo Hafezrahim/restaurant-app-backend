@@ -4,20 +4,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCurrency } from '@/context/CurrencyContext';
 import { Tag, Copy, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
-import { AVAILABLE_COUPONS } from '@/data/coupons';
 import useEmblaCarousel from 'embla-carousel-react';
 
 const AUTOPLAY_INTERVAL = 4000;
 
-const fallbackCoupons = AVAILABLE_COUPONS.map((coupon, index) => ({
-  id: `fallback-${coupon.code}-${index}`,
-  code: coupon.code,
-  type: coupon.type,
-  value: coupon.value,
-  min_order: coupon.minOrder,
-  description: coupon.description,
-  expires_at: coupon.expiresAt,
-}));
+// Coupons are now sourced solely from the `coupons` table (server-validated).
+// If the table is empty we render an empty carousel rather than expose
+// hardcoded codes in the JS bundle.
+const fallbackCoupons: any[] = [];
 
 export const OffersSection: React.FC = () => {
   const { formatPrice } = useCurrency();

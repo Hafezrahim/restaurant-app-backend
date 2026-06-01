@@ -15,7 +15,7 @@ import { PaymentMethodSelector, PaymentMethod } from '@/components/checkout/Paym
 import { useClientAuth } from '@/context/ClientAuthContext';
 import { useRewards, MIN_REDEEM, SAR_PER_POINT } from '@/context/RewardsContext';
 import { useNotifications } from '@/context/NotificationsContext';
-import { validateCoupon, recordCouponUsage } from '@/data/coupons';
+import { validateCoupon } from '@/data/coupons';
 import { useCurrency } from '@/context/CurrencyContext';
 import { supabase } from '@/integrations/supabase/client';
 import logo from '@/assets/logo.png';
@@ -32,7 +32,7 @@ const Checkout: React.FC = () => {
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCart();
   const { user, isAuthenticated } = useClientAuth();
-  const { points, canRedeem, pointsValue, addPoints, redeemPoints } = useRewards();
+  const { points, canRedeem, pointsValue, redeemPoints, refresh: refreshRewards } = useRewards();
   const { addNotification } = useNotifications();
   const { formatPrice, currency } = useCurrency();
   const [redeemingPoints, setRedeemingPoints] = useState(false);
@@ -76,9 +76,9 @@ const Checkout: React.FC = () => {
   const grandTotal = currentTotal + deliveryFee + tax - pointsDiscount - couponDiscount;
   const displayItems = step === 'receipt' ? orderItems : items;
 
-  const handleApplyCoupon = () => {
+  const handleApplyCoupon = async () => {
     setCouponError('');
-    const result = validateCoupon(couponCode, totalPrice, user?.id);
+    const result = await validateCoupon(couponCode, totalPrice);
     if (result.valid && result.discount) {
       setCouponDiscount(result.discount);
       setCouponApplied(true);
@@ -167,94 +167,58 @@ const Checkout: React.FC = () => {
       toast.error('يرجى ملء جميع الحقول المطلوبة');
       return;
     }
-    
-    // Validate bank transfer has receipt
     if (paymentMethod === 'bank_transfer' && !receiptFile) {
       toast.error('يرجى رفع صورة إيصال التحويل البنكي');
       return;
     }
-    
-    // Save customer data for future orders
+
+    // Persist customer data for future orders
     localStorage.setItem(CUSTOMER_STORAGE_KEY, JSON.stringify({
-      name: formData.name,
-      phone: formData.phone,
-      address: formData.address,
-      lat: formData.lat,
-      lng: formData.lng,
+      name: formData.name, phone: formData.phone, address: formData.address,
+      lat: formData.lat, lng: formData.lng,
     }));
-    
-    const tracking = generateTrackingNumber();
-    
-    // Store order data before clearing
-    setOrderItems([...items]);
-    setOrderTotal(totalPrice);
-    setOrderPaymentMethod(paymentMethod);
-    setTrackingNumber(tracking);
 
-    const orderGrandTotal = totalPrice + deliveryFee + tax - pointsDiscount - couponDiscount;
-
-    // Map payment method to DB enum
+    // Map UI payment method to DB enum
     const dbPaymentMethod = paymentMethod === 'card_on_delivery' ? 'card' : paymentMethod;
 
-    // Insert order into Supabase
-    try {
-      const { data: session } = await supabase.auth.getSession();
-      const userId = session?.session?.user?.id || null;
+    // Call the trusted edge function — it recomputes prices, taxes,
+    // coupon discount, and points redemption from the database.
+    const { data: result, error: fnError } = await supabase.functions.invoke('create-order', {
+      body: {
+        items: items.map((i) => ({ id: i.id, quantity: i.quantity })),
+        customer: {
+          name: formData.name, phone: formData.phone, address: formData.address,
+          lat: formData.lat || undefined, lng: formData.lng || undefined,
+        },
+        delivery_zone_id: selectedZone?.id,
+        payment_method: dbPaymentMethod,
+        notes: formData.notes || undefined,
+        coupon_code: couponApplied ? couponCode : undefined,
+        redeem_points: pointsDiscount > 0,
+      },
+    });
 
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          order_number: tracking,
-          customer_name: formData.name,
-          customer_phone: formData.phone,
-          customer_email: user?.email || null,
-          delivery_address: formData.address,
-          delivery_lat: formData.lat || null,
-          delivery_lng: formData.lng || null,
-          notes: formData.notes || null,
-          payment_method: dbPaymentMethod as any,
-          subtotal: totalPrice,
-          delivery_fee: deliveryFee,
-          discount: pointsDiscount + couponDiscount,
-          total: orderGrandTotal,
-          coupon_code: couponApplied ? couponCode : null,
-          user_id: userId,
-          status: 'pending' as any,
-        })
-        .select('id')
-        .single();
-
-      if (orderError) {
-        console.error('Order insert error:', orderError);
-        toast.error('حدث خطأ أثناء حفظ الطلب');
-        return;
-      }
-
-      // Insert order items
-      if (orderData) {
-        const orderItemsData = items.map((item) => ({
-          order_id: orderData.id,
-          menu_item_id: item.id || null,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-        }));
-
-        const { error: itemsError } = await supabase
-          .from('order_items')
-          .insert(orderItemsData);
-
-        if (itemsError) {
-          console.error('Order items insert error:', itemsError);
-        }
-      }
-    } catch (err) {
-      console.error('Order save error:', err);
-      toast.error('حدث خطأ أثناء حفظ الطلب');
+    if (fnError || !result?.tracking_number) {
+      const msg = (() => {
+        try { return JSON.parse((fnError as any)?.context?.body)?.error; } catch { return null; }
+      })();
+      console.error('Order create error:', fnError);
+      toast.error(msg || 'حدث خطأ أثناء حفظ الطلب');
       return;
     }
 
-    // Save order to client orders in localStorage too
+    const tracking = result.tracking_number as string;
+    const orderGrandTotal = Number(result.total);
+
+    // Store order data before clearing
+    setOrderItems([...items]);
+    setOrderTotal(Number(result.subtotal));
+    setOrderPaymentMethod(paymentMethod);
+    setTrackingNumber(tracking);
+    setCouponDiscount(Number(result.coupon_discount) || 0);
+    setPointsDiscount(Number(result.points_discount) || 0);
+
+    // Save order to local client history (UI cache only — DB is source of truth)
     if (isAuthenticated) {
       const existingOrders = JSON.parse(localStorage.getItem('mazaj_client_orders') || '[]');
       existingOrders.unshift({
@@ -263,11 +227,11 @@ const Checkout: React.FC = () => {
         dateFormatted: new Date().toLocaleDateString('ar-SA'),
         itemCount: items.reduce((s, i) => s + i.quantity, 0),
         total: orderGrandTotal,
-        subtotal: totalPrice,
-        deliveryFee,
-        tax: totalPrice * 0.15,
+        subtotal: Number(result.subtotal),
+        deliveryFee: Number(result.delivery_fee),
+        tax: Number(result.tax),
         status: 'pending',
-        items: items.map(i => ({ name: i.name, price: i.price, quantity: i.quantity, image: i.image })),
+        items: items.map((i) => ({ name: i.name, price: i.price, quantity: i.quantity, image: i.image })),
         customer: { name: formData.name, phone: formData.phone, address: formData.address },
         paymentMethod: paymentMethodLabels[paymentMethod],
         deliveryZone: selectedZone?.name || '',
@@ -275,11 +239,10 @@ const Checkout: React.FC = () => {
       });
       localStorage.setItem('mazaj_client_orders', JSON.stringify(existingOrders));
 
-      // Add reward points
-      addPoints(orderGrandTotal, tracking);
-      const earnedPts = Math.floor(orderGrandTotal);
+      // Refresh server-backed rewards (points were updated server-side)
+      refreshRewards();
 
-      // Add notifications
+      const earnedPts = Math.floor(orderGrandTotal);
       addNotification({
         title: 'تم استلام طلبك',
         message: `طلبك رقم ${tracking} قيد المراجعة وسيتم تجهيزه قريباً`,
@@ -292,29 +255,8 @@ const Checkout: React.FC = () => {
           type: 'reward',
         });
       }
-
-      // Simulate status change notifications after delays
-      setTimeout(() => {
-        addNotification({
-          title: 'طلبك قيد التجهيز',
-          message: `الطلب ${tracking} يتم تجهيزه الآن`,
-          type: 'order',
-        });
-      }, 15000);
-      setTimeout(() => {
-        addNotification({
-          title: 'الطلب في الطريق!',
-          message: `الطلب ${tracking} في طريقه إليك`,
-          type: 'order',
-        });
-      }, 30000);
     }
 
-    // Record coupon usage
-    if (couponApplied && couponCode) {
-      recordCouponUsage(couponCode, user?.id);
-    }
-    
     setStep('receipt');
     clearCart();
   };
