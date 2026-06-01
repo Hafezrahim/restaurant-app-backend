@@ -16,7 +16,8 @@ import {
   ChevronLeft,
   LogOut,
   Bell,
-  Search
+  Search,
+  Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -75,6 +76,12 @@ const menuItems = [
     title: "تحسين محركات البحث",
     icon: Search,
     path: "/admin/seo",
+    badge: null
+  },
+  {
+    title: "الأمان",
+    icon: Shield,
+    path: "/admin/security",
     badge: null
   },
   { 
