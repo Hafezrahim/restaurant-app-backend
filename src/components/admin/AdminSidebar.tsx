@@ -78,6 +78,12 @@ const menuItems = [
     path: "/admin/seo",
     badge: null
   },
+  {
+    title: "الأمان",
+    icon: Shield,
+    path: "/admin/security",
+    badge: null
+  },
   { 
     title: "الإعدادات", 
     icon: Settings, 
