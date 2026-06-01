@@ -15,7 +15,7 @@ import { PaymentMethodSelector, PaymentMethod } from '@/components/checkout/Paym
 import { useClientAuth } from '@/context/ClientAuthContext';
 import { useRewards, MIN_REDEEM, SAR_PER_POINT } from '@/context/RewardsContext';
 import { useNotifications } from '@/context/NotificationsContext';
-import { validateCoupon, recordCouponUsage } from '@/data/coupons';
+import { validateCoupon } from '@/data/coupons';
 import { useCurrency } from '@/context/CurrencyContext';
 import { supabase } from '@/integrations/supabase/client';
 import logo from '@/assets/logo.png';
@@ -32,7 +32,7 @@ const Checkout: React.FC = () => {
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCart();
   const { user, isAuthenticated } = useClientAuth();
-  const { points, canRedeem, pointsValue, addPoints, redeemPoints } = useRewards();
+  const { points, canRedeem, pointsValue, redeemPoints, refresh: refreshRewards } = useRewards();
   const { addNotification } = useNotifications();
   const { formatPrice, currency } = useCurrency();
   const [redeemingPoints, setRedeemingPoints] = useState(false);
@@ -76,9 +76,9 @@ const Checkout: React.FC = () => {
   const grandTotal = currentTotal + deliveryFee + tax - pointsDiscount - couponDiscount;
   const displayItems = step === 'receipt' ? orderItems : items;
 
-  const handleApplyCoupon = () => {
+  const handleApplyCoupon = async () => {
     setCouponError('');
-    const result = validateCoupon(couponCode, totalPrice, user?.id);
+    const result = await validateCoupon(couponCode, totalPrice);
     if (result.valid && result.discount) {
       setCouponDiscount(result.discount);
       setCouponApplied(true);
