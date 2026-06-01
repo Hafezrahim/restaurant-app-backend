@@ -71,6 +71,7 @@ const App = () => (
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
+                <SecurityHeaders />
                 <SeoFromSettings />
                 <Routes>
                     <Route path="/" element={<Index />} />
