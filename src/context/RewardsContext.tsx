@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useCallback, useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useClientAuth } from './ClientAuthContext';
 
 export interface RewardTransaction {
@@ -30,9 +32,7 @@ const TIERS: Omit<TierInfo, 'nextTier'>[] = [
 
 export function getTierInfo(totalEarned: number): TierInfo {
   let current = TIERS[0];
-  for (const tier of TIERS) {
-    if (totalEarned >= tier.minPoints) current = tier;
-  }
+  for (const tier of TIERS) if (totalEarned >= tier.minPoints) current = tier;
   const idx = TIERS.indexOf(current);
   const next = idx < TIERS.length - 1 ? TIERS[idx + 1] : undefined;
   return {
@@ -44,18 +44,15 @@ export function getTierInfo(totalEarned: number): TierInfo {
 interface RewardsContextType {
   points: number;
   transactions: RewardTransaction[];
-  addPoints: (amount: number, orderNumber?: string) => void;
+  /** Schedule local redemption flag — actual deduction is server-side at checkout. */
   redeemPoints: (points: number) => number;
   canRedeem: boolean;
   pointsValue: number;
   tier: TierInfo;
   totalEarned: number;
+  refresh: () => void;
 }
 
-const REWARDS_KEY = 'mazaj_rewards';
-const REWARDS_HISTORY_KEY = 'mazaj_rewards_history';
-const TOTAL_EARNED_KEY = 'mazaj_total_earned';
-const POINTS_PER_SAR = 1;
 const SAR_PER_POINT = 0.1;
 const MIN_REDEEM = 50;
 
@@ -63,109 +60,65 @@ const RewardsContext = createContext<RewardsContextType | undefined>(undefined);
 
 export const RewardsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useClientAuth();
+  const qc = useQueryClient();
 
-  const getStored = (key: string) => {
-    const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : {};
-  };
-
-  const [points, setPoints] = useState<number>(() => {
-    if (!user) return 0;
-    return getStored(REWARDS_KEY)[user.id] || 0;
+  // Source of truth is now the `rewards` table (SELECT scoped to auth.uid()).
+  // Sum positive entries for "total earned" and net sum for current balance.
+  const { data } = useQuery({
+    queryKey: ['rewards', user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data: rows, error } = await supabase
+        .from('rewards')
+        .select('id, points, reason, order_id, created_at')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return rows ?? [];
+    },
+    staleTime: 30_000,
   });
 
-  const [transactions, setTransactions] = useState<RewardTransaction[]>(() => {
-    if (!user) return [];
-    return getStored(REWARDS_HISTORY_KEY)[user.id] || [];
-  });
+  const [redeemFlag, setRedeemFlag] = useState(false);
 
-  const [totalEarned, setTotalEarned] = useState<number>(() => {
-    if (!user) return 0;
-    return getStored(TOTAL_EARNED_KEY)[user.id] || 0;
-  });
+  useEffect(() => { setRedeemFlag(false); }, [user?.id]);
 
-  useEffect(() => {
-    if (user) {
-      setPoints(getStored(REWARDS_KEY)[user.id] || 0);
-      setTransactions(getStored(REWARDS_HISTORY_KEY)[user.id] || []);
-      setTotalEarned(getStored(TOTAL_EARNED_KEY)[user.id] || 0);
-    } else {
-      setPoints(0);
-      setTransactions([]);
-      setTotalEarned(0);
-    }
-  }, [user]);
+  const rows = data ?? [];
+  const points = rows.reduce((s, r) => s + (r.points ?? 0), 0);
+  const totalEarned = rows.filter((r) => (r.points ?? 0) > 0).reduce((s, r) => s + r.points, 0);
 
-  const save = (key: string, userId: string, value: any) => {
-    const all = getStored(key);
-    all[userId] = value;
-    localStorage.setItem(key, JSON.stringify(all));
-  };
-
-  const addTransaction = (txn: RewardTransaction) => {
-    if (!user) return;
-    setTransactions(prev => {
-      const updated = [txn, ...prev].slice(0, 100);
-      save(REWARDS_HISTORY_KEY, user.id, updated);
-      return updated;
-    });
-  };
+  const transactions: RewardTransaction[] = rows.map((r) => ({
+    id: r.id,
+    type: r.points >= 0 ? 'earn' : 'redeem',
+    points: Math.abs(r.points),
+    description: r.reason || '',
+    date: r.created_at,
+    orderNumber: r.order_id ?? undefined,
+  }));
 
   const tier = getTierInfo(totalEarned);
 
-  const addPoints = useCallback((orderTotal: number, orderNumber?: string) => {
-    if (!user) return;
-    const currentTier = getTierInfo(getStored(TOTAL_EARNED_KEY)[user.id] || 0);
-    const earned = Math.floor(orderTotal * POINTS_PER_SAR * currentTier.multiplier);
-    setPoints(prev => {
-      const updated = prev + earned;
-      save(REWARDS_KEY, user.id, updated);
-      return updated;
-    });
-    setTotalEarned(prev => {
-      const updated = prev + earned;
-      save(TOTAL_EARNED_KEY, user.id, updated);
-      return updated;
-    });
-    const multiplierText = currentTier.multiplier > 1 ? ` (×${currentTier.multiplier} ${currentTier.name})` : '';
-    addTransaction({
-      id: Date.now().toString(36),
-      type: 'earn',
-      points: earned,
-      description: orderNumber ? `نقاط من الطلب ${orderNumber}${multiplierText}` : `نقاط مكتسبة${multiplierText}`,
-      date: new Date().toISOString(),
-      orderNumber,
-    });
-  }, [user]);
-
   const redeemPoints = useCallback((pts: number): number => {
-    if (!user || pts < MIN_REDEEM || pts > points) return 0;
-    const discount = pts * SAR_PER_POINT;
-    setPoints(prev => {
-      const updated = prev - pts;
-      save(REWARDS_KEY, user.id, updated);
-      return updated;
-    });
-    addTransaction({
-      id: Date.now().toString(36),
-      type: 'redeem',
-      points: pts,
-      description: `استبدال ${pts} نقطة بخصم ${discount.toFixed(1)}`,
-      date: new Date().toISOString(),
-    });
-    return discount;
-  }, [user, points]);
+    if (pts < MIN_REDEEM || pts > points) return 0;
+    setRedeemFlag(true);
+    return pts * SAR_PER_POINT;
+  }, [points]);
+
+  const refresh = useCallback(() => {
+    qc.invalidateQueries({ queryKey: ['rewards', user?.id] });
+  }, [qc, user?.id]);
 
   return (
     <RewardsContext.Provider value={{
       points,
       transactions,
-      addPoints,
       redeemPoints,
       canRedeem: points >= MIN_REDEEM,
       pointsValue: points * SAR_PER_POINT,
       tier,
       totalEarned,
+      refresh,
     }}>
       {children}
     </RewardsContext.Provider>

@@ -1,103 +1,41 @@
-// Coupon system for Mazaj restaurant
-export interface Coupon {
-  code: string;
-  type: 'percentage' | 'fixed';
-  value: number; // percentage (0-100) or fixed SAR amount
-  minOrder: number;
-  maxDiscount?: number; // max discount for percentage coupons
-  expiresAt: string;
-  usageLimit: number;
-  description: string;
-}
-
-const COUPON_USAGE_KEY = 'mazaj_coupon_usage';
-
-// Pre-defined coupons
-export const AVAILABLE_COUPONS: Coupon[] = [
-  {
-    code: 'WELCOME10',
-    type: 'percentage',
-    value: 10,
-    minOrder: 50,
-    maxDiscount: 30,
-    expiresAt: '2027-12-31',
-    usageLimit: 1,
-    description: 'خصم 10% للطلب الأول (حتى 30 ر.س)',
-  },
-  {
-    code: 'MAZAJ20',
-    type: 'fixed',
-    value: 20,
-    minOrder: 100,
-    expiresAt: '2027-06-30',
-    usageLimit: 3,
-    description: 'خصم 20 ر.س على الطلبات فوق 100 ر.س',
-  },
-  {
-    code: 'FREE15',
-    type: 'percentage',
-    value: 15,
-    minOrder: 80,
-    maxDiscount: 50,
-    expiresAt: '2027-12-31',
-    usageLimit: 2,
-    description: 'خصم 15% على الطلبات فوق 80 ر.س (حتى 50 ر.س)',
-  },
-];
-
-function getCouponUsage(userId?: string): Record<string, number> {
-  const key = userId ? `${COUPON_USAGE_KEY}_${userId}` : COUPON_USAGE_KEY;
-  const stored = localStorage.getItem(key);
-  return stored ? JSON.parse(stored) : {};
-}
-
-function saveCouponUsage(usage: Record<string, number>, userId?: string) {
-  const key = userId ? `${COUPON_USAGE_KEY}_${userId}` : COUPON_USAGE_KEY;
-  localStorage.setItem(key, JSON.stringify(usage));
-}
+// Server-side coupon validation. Hardcoded coupons & localStorage usage
+// counters have been removed for security — validation now hits the
+// `validate-coupon` Supabase edge function which consults the `public.coupons`
+// table. The authoritative discount is recomputed inside the `create-order`
+// function when the order is placed.
+import { supabase } from '@/integrations/supabase/client';
 
 export interface CouponValidation {
   valid: boolean;
   error?: string;
   discount?: number;
-  coupon?: Coupon;
+  code?: string;
 }
 
-export function validateCoupon(code: string, orderTotal: number, userId?: string): CouponValidation {
+export async function validateCoupon(
+  code: string,
+  orderTotal: number,
+): Promise<CouponValidation> {
   const trimmed = code.trim().toUpperCase();
   if (!trimmed) return { valid: false, error: 'يرجى إدخال كود الخصم' };
 
-  const coupon = AVAILABLE_COUPONS.find(c => c.code === trimmed);
-  if (!coupon) return { valid: false, error: 'كود الخصم غير صالح' };
+  const { data, error } = await supabase.functions.invoke('validate-coupon', {
+    body: { code: trimmed, subtotal: orderTotal },
+  });
 
-  if (new Date(coupon.expiresAt) < new Date()) {
-    return { valid: false, error: 'كود الخصم منتهي الصلاحية' };
+  if (error) {
+    // Edge function returned non-2xx; the body usually contains { error }
+    const msg = (error as any)?.context?.body
+      ? (() => { try { return JSON.parse((error as any).context.body).error; } catch { return null; } })()
+      : null;
+    return { valid: false, error: msg || 'تعذّر التحقق من الكود' };
   }
-
-  if (orderTotal < coupon.minOrder) {
-    return { valid: false, error: `الحد الأدنى للطلب ${coupon.minOrder} ر.س` };
-  }
-
-  const usage = getCouponUsage(userId);
-  if ((usage[trimmed] || 0) >= coupon.usageLimit) {
-    return { valid: false, error: 'تم استخدام هذا الكود بالحد الأقصى' };
-  }
-
-  let discount: number;
-  if (coupon.type === 'percentage') {
-    discount = (orderTotal * coupon.value) / 100;
-    if (coupon.maxDiscount) discount = Math.min(discount, coupon.maxDiscount);
-  } else {
-    discount = coupon.value;
-  }
-
-  discount = Math.min(discount, orderTotal);
-
-  return { valid: true, discount, coupon };
+  if (!data?.valid) return { valid: false, error: data?.error || 'كود غير صالح' };
+  return { valid: true, discount: Number(data.discount) || 0, code: data.code };
 }
 
-export function recordCouponUsage(code: string, userId?: string) {
-  const usage = getCouponUsage(userId);
-  usage[code.toUpperCase()] = (usage[code.toUpperCase()] || 0) + 1;
-  saveCouponUsage(usage, userId);
+// Recording usage is now performed server-side by create-order. Kept as a
+// no-op for backward compatibility with any straggling callers.
+export function recordCouponUsage(_code: string, _userId?: string) {
+  /* server-side only */
 }
