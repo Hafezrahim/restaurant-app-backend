@@ -181,7 +181,30 @@ type ScanResult = {
   details: string;
   fixable?: boolean;
   fixLabel?: string;
+  retryable?: boolean;
+  httpStatus?: number;
 };
+
+// Build a "soft-fail" result instead of throwing on any non-2xx / PostgREST error.
+function softFail(
+  id: string,
+  category: string,
+  title: string,
+  details: string,
+  opts: { severity?: ScanSeverity; httpStatus?: number } = {},
+): ScanResult {
+  return {
+    id,
+    category,
+    title,
+    status: "fail",
+    severity: opts.severity ?? "medium",
+    details,
+    retryable: true,
+    httpStatus: opts.httpStatus,
+  };
+}
+
 
 
 // ============================================================
