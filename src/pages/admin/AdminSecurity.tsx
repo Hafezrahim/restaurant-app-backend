@@ -26,6 +26,10 @@ import {
   ExternalLink,
   RefreshCw,
   AlertTriangle,
+  ScanLine,
+  Wrench,
+  Loader2,
+
 } from "lucide-react";
 import { RECOMMENDED_EDGE_HEADERS, CSP } from "@/components/seo/SecurityHeaders";
 import { supabase } from "@/integrations/supabase/client";
