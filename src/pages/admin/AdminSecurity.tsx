@@ -687,14 +687,25 @@ export default function AdminSecurity() {
                             <Badge variant="outline" className="text-[10px]">{r.category}</Badge>
                             <h4 className="font-semibold">{r.title}</h4>
                             <Badge className={`text-[10px] ${severityClass(r.severity)}`}>{severityLabel(r.severity)}</Badge>
+                            {r.httpStatus != null && (
+                              <Badge variant="outline" className="text-[10px]">HTTP {r.httpStatus}</Badge>
+                            )}
                           </div>
                           <p className="text-sm text-muted-foreground mt-1 break-words">{r.details}</p>
                         </div>
-                        {r.status !== "pass" && r.fixable && (
-                          <Button size="sm" variant="outline" onClick={() => applyFix(r)} disabled={fixingId === r.id}>
-                            {fixingId === r.id ? <Loader2 className="w-4 h-4 animate-spin"/> : <><Wrench className="w-4 h-4 ml-1"/>{r.fixLabel || "إصلاح"}</>}
-                          </Button>
-                        )}
+                        <div className="flex flex-col gap-2 shrink-0">
+                          {r.status !== "pass" && r.fixable && (
+                            <Button size="sm" variant="outline" onClick={() => applyFix(r)} disabled={fixingId === r.id}>
+                              {fixingId === r.id ? <Loader2 className="w-4 h-4 animate-spin"/> : <><Wrench className="w-4 h-4 ml-1"/>{r.fixLabel || "إصلاح"}</>}
+                            </Button>
+                          )}
+                          {r.status !== "pass" && r.retryable && (
+                            <Button size="sm" variant="ghost" onClick={() => retryStep(r.id)} disabled={fixingId === r.id}>
+                              {fixingId === r.id ? <Loader2 className="w-4 h-4 animate-spin"/> : <><RefreshCw className="w-4 h-4 ml-1"/>إعادة المحاولة</>}
+                            </Button>
+                          )}
+                        </div>
+
                       </div>
                     ))}
                   </>
