@@ -1002,3 +1002,39 @@ function AccessBadge({ v }: { v: AuditRow["read"] | AuditRow["write"] }) {
   const x = map[v];
   return <Badge className={`${x.cls} text-white`}>{x.label}</Badge>;
 }
+
+function severityClass(s: ScanSeverity) {
+  return {
+    critical: "bg-red-700 text-white",
+    high: "bg-red-500 text-white",
+    medium: "bg-yellow-500 text-black",
+    low: "bg-blue-500 text-white",
+    info: "bg-muted text-foreground",
+  }[s];
+}
+function severityLabel(s: ScanSeverity) {
+  return { critical: "حرج", high: "عالٍ", medium: "متوسط", low: "منخفض", info: "معلومة" }[s];
+}
+
+function ScanSummary({ results }: { results: ScanResult[] }) {
+  const pass = results.filter((r) => r.status === "pass").length;
+  const warn = results.filter((r) => r.status === "warn").length;
+  const fail = results.filter((r) => r.status === "fail").length;
+  return (
+    <div className="grid grid-cols-3 gap-3 mb-2">
+      <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-center">
+        <div className="text-2xl font-bold text-green-600">{pass}</div>
+        <div className="text-xs text-muted-foreground">ناجح</div>
+      </div>
+      <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-center">
+        <div className="text-2xl font-bold text-yellow-600">{warn}</div>
+        <div className="text-xs text-muted-foreground">تحذير</div>
+      </div>
+      <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-center">
+        <div className="text-2xl font-bold text-destructive">{fail}</div>
+        <div className="text-xs text-muted-foreground">فاشل</div>
+      </div>
+    </div>
+  );
+}
+
