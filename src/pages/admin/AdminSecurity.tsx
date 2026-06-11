@@ -181,7 +181,30 @@ type ScanResult = {
   details: string;
   fixable?: boolean;
   fixLabel?: string;
+  retryable?: boolean;
+  httpStatus?: number;
 };
+
+// Build a "soft-fail" result instead of throwing on any non-2xx / PostgREST error.
+function softFail(
+  id: string,
+  category: string,
+  title: string,
+  details: string,
+  opts: { severity?: ScanSeverity; httpStatus?: number } = {},
+): ScanResult {
+  return {
+    id,
+    category,
+    title,
+    status: "fail",
+    severity: opts.severity ?? "medium",
+    details,
+    retryable: true,
+    httpStatus: opts.httpStatus,
+  };
+}
+
 
 
 // ============================================================
@@ -298,84 +321,75 @@ export default function AdminSecurity() {
     }
   };
 
-  // ============================================================
-  // Full security scan — runs a battery of live checks
-  // ============================================================
-  const runFullScan = async () => {
-    setScanRunning(true);
-    setScanResults(null);
-    setScanProgress(0);
-    const results: ScanResult[] = [];
-    const steps: Array<() => Promise<ScanResult>> = [
-      // 1. Headers present
-      async () => {
-        const headers = readActiveHeaders();
-        setActiveHeaders(headers);
-        const missing = Object.keys(RECOMMENDED_EDGE_HEADERS).filter(
-          (n) => !headers[n] && !headers[n.toLowerCase()] && !(n === "Referrer-Policy" && headers["referrer"]),
-        );
-        return {
-          id: "headers",
-          category: "الرؤوس",
-          title: "رؤوس الأمان في المتصفّح",
-          status: missing.length === 0 ? "pass" : missing.length <= 2 ? "warn" : "fail",
-          severity: missing.length === 0 ? "info" : "medium",
-          details: missing.length ? `مفقود: ${missing.join(", ")} — اضبطها على CDN` : "جميع الرؤوس الموصى بها مفعّلة.",
-          fixable: missing.length > 0,
-          fixLabel: "إعادة فحص",
-        };
-      },
-      // 2. CSP active
-      async () => {
-        const csp = document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.getAttribute("content") || "";
-        const ok = csp.includes("default-src") && !csp.includes("unsafe-eval");
-        return {
-          id: "csp",
-          category: "الرؤوس",
-          title: "سياسة CSP صارمة",
-          status: ok ? "pass" : "fail",
-          severity: ok ? "info" : "high",
-          details: ok ? "CSP مفعّلة بدون unsafe-eval." : "CSP غير صارمة أو تحتوي unsafe-eval.",
-        };
-      },
-      // 3. HTTPS
-      async () => {
-        const ok = window.location.protocol === "https:" || window.location.hostname === "localhost";
-        return {
-          id: "https",
-          category: "الشبكة",
-          title: "اتصال HTTPS",
-          status: ok ? "pass" : "fail",
-          severity: ok ? "info" : "critical",
-          details: ok ? `البروتوكول: ${window.location.protocol}` : "الموقع يُحمّل عبر HTTP — فعّل HTTPS فورًا.",
-        };
-      },
-      // 4. has_role RPC reachable
-      async () => {
-        try {
-          const { data: u } = await supabase.auth.getUser();
-          if (!u.user) {
-            return { id: "has_role", category: "RLS", title: "دالة has_role", status: "warn", severity: "low", details: "لا يوجد مستخدم مسجّل لاختبار الدالة." };
-          }
-          const { error } = await supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
+  // Each step is a no-throw async function returning a ScanResult.
+  // Any 4xx/network/PostgREST error is captured as a retryable soft-fail.
+  const buildSteps = (): Record<string, () => Promise<ScanResult>> => ({
+    headers: async () => {
+      const headers = readActiveHeaders();
+      setActiveHeaders(headers);
+      const missing = Object.keys(RECOMMENDED_EDGE_HEADERS).filter(
+        (n) => !headers[n] && !headers[n.toLowerCase()] && !(n === "Referrer-Policy" && headers["referrer"]),
+      );
+      return {
+        id: "headers",
+        category: "الرؤوس",
+        title: "رؤوس الأمان في المتصفّح",
+        status: missing.length === 0 ? "pass" : missing.length <= 2 ? "warn" : "fail",
+        severity: missing.length === 0 ? "info" : "medium",
+        details: missing.length ? `مفقود: ${missing.join(", ")} — اضبطها على CDN` : "جميع الرؤوس الموصى بها مفعّلة.",
+        fixable: missing.length > 0,
+        fixLabel: "إعادة فحص",
+      };
+    },
+    csp: async () => {
+      const csp = document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.getAttribute("content") || "";
+      const ok = csp.includes("default-src") && !csp.includes("unsafe-eval");
+      return {
+        id: "csp",
+        category: "الرؤوس",
+        title: "سياسة CSP صارمة",
+        status: ok ? "pass" : "fail",
+        severity: ok ? "info" : "high",
+        details: ok ? "CSP مفعّلة بدون unsafe-eval." : "CSP غير صارمة أو تحتوي unsafe-eval.",
+      };
+    },
+    https: async () => {
+      const ok = window.location.protocol === "https:" || window.location.hostname === "localhost";
+      return {
+        id: "https",
+        category: "الشبكة",
+        title: "اتصال HTTPS",
+        status: ok ? "pass" : "fail",
+        severity: ok ? "info" : "critical",
+        details: ok ? `البروتوكول: ${window.location.protocol}` : "الموقع يُحمّل عبر HTTP — فعّل HTTPS فورًا.",
+      };
+    },
+    has_role: async () => {
+      try {
+        const { data: u } = await supabase.auth.getUser();
+        if (!u.user) {
+          return { id: "has_role", category: "RLS", title: "دالة has_role", status: "warn", severity: "low", details: "لا يوجد مستخدم مسجّل لاختبار الدالة." };
+        }
+        const { error } = await supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
+        if (error) {
           return {
-            id: "has_role",
-            category: "RLS",
-            title: "دالة has_role قابلة للاستدعاء",
-            status: error ? "fail" : "pass",
-            severity: error ? "high" : "info",
-            details: error ? `خطأ: ${error.message}` : "الدالة تعمل وتعيد قيمة منطقية.",
-            fixable: !!error,
+            ...softFail("has_role", "RLS", "دالة has_role قابلة للاستدعاء", `خطأ ${error.code || ""}: ${error.message}`, { severity: "high" }),
+            fixable: true,
             fixLabel: "إعادة تحديث الـ schema cache",
           };
-        } catch (e: any) {
-          return { id: "has_role", category: "RLS", title: "دالة has_role", status: "fail", severity: "high", details: e?.message || "فشل غير متوقع" };
         }
-      },
-      // 5. Anon cannot read orders
-      async () => {
+        return { id: "has_role", category: "RLS", title: "دالة has_role قابلة للاستدعاء", status: "pass", severity: "info", details: "الدالة تعمل وتعيد قيمة منطقية." };
+      } catch (e: any) {
+        return softFail("has_role", "RLS", "دالة has_role", e?.message || "فشل غير متوقع", { severity: "high" });
+      }
+    },
+    anon_orders: async () => {
+      try {
         const { data, error } = await supabase.from("orders").select("id").limit(1);
-        // Without auth, RLS should block — either error or empty
+        if (error && error.code !== "PGRST301" && error.code !== "42501") {
+          // Real failure (network/server), not RLS denial
+          return softFail("anon_orders", "RLS", "المجهول لا يقرأ orders", `تعذّر التحقق: ${error.message}`, { severity: "medium" });
+        }
         const blocked = !!error || !data || data.length === 0;
         return {
           id: "anon_orders",
@@ -385,9 +399,12 @@ export default function AdminSecurity() {
           severity: blocked ? "info" : "critical",
           details: blocked ? "RLS تمنع القراءة العامة لجدول orders." : "تحذير: يمكن قراءة طلبات من غير مصادقة!",
         };
-      },
-      // 6. Anon cannot read user_roles
-      async () => {
+      } catch (e: any) {
+        return softFail("anon_orders", "RLS", "المجهول لا يقرأ orders", e?.message || "خطأ غير متوقع");
+      }
+    },
+    user_roles_leak: async () => {
+      try {
         const { data: u } = await supabase.auth.getUser();
         const { data, error } = await supabase.from("user_roles").select("user_id").limit(1);
         const ok = u.user ? true : !!error || !data || data.length === 0;
@@ -399,12 +416,15 @@ export default function AdminSecurity() {
           severity: ok ? "info" : "critical",
           details: ok ? "لا تسرّب لجدول الأدوار." : "user_roles مكشوف للزوار — خطر رفع صلاحيات.",
         };
-      },
-      // 7. restaurant_settings allowlist
-      async () => {
+      } catch (e: any) {
+        return softFail("user_roles_leak", "RLS", "user_roles محمي من المجهول", e?.message || "خطأ غير متوقع");
+      }
+    },
+    settings_allowlist: async () => {
+      try {
         const { data, error } = await supabase.from("restaurant_settings").select("key").limit(50);
         if (error) {
-          return { id: "settings_allowlist", category: "RLS", title: "allowlist لإعدادات المطعم", status: "warn", severity: "low", details: error.message };
+          return softFail("settings_allowlist", "RLS", "allowlist لإعدادات المطعم", `تعذّر التحقق: ${error.message}`, { severity: "low" });
         }
         const sensitive = data?.find((r: any) => /payment|secret|stripe|api/i.test(r.key));
         return {
@@ -415,113 +435,135 @@ export default function AdminSecurity() {
           severity: sensitive ? "high" : "info",
           details: sensitive ? `مفتاح حسّاس مكشوف: ${sensitive.key}` : "المفاتيح المعروضة آمنة.",
         };
-      },
-      // 8. Edge functions reachable
-      async () => {
-        try {
-          const projectId = (import.meta as any).env?.VITE_SUPABASE_PROJECT_ID;
-          const url = `https://${projectId}.supabase.co/functions/v1/validate-coupon`;
-          const t0 = performance.now();
-          const res = await fetch(url, { method: "OPTIONS" });
-          const ms = Math.round(performance.now() - t0);
-          const ok = res.status < 500;
-          return {
-            id: "edge_fn",
-            category: "Edge",
-            title: "Edge Functions قابلة للوصول",
-            status: ok ? "pass" : "fail",
-            severity: ok ? "info" : "high",
-            details: ok
-              ? `validate-coupon استجابت (HTTP ${res.status}) في ${ms}ms.`
-              : `استجابة غير متوقّعة: HTTP ${res.status}`,
-          };
-        } catch (e: any) {
-          return { id: "edge_fn", category: "Edge", title: "Edge Functions", status: "fail", severity: "high", details: e?.message || "تعذّر الوصول" };
-        }
-      },
-
-      // 9. Service role key not in bundle
-      async () => {
-        const hasServiceRole = /service_role/i.test(document.documentElement.innerHTML);
-        return {
-          id: "service_role_leak",
-          category: "أسرار",
-          title: "service_role غير مكشوف في الواجهة",
-          status: hasServiceRole ? "fail" : "pass",
-          severity: hasServiceRole ? "critical" : "info",
-          details: hasServiceRole ? "تم العثور على إشارة لـ service_role — راجع الكود فورًا." : "لم يُعثر على service_role في DOM.",
-        };
-      },
-      // 10. localStorage doesn't contain tokens in clear admin keys
-      async () => {
-        const keys = Object.keys(localStorage);
-        const risky = keys.filter((k) => /password|secret|service_role/i.test(k));
-        return {
-          id: "ls_secrets",
-          category: "التخزين",
-          title: "localStorage خالٍ من الأسرار",
-          status: risky.length ? "fail" : "pass",
-          severity: risky.length ? "high" : "info",
-          details: risky.length ? `مفاتيح مشبوهة: ${risky.join(", ")}` : "لا أسرار في التخزين المحلي.",
-          fixable: risky.length > 0,
-          fixLabel: "حذف المفاتيح المشبوهة",
-        };
-      },
-      // 11. Source maps not exposed
-      async () => {
-        try {
-          const scripts = Array.from(document.querySelectorAll("script[src]")).slice(0, 1);
-          if (!scripts.length) return { id: "sourcemaps", category: "الواجهة", title: "Source maps", status: "pass", severity: "info", details: "لا توجد scripts خارجية." };
-          const src = (scripts[0] as HTMLScriptElement).src;
-          const r = await fetch(src + ".map", { method: "HEAD" });
-          const exposed = r.ok;
-          return {
-            id: "sourcemaps",
-            category: "الواجهة",
-            title: "Source maps غير منشورة في الإنتاج",
-            status: exposed ? "warn" : "pass",
-            severity: exposed ? "medium" : "info",
-            details: exposed ? "تم العثور على .map — عطّلها في الإنتاج." : "لا توجد source maps متاحة.",
-          };
-        } catch {
-          return { id: "sourcemaps", category: "الواجهة", title: "Source maps", status: "pass", severity: "info", details: "غير متاحة (آمن)." };
-        }
-      },
-      // 12. Checklist blockers
-      async () => {
-        const remaining = blockers.length - blockersDone;
-        return {
-          id: "checklist",
-          category: "الإطلاق",
-          title: "عوائق قائمة الإطلاق",
-          status: remaining === 0 ? "pass" : "fail",
-          severity: remaining === 0 ? "info" : "high",
-          details: remaining === 0 ? "كل العوائق مكتملة." : `${remaining} عائق متبقٍ — راجع قسم القائمة.`,
-        };
-      },
-    ];
-
-    for (let i = 0; i < steps.length; i++) {
-      try {
-        const r = await steps[i]();
-        results.push(r);
       } catch (e: any) {
-        results.push({
-          id: `step_${i}`,
-          category: "خطأ",
-          title: `فحص #${i + 1}`,
-          status: "fail",
-          severity: "medium",
-          details: e?.message || "فشل غير متوقع",
-        });
+        return softFail("settings_allowlist", "RLS", "allowlist لإعدادات المطعم", e?.message || "خطأ غير متوقع");
       }
-      setScanProgress(Math.round(((i + 1) / steps.length) * 100));
+    },
+    edge_fn: async () => {
+      try {
+        const projectId = (import.meta as any).env?.VITE_SUPABASE_PROJECT_ID;
+        const url = `https://${projectId}.supabase.co/functions/v1/validate-coupon`;
+        const t0 = performance.now();
+        const res = await fetch(url, { method: "OPTIONS" });
+        const ms = Math.round(performance.now() - t0);
+        if (res.status >= 500) {
+          return softFail("edge_fn", "Edge", "Edge Functions قابلة للوصول", `HTTP ${res.status} — الخادم غير متاح`, { severity: "high", httpStatus: res.status });
+        }
+        // 2xx/3xx/4xx all prove reachability (CORS preflight may return 4xx).
+        return {
+          id: "edge_fn",
+          category: "Edge",
+          title: "Edge Functions قابلة للوصول",
+          status: "pass",
+          severity: "info",
+          details: `validate-coupon استجابت (HTTP ${res.status}) في ${ms}ms.`,
+          httpStatus: res.status,
+        };
+      } catch (e: any) {
+        return softFail("edge_fn", "Edge", "Edge Functions قابلة للوصول", e?.message || "تعذّر الوصول للشبكة", { severity: "high" });
+      }
+    },
+    service_role_leak: async () => {
+      const hasServiceRole = /service_role/i.test(document.documentElement.innerHTML);
+      return {
+        id: "service_role_leak",
+        category: "أسرار",
+        title: "service_role غير مكشوف في الواجهة",
+        status: hasServiceRole ? "fail" : "pass",
+        severity: hasServiceRole ? "critical" : "info",
+        details: hasServiceRole ? "تم العثور على إشارة لـ service_role — راجع الكود فورًا." : "لم يُعثر على service_role في DOM.",
+      };
+    },
+    ls_secrets: async () => {
+      const keys = Object.keys(localStorage);
+      const risky = keys.filter((k) => /password|secret|service_role/i.test(k));
+      return {
+        id: "ls_secrets",
+        category: "التخزين",
+        title: "localStorage خالٍ من الأسرار",
+        status: risky.length ? "fail" : "pass",
+        severity: risky.length ? "high" : "info",
+        details: risky.length ? `مفاتيح مشبوهة: ${risky.join(", ")}` : "لا أسرار في التخزين المحلي.",
+        fixable: risky.length > 0,
+        fixLabel: "حذف المفاتيح المشبوهة",
+      };
+    },
+    sourcemaps: async () => {
+      try {
+        const scripts = Array.from(document.querySelectorAll("script[src]")).slice(0, 1);
+        if (!scripts.length) return { id: "sourcemaps", category: "الواجهة", title: "Source maps", status: "pass", severity: "info", details: "لا توجد scripts خارجية." };
+        const src = (scripts[0] as HTMLScriptElement).src;
+        const r = await fetch(src + ".map", { method: "HEAD" });
+        const exposed = r.ok;
+        return {
+          id: "sourcemaps",
+          category: "الواجهة",
+          title: "Source maps غير منشورة في الإنتاج",
+          status: exposed ? "warn" : "pass",
+          severity: exposed ? "medium" : "info",
+          details: exposed ? "تم العثور على .map — عطّلها في الإنتاج." : "لا توجد source maps متاحة.",
+        };
+      } catch {
+        return { id: "sourcemaps", category: "الواجهة", title: "Source maps", status: "pass", severity: "info", details: "غير متاحة (آمن)." };
+      }
+    },
+    checklist: async () => {
+      const remaining = blockers.length - blockersDone;
+      return {
+        id: "checklist",
+        category: "الإطلاق",
+        title: "عوائق قائمة الإطلاق",
+        status: remaining === 0 ? "pass" : "fail",
+        severity: remaining === 0 ? "info" : "high",
+        details: remaining === 0 ? "كل العوائق مكتملة." : `${remaining} عائق متبقٍ — راجع قسم القائمة.`,
+      };
+    },
+  });
+
+  // Safe runner — every step is wrapped so a thrown error becomes a retryable soft-fail.
+  const runStep = async (id: string, fn: () => Promise<ScanResult>): Promise<ScanResult> => {
+    try {
+      return await fn();
+    } catch (e: any) {
+      return softFail(id, "خطأ", `فشل تنفيذ الفحص: ${id}`, e?.message || "خطأ غير متوقع");
+    }
+  };
+
+  const runFullScan = async () => {
+    setScanRunning(true);
+    setScanResults(null);
+    setScanProgress(0);
+    const steps = buildSteps();
+    const ids = Object.keys(steps);
+    const results: ScanResult[] = [];
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i];
+      results.push(await runStep(id, steps[id]));
+      setScanProgress(Math.round(((i + 1) / ids.length) * 100));
       setScanResults([...results]);
     }
     setScanRunning(false);
     const failed = results.filter((r) => r.status === "fail").length;
     if (failed === 0) toast.success("الفحص اكتمل — لا توجد مشاكل حرجة.");
     else toast.error(`الفحص اكتمل: ${failed} مشكلة تحتاج إصلاح.`);
+  };
+
+  // Retry a single step without rerunning the whole scan
+  const retryStep = async (id: string) => {
+    setFixingId(id);
+    try {
+      const fn = buildSteps()[id];
+      if (!fn) {
+        toast.error("هذا الفحص غير قابل لإعادة التشغيل.");
+        return;
+      }
+      const r = await runStep(id, fn);
+      setScanResults((prev) => (prev ? prev.map((x) => (x.id === id ? r : x)) : [r]));
+      if (r.status === "pass") toast.success("تمت إعادة المحاولة بنجاح.");
+      else toast.warning("لا يزال الفحص فاشلًا — راجع التفاصيل.");
+    } finally {
+      setFixingId(null);
+    }
   };
 
   const applyFix = async (r: ScanResult) => {
@@ -534,7 +576,6 @@ export default function AdminSecurity() {
           break;
         }
         case "has_role": {
-          // Force schema cache refresh by re-invoking
           const { data: u } = await supabase.auth.getUser();
           if (u.user) await supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
           toast.success("تم إعادة استدعاء الدالة.");
@@ -550,14 +591,14 @@ export default function AdminSecurity() {
         default:
           toast.info("لا يوجد إصلاح تلقائي — راجع التفاصيل.");
       }
-      // Re-run that single check
-      await runFullScan();
+      await retryStep(r.id);
     } catch (e: any) {
       toast.error(e?.message || "فشل الإصلاح");
     } finally {
       setFixingId(null);
     }
   };
+
 
 
   return (
@@ -646,14 +687,25 @@ export default function AdminSecurity() {
                             <Badge variant="outline" className="text-[10px]">{r.category}</Badge>
                             <h4 className="font-semibold">{r.title}</h4>
                             <Badge className={`text-[10px] ${severityClass(r.severity)}`}>{severityLabel(r.severity)}</Badge>
+                            {r.httpStatus != null && (
+                              <Badge variant="outline" className="text-[10px]">HTTP {r.httpStatus}</Badge>
+                            )}
                           </div>
                           <p className="text-sm text-muted-foreground mt-1 break-words">{r.details}</p>
                         </div>
-                        {r.status !== "pass" && r.fixable && (
-                          <Button size="sm" variant="outline" onClick={() => applyFix(r)} disabled={fixingId === r.id}>
-                            {fixingId === r.id ? <Loader2 className="w-4 h-4 animate-spin"/> : <><Wrench className="w-4 h-4 ml-1"/>{r.fixLabel || "إصلاح"}</>}
-                          </Button>
-                        )}
+                        <div className="flex flex-col gap-2 shrink-0">
+                          {r.status !== "pass" && r.fixable && (
+                            <Button size="sm" variant="outline" onClick={() => applyFix(r)} disabled={fixingId === r.id}>
+                              {fixingId === r.id ? <Loader2 className="w-4 h-4 animate-spin"/> : <><Wrench className="w-4 h-4 ml-1"/>{r.fixLabel || "إصلاح"}</>}
+                            </Button>
+                          )}
+                          {r.status !== "pass" && r.retryable && (
+                            <Button size="sm" variant="ghost" onClick={() => retryStep(r.id)} disabled={fixingId === r.id}>
+                              {fixingId === r.id ? <Loader2 className="w-4 h-4 animate-spin"/> : <><RefreshCw className="w-4 h-4 ml-1"/>إعادة المحاولة</>}
+                            </Button>
+                          )}
+                        </div>
+
                       </div>
                     ))}
                   </>
