@@ -419,20 +419,27 @@ export default function AdminSecurity() {
       // 8. Edge functions reachable
       async () => {
         try {
-          const { error } = await supabase.functions.invoke("validate-coupon", { body: { code: "__SCAN__" } });
-          // Function might return validation error — what matters is it ran
+          const projectId = (import.meta as any).env?.VITE_SUPABASE_PROJECT_ID;
+          const url = `https://${projectId}.supabase.co/functions/v1/validate-coupon`;
+          const t0 = performance.now();
+          const res = await fetch(url, { method: "OPTIONS" });
+          const ms = Math.round(performance.now() - t0);
+          const ok = res.status < 500;
           return {
             id: "edge_fn",
             category: "Edge",
             title: "Edge Functions قابلة للوصول",
-            status: "pass",
-            severity: "info",
-            details: error ? `استجابة (متوقّعة): ${error.message}` : "validate-coupon استجابت.",
+            status: ok ? "pass" : "fail",
+            severity: ok ? "info" : "high",
+            details: ok
+              ? `validate-coupon استجابت (HTTP ${res.status}) في ${ms}ms.`
+              : `استجابة غير متوقّعة: HTTP ${res.status}`,
           };
         } catch (e: any) {
-          return { id: "edge_fn", category: "Edge", title: "Edge Functions", status: "fail", severity: "high", details: e?.message };
+          return { id: "edge_fn", category: "Edge", title: "Edge Functions", status: "fail", severity: "high", details: e?.message || "تعذّر الوصول" };
         }
       },
+
       // 9. Service role key not in bundle
       async () => {
         const hasServiceRole = /service_role/i.test(document.documentElement.innerHTML);
