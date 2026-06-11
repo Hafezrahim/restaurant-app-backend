@@ -198,6 +198,11 @@ export default function AdminSecurity() {
   const [obfuscate, setObfuscate] = useState<boolean>(
     () => localStorage.getItem("security_blackbox") === "1",
   );
+  const [scanRunning, setScanRunning] = useState(false);
+  const [scanResults, setScanResults] = useState<ScanResult[] | null>(null);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [fixingId, setFixingId] = useState<string | null>(null);
+
 
   useEffect(() => {
     try {
