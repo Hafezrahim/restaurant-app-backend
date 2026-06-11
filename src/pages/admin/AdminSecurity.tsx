@@ -168,6 +168,21 @@ const DEFINER_FUNCTIONS = [
     why: "trigger بسيط يضبط updated_at — لا يقرأ صلاحيات.",
   },
 ];
+// ============================================================
+// 4) Full scan types
+// ============================================================
+type ScanSeverity = "critical" | "high" | "medium" | "low" | "info";
+type ScanResult = {
+  id: string;
+  category: string;
+  title: string;
+  status: "pass" | "fail" | "warn";
+  severity: ScanSeverity;
+  details: string;
+  fixable?: boolean;
+  fixLabel?: string;
+};
+
 
 // ============================================================
 // 3) Active security headers verification (read what's actually in <head>)
