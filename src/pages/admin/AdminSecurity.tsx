@@ -594,8 +594,9 @@ export default function AdminSecurity() {
           </CardContent>
         </Card>
 
-        <Tabs defaultValue="checklist" className="space-y-4">
+        <Tabs defaultValue="scan" className="space-y-4">
           <TabsList className="flex flex-wrap h-auto">
+            <TabsTrigger value="scan"><ScanLine className="w-4 h-4 ml-1"/>فحص شامل</TabsTrigger>
             <TabsTrigger value="checklist"><KeyRound className="w-4 h-4 ml-1"/>القائمة</TabsTrigger>
             <TabsTrigger value="rls"><Database className="w-4 h-4 ml-1"/>RLS</TabsTrigger>
             <TabsTrigger value="headers"><Lock className="w-4 h-4 ml-1"/>الرؤوس</TabsTrigger>
@@ -604,6 +605,56 @@ export default function AdminSecurity() {
             <TabsTrigger value="blackbox"><EyeOff className="w-4 h-4 ml-1"/>الإخفاء</TabsTrigger>
             <TabsTrigger value="cdn"><Cloud className="w-4 h-4 ml-1"/>CDN/WAF</TabsTrigger>
           </TabsList>
+
+          {/* ---------- Full Scan ---------- */}
+          <TabsContent value="scan" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div>
+                    <CardTitle className="flex items-center gap-2"><ScanLine className="w-5 h-5"/>الفحص الشامل المباشر</CardTitle>
+                    <CardDescription>يشغّل سلسلة اختبارات حيّة على RLS والرؤوس والأسرار والإيدج فانكشنز ويعرض الإصلاحات المتاحة.</CardDescription>
+                  </div>
+                  <Button onClick={runFullScan} disabled={scanRunning} size="lg">
+                    {scanRunning ? <><Loader2 className="w-4 h-4 ml-1 animate-spin"/>جارٍ الفحص...</> : <><ScanLine className="w-4 h-4 ml-1"/>تشغيل الفحص الآن</>}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {scanRunning && <Progress value={scanProgress} />}
+                {!scanResults && !scanRunning && (
+                  <Alert>
+                    <Shield className="w-4 h-4"/>
+                    <AlertDescription>اضغط «تشغيل الفحص الآن» لبدء التدقيق الكامل.</AlertDescription>
+                  </Alert>
+                )}
+                {scanResults && (
+                  <>
+                    <ScanSummary results={scanResults} />
+                    {scanResults.map((r) => (
+                      <div key={r.id} className={`p-3 rounded-lg border flex items-start gap-3 ${r.status === "pass" ? "border-green-500/30 bg-green-500/5" : r.status === "warn" ? "border-yellow-500/30 bg-yellow-500/5" : "border-destructive/40 bg-destructive/5"}`}>
+                        {r.status === "pass" ? <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5"/> : r.status === "warn" ? <AlertTriangle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5"/> : <XCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5"/>}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge variant="outline" className="text-[10px]">{r.category}</Badge>
+                            <h4 className="font-semibold">{r.title}</h4>
+                            <Badge className={`text-[10px] ${severityClass(r.severity)}`}>{severityLabel(r.severity)}</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1 break-words">{r.details}</p>
+                        </div>
+                        {r.status !== "pass" && r.fixable && (
+                          <Button size="sm" variant="outline" onClick={() => applyFix(r)} disabled={fixingId === r.id}>
+                            {fixingId === r.id ? <Loader2 className="w-4 h-4 animate-spin"/> : <><Wrench className="w-4 h-4 ml-1"/>{r.fixLabel || "إصلاح"}</>}
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
 
           {/* ---------- Checklist ---------- */}
           <TabsContent value="checklist" className="space-y-3">
