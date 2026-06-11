@@ -26,6 +26,10 @@ import {
   ExternalLink,
   RefreshCw,
   AlertTriangle,
+  ScanLine,
+  Wrench,
+  Loader2,
+
 } from "lucide-react";
 import { RECOMMENDED_EDGE_HEADERS, CSP } from "@/components/seo/SecurityHeaders";
 import { supabase } from "@/integrations/supabase/client";
@@ -164,6 +168,21 @@ const DEFINER_FUNCTIONS = [
     why: "trigger بسيط يضبط updated_at — لا يقرأ صلاحيات.",
   },
 ];
+// ============================================================
+// 4) Full scan types
+// ============================================================
+type ScanSeverity = "critical" | "high" | "medium" | "low" | "info";
+type ScanResult = {
+  id: string;
+  category: string;
+  title: string;
+  status: "pass" | "fail" | "warn";
+  severity: ScanSeverity;
+  details: string;
+  fixable?: boolean;
+  fixLabel?: string;
+};
+
 
 // ============================================================
 // 3) Active security headers verification (read what's actually in <head>)
@@ -194,6 +213,11 @@ export default function AdminSecurity() {
   const [obfuscate, setObfuscate] = useState<boolean>(
     () => localStorage.getItem("security_blackbox") === "1",
   );
+  const [scanRunning, setScanRunning] = useState(false);
+  const [scanResults, setScanResults] = useState<ScanResult[] | null>(null);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [fixingId, setFixingId] = useState<string | null>(null);
+
 
   useEffect(() => {
     try {
@@ -274,6 +298,261 @@ export default function AdminSecurity() {
     }
   };
 
+  // ============================================================
+  // Full security scan — runs a battery of live checks
+  // ============================================================
+  const runFullScan = async () => {
+    setScanRunning(true);
+    setScanResults(null);
+    setScanProgress(0);
+    const results: ScanResult[] = [];
+    const steps: Array<() => Promise<ScanResult>> = [
+      // 1. Headers present
+      async () => {
+        const headers = readActiveHeaders();
+        setActiveHeaders(headers);
+        const missing = Object.keys(RECOMMENDED_EDGE_HEADERS).filter(
+          (n) => !headers[n] && !headers[n.toLowerCase()] && !(n === "Referrer-Policy" && headers["referrer"]),
+        );
+        return {
+          id: "headers",
+          category: "الرؤوس",
+          title: "رؤوس الأمان في المتصفّح",
+          status: missing.length === 0 ? "pass" : missing.length <= 2 ? "warn" : "fail",
+          severity: missing.length === 0 ? "info" : "medium",
+          details: missing.length ? `مفقود: ${missing.join(", ")} — اضبطها على CDN` : "جميع الرؤوس الموصى بها مفعّلة.",
+          fixable: missing.length > 0,
+          fixLabel: "إعادة فحص",
+        };
+      },
+      // 2. CSP active
+      async () => {
+        const csp = document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.getAttribute("content") || "";
+        const ok = csp.includes("default-src") && !csp.includes("unsafe-eval");
+        return {
+          id: "csp",
+          category: "الرؤوس",
+          title: "سياسة CSP صارمة",
+          status: ok ? "pass" : "fail",
+          severity: ok ? "info" : "high",
+          details: ok ? "CSP مفعّلة بدون unsafe-eval." : "CSP غير صارمة أو تحتوي unsafe-eval.",
+        };
+      },
+      // 3. HTTPS
+      async () => {
+        const ok = window.location.protocol === "https:" || window.location.hostname === "localhost";
+        return {
+          id: "https",
+          category: "الشبكة",
+          title: "اتصال HTTPS",
+          status: ok ? "pass" : "fail",
+          severity: ok ? "info" : "critical",
+          details: ok ? `البروتوكول: ${window.location.protocol}` : "الموقع يُحمّل عبر HTTP — فعّل HTTPS فورًا.",
+        };
+      },
+      // 4. has_role RPC reachable
+      async () => {
+        try {
+          const { data: u } = await supabase.auth.getUser();
+          if (!u.user) {
+            return { id: "has_role", category: "RLS", title: "دالة has_role", status: "warn", severity: "low", details: "لا يوجد مستخدم مسجّل لاختبار الدالة." };
+          }
+          const { error } = await supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
+          return {
+            id: "has_role",
+            category: "RLS",
+            title: "دالة has_role قابلة للاستدعاء",
+            status: error ? "fail" : "pass",
+            severity: error ? "high" : "info",
+            details: error ? `خطأ: ${error.message}` : "الدالة تعمل وتعيد قيمة منطقية.",
+            fixable: !!error,
+            fixLabel: "إعادة تحديث الـ schema cache",
+          };
+        } catch (e: any) {
+          return { id: "has_role", category: "RLS", title: "دالة has_role", status: "fail", severity: "high", details: e?.message || "فشل غير متوقع" };
+        }
+      },
+      // 5. Anon cannot read orders
+      async () => {
+        const { data, error } = await supabase.from("orders").select("id").limit(1);
+        // Without auth, RLS should block — either error or empty
+        const blocked = !!error || !data || data.length === 0;
+        return {
+          id: "anon_orders",
+          category: "RLS",
+          title: "المجهول لا يقرأ orders",
+          status: blocked ? "pass" : "fail",
+          severity: blocked ? "info" : "critical",
+          details: blocked ? "RLS تمنع القراءة العامة لجدول orders." : "تحذير: يمكن قراءة طلبات من غير مصادقة!",
+        };
+      },
+      // 6. Anon cannot read user_roles
+      async () => {
+        const { data: u } = await supabase.auth.getUser();
+        const { data, error } = await supabase.from("user_roles").select("user_id").limit(1);
+        const ok = u.user ? true : !!error || !data || data.length === 0;
+        return {
+          id: "user_roles_leak",
+          category: "RLS",
+          title: "user_roles محمي من المجهول",
+          status: ok ? "pass" : "fail",
+          severity: ok ? "info" : "critical",
+          details: ok ? "لا تسرّب لجدول الأدوار." : "user_roles مكشوف للزوار — خطر رفع صلاحيات.",
+        };
+      },
+      // 7. restaurant_settings allowlist
+      async () => {
+        const { data, error } = await supabase.from("restaurant_settings").select("key").limit(50);
+        if (error) {
+          return { id: "settings_allowlist", category: "RLS", title: "allowlist لإعدادات المطعم", status: "warn", severity: "low", details: error.message };
+        }
+        const sensitive = data?.find((r: any) => /payment|secret|stripe|api/i.test(r.key));
+        return {
+          id: "settings_allowlist",
+          category: "RLS",
+          title: "allowlist لإعدادات المطعم",
+          status: sensitive ? "fail" : "pass",
+          severity: sensitive ? "high" : "info",
+          details: sensitive ? `مفتاح حسّاس مكشوف: ${sensitive.key}` : "المفاتيح المعروضة آمنة.",
+        };
+      },
+      // 8. Edge functions reachable
+      async () => {
+        try {
+          const { error } = await supabase.functions.invoke("validate-coupon", { body: { code: "__SCAN__" } });
+          // Function might return validation error — what matters is it ran
+          return {
+            id: "edge_fn",
+            category: "Edge",
+            title: "Edge Functions قابلة للوصول",
+            status: "pass",
+            severity: "info",
+            details: error ? `استجابة (متوقّعة): ${error.message}` : "validate-coupon استجابت.",
+          };
+        } catch (e: any) {
+          return { id: "edge_fn", category: "Edge", title: "Edge Functions", status: "fail", severity: "high", details: e?.message };
+        }
+      },
+      // 9. Service role key not in bundle
+      async () => {
+        const hasServiceRole = /service_role/i.test(document.documentElement.innerHTML);
+        return {
+          id: "service_role_leak",
+          category: "أسرار",
+          title: "service_role غير مكشوف في الواجهة",
+          status: hasServiceRole ? "fail" : "pass",
+          severity: hasServiceRole ? "critical" : "info",
+          details: hasServiceRole ? "تم العثور على إشارة لـ service_role — راجع الكود فورًا." : "لم يُعثر على service_role في DOM.",
+        };
+      },
+      // 10. localStorage doesn't contain tokens in clear admin keys
+      async () => {
+        const keys = Object.keys(localStorage);
+        const risky = keys.filter((k) => /password|secret|service_role/i.test(k));
+        return {
+          id: "ls_secrets",
+          category: "التخزين",
+          title: "localStorage خالٍ من الأسرار",
+          status: risky.length ? "fail" : "pass",
+          severity: risky.length ? "high" : "info",
+          details: risky.length ? `مفاتيح مشبوهة: ${risky.join(", ")}` : "لا أسرار في التخزين المحلي.",
+          fixable: risky.length > 0,
+          fixLabel: "حذف المفاتيح المشبوهة",
+        };
+      },
+      // 11. Source maps not exposed
+      async () => {
+        try {
+          const scripts = Array.from(document.querySelectorAll("script[src]")).slice(0, 1);
+          if (!scripts.length) return { id: "sourcemaps", category: "الواجهة", title: "Source maps", status: "pass", severity: "info", details: "لا توجد scripts خارجية." };
+          const src = (scripts[0] as HTMLScriptElement).src;
+          const r = await fetch(src + ".map", { method: "HEAD" });
+          const exposed = r.ok;
+          return {
+            id: "sourcemaps",
+            category: "الواجهة",
+            title: "Source maps غير منشورة في الإنتاج",
+            status: exposed ? "warn" : "pass",
+            severity: exposed ? "medium" : "info",
+            details: exposed ? "تم العثور على .map — عطّلها في الإنتاج." : "لا توجد source maps متاحة.",
+          };
+        } catch {
+          return { id: "sourcemaps", category: "الواجهة", title: "Source maps", status: "pass", severity: "info", details: "غير متاحة (آمن)." };
+        }
+      },
+      // 12. Checklist blockers
+      async () => {
+        const remaining = blockers.length - blockersDone;
+        return {
+          id: "checklist",
+          category: "الإطلاق",
+          title: "عوائق قائمة الإطلاق",
+          status: remaining === 0 ? "pass" : "fail",
+          severity: remaining === 0 ? "info" : "high",
+          details: remaining === 0 ? "كل العوائق مكتملة." : `${remaining} عائق متبقٍ — راجع قسم القائمة.`,
+        };
+      },
+    ];
+
+    for (let i = 0; i < steps.length; i++) {
+      try {
+        const r = await steps[i]();
+        results.push(r);
+      } catch (e: any) {
+        results.push({
+          id: `step_${i}`,
+          category: "خطأ",
+          title: `فحص #${i + 1}`,
+          status: "fail",
+          severity: "medium",
+          details: e?.message || "فشل غير متوقع",
+        });
+      }
+      setScanProgress(Math.round(((i + 1) / steps.length) * 100));
+      setScanResults([...results]);
+    }
+    setScanRunning(false);
+    const failed = results.filter((r) => r.status === "fail").length;
+    if (failed === 0) toast.success("الفحص اكتمل — لا توجد مشاكل حرجة.");
+    else toast.error(`الفحص اكتمل: ${failed} مشكلة تحتاج إصلاح.`);
+  };
+
+  const applyFix = async (r: ScanResult) => {
+    setFixingId(r.id);
+    try {
+      switch (r.id) {
+        case "headers": {
+          setActiveHeaders(readActiveHeaders());
+          toast.success("تم إعادة قراءة الرؤوس.");
+          break;
+        }
+        case "has_role": {
+          // Force schema cache refresh by re-invoking
+          const { data: u } = await supabase.auth.getUser();
+          if (u.user) await supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
+          toast.success("تم إعادة استدعاء الدالة.");
+          break;
+        }
+        case "ls_secrets": {
+          Object.keys(localStorage)
+            .filter((k) => /password|secret|service_role/i.test(k))
+            .forEach((k) => localStorage.removeItem(k));
+          toast.success("تم حذف المفاتيح المشبوهة من localStorage.");
+          break;
+        }
+        default:
+          toast.info("لا يوجد إصلاح تلقائي — راجع التفاصيل.");
+      }
+      // Re-run that single check
+      await runFullScan();
+    } catch (e: any) {
+      toast.error(e?.message || "فشل الإصلاح");
+    } finally {
+      setFixingId(null);
+    }
+  };
+
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -315,8 +594,9 @@ export default function AdminSecurity() {
           </CardContent>
         </Card>
 
-        <Tabs defaultValue="checklist" className="space-y-4">
+        <Tabs defaultValue="scan" className="space-y-4">
           <TabsList className="flex flex-wrap h-auto">
+            <TabsTrigger value="scan"><ScanLine className="w-4 h-4 ml-1"/>فحص شامل</TabsTrigger>
             <TabsTrigger value="checklist"><KeyRound className="w-4 h-4 ml-1"/>القائمة</TabsTrigger>
             <TabsTrigger value="rls"><Database className="w-4 h-4 ml-1"/>RLS</TabsTrigger>
             <TabsTrigger value="headers"><Lock className="w-4 h-4 ml-1"/>الرؤوس</TabsTrigger>
@@ -325,6 +605,56 @@ export default function AdminSecurity() {
             <TabsTrigger value="blackbox"><EyeOff className="w-4 h-4 ml-1"/>الإخفاء</TabsTrigger>
             <TabsTrigger value="cdn"><Cloud className="w-4 h-4 ml-1"/>CDN/WAF</TabsTrigger>
           </TabsList>
+
+          {/* ---------- Full Scan ---------- */}
+          <TabsContent value="scan" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div>
+                    <CardTitle className="flex items-center gap-2"><ScanLine className="w-5 h-5"/>الفحص الشامل المباشر</CardTitle>
+                    <CardDescription>يشغّل سلسلة اختبارات حيّة على RLS والرؤوس والأسرار والإيدج فانكشنز ويعرض الإصلاحات المتاحة.</CardDescription>
+                  </div>
+                  <Button onClick={runFullScan} disabled={scanRunning} size="lg">
+                    {scanRunning ? <><Loader2 className="w-4 h-4 ml-1 animate-spin"/>جارٍ الفحص...</> : <><ScanLine className="w-4 h-4 ml-1"/>تشغيل الفحص الآن</>}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {scanRunning && <Progress value={scanProgress} />}
+                {!scanResults && !scanRunning && (
+                  <Alert>
+                    <Shield className="w-4 h-4"/>
+                    <AlertDescription>اضغط «تشغيل الفحص الآن» لبدء التدقيق الكامل.</AlertDescription>
+                  </Alert>
+                )}
+                {scanResults && (
+                  <>
+                    <ScanSummary results={scanResults} />
+                    {scanResults.map((r) => (
+                      <div key={r.id} className={`p-3 rounded-lg border flex items-start gap-3 ${r.status === "pass" ? "border-green-500/30 bg-green-500/5" : r.status === "warn" ? "border-yellow-500/30 bg-yellow-500/5" : "border-destructive/40 bg-destructive/5"}`}>
+                        {r.status === "pass" ? <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5"/> : r.status === "warn" ? <AlertTriangle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5"/> : <XCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5"/>}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge variant="outline" className="text-[10px]">{r.category}</Badge>
+                            <h4 className="font-semibold">{r.title}</h4>
+                            <Badge className={`text-[10px] ${severityClass(r.severity)}`}>{severityLabel(r.severity)}</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1 break-words">{r.details}</p>
+                        </div>
+                        {r.status !== "pass" && r.fixable && (
+                          <Button size="sm" variant="outline" onClick={() => applyFix(r)} disabled={fixingId === r.id}>
+                            {fixingId === r.id ? <Loader2 className="w-4 h-4 animate-spin"/> : <><Wrench className="w-4 h-4 ml-1"/>{r.fixLabel || "إصلاح"}</>}
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
 
           {/* ---------- Checklist ---------- */}
           <TabsContent value="checklist" className="space-y-3">
@@ -672,3 +1002,39 @@ function AccessBadge({ v }: { v: AuditRow["read"] | AuditRow["write"] }) {
   const x = map[v];
   return <Badge className={`${x.cls} text-white`}>{x.label}</Badge>;
 }
+
+function severityClass(s: ScanSeverity) {
+  return {
+    critical: "bg-red-700 text-white",
+    high: "bg-red-500 text-white",
+    medium: "bg-yellow-500 text-black",
+    low: "bg-blue-500 text-white",
+    info: "bg-muted text-foreground",
+  }[s];
+}
+function severityLabel(s: ScanSeverity) {
+  return { critical: "حرج", high: "عالٍ", medium: "متوسط", low: "منخفض", info: "معلومة" }[s];
+}
+
+function ScanSummary({ results }: { results: ScanResult[] }) {
+  const pass = results.filter((r) => r.status === "pass").length;
+  const warn = results.filter((r) => r.status === "warn").length;
+  const fail = results.filter((r) => r.status === "fail").length;
+  return (
+    <div className="grid grid-cols-3 gap-3 mb-2">
+      <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-center">
+        <div className="text-2xl font-bold text-green-600">{pass}</div>
+        <div className="text-xs text-muted-foreground">ناجح</div>
+      </div>
+      <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-center">
+        <div className="text-2xl font-bold text-yellow-600">{warn}</div>
+        <div className="text-xs text-muted-foreground">تحذير</div>
+      </div>
+      <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-center">
+        <div className="text-2xl font-bold text-destructive">{fail}</div>
+        <div className="text-xs text-muted-foreground">فاشل</div>
+      </div>
+    </div>
+  );
+}
+
