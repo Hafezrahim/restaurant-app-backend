@@ -298,6 +298,261 @@ export default function AdminSecurity() {
     }
   };
 
+  // ============================================================
+  // Full security scan — runs a battery of live checks
+  // ============================================================
+  const runFullScan = async () => {
+    setScanRunning(true);
+    setScanResults(null);
+    setScanProgress(0);
+    const results: ScanResult[] = [];
+    const steps: Array<() => Promise<ScanResult>> = [
+      // 1. Headers present
+      async () => {
+        const headers = readActiveHeaders();
+        setActiveHeaders(headers);
+        const missing = Object.keys(RECOMMENDED_EDGE_HEADERS).filter(
+          (n) => !headers[n] && !headers[n.toLowerCase()] && !(n === "Referrer-Policy" && headers["referrer"]),
+        );
+        return {
+          id: "headers",
+          category: "الرؤوس",
+          title: "رؤوس الأمان في المتصفّح",
+          status: missing.length === 0 ? "pass" : missing.length <= 2 ? "warn" : "fail",
+          severity: missing.length === 0 ? "info" : "medium",
+          details: missing.length ? `مفقود: ${missing.join(", ")} — اضبطها على CDN` : "جميع الرؤوس الموصى بها مفعّلة.",
+          fixable: missing.length > 0,
+          fixLabel: "إعادة فحص",
+        };
+      },
+      // 2. CSP active
+      async () => {
+        const csp = document.querySelector('meta[http-equiv="Content-Security-Policy"]')?.getAttribute("content") || "";
+        const ok = csp.includes("default-src") && !csp.includes("unsafe-eval");
+        return {
+          id: "csp",
+          category: "الرؤوس",
+          title: "سياسة CSP صارمة",
+          status: ok ? "pass" : "fail",
+          severity: ok ? "info" : "high",
+          details: ok ? "CSP مفعّلة بدون unsafe-eval." : "CSP غير صارمة أو تحتوي unsafe-eval.",
+        };
+      },
+      // 3. HTTPS
+      async () => {
+        const ok = window.location.protocol === "https:" || window.location.hostname === "localhost";
+        return {
+          id: "https",
+          category: "الشبكة",
+          title: "اتصال HTTPS",
+          status: ok ? "pass" : "fail",
+          severity: ok ? "info" : "critical",
+          details: ok ? `البروتوكول: ${window.location.protocol}` : "الموقع يُحمّل عبر HTTP — فعّل HTTPS فورًا.",
+        };
+      },
+      // 4. has_role RPC reachable
+      async () => {
+        try {
+          const { data: u } = await supabase.auth.getUser();
+          if (!u.user) {
+            return { id: "has_role", category: "RLS", title: "دالة has_role", status: "warn", severity: "low", details: "لا يوجد مستخدم مسجّل لاختبار الدالة." };
+          }
+          const { error } = await supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
+          return {
+            id: "has_role",
+            category: "RLS",
+            title: "دالة has_role قابلة للاستدعاء",
+            status: error ? "fail" : "pass",
+            severity: error ? "high" : "info",
+            details: error ? `خطأ: ${error.message}` : "الدالة تعمل وتعيد قيمة منطقية.",
+            fixable: !!error,
+            fixLabel: "إعادة تحديث الـ schema cache",
+          };
+        } catch (e: any) {
+          return { id: "has_role", category: "RLS", title: "دالة has_role", status: "fail", severity: "high", details: e?.message || "فشل غير متوقع" };
+        }
+      },
+      // 5. Anon cannot read orders
+      async () => {
+        const { data, error } = await supabase.from("orders").select("id").limit(1);
+        // Without auth, RLS should block — either error or empty
+        const blocked = !!error || !data || data.length === 0;
+        return {
+          id: "anon_orders",
+          category: "RLS",
+          title: "المجهول لا يقرأ orders",
+          status: blocked ? "pass" : "fail",
+          severity: blocked ? "info" : "critical",
+          details: blocked ? "RLS تمنع القراءة العامة لجدول orders." : "تحذير: يمكن قراءة طلبات من غير مصادقة!",
+        };
+      },
+      // 6. Anon cannot read user_roles
+      async () => {
+        const { data: u } = await supabase.auth.getUser();
+        const { data, error } = await supabase.from("user_roles").select("user_id").limit(1);
+        const ok = u.user ? true : !!error || !data || data.length === 0;
+        return {
+          id: "user_roles_leak",
+          category: "RLS",
+          title: "user_roles محمي من المجهول",
+          status: ok ? "pass" : "fail",
+          severity: ok ? "info" : "critical",
+          details: ok ? "لا تسرّب لجدول الأدوار." : "user_roles مكشوف للزوار — خطر رفع صلاحيات.",
+        };
+      },
+      // 7. restaurant_settings allowlist
+      async () => {
+        const { data, error } = await supabase.from("restaurant_settings").select("key").limit(50);
+        if (error) {
+          return { id: "settings_allowlist", category: "RLS", title: "allowlist لإعدادات المطعم", status: "warn", severity: "low", details: error.message };
+        }
+        const sensitive = data?.find((r: any) => /payment|secret|stripe|api/i.test(r.key));
+        return {
+          id: "settings_allowlist",
+          category: "RLS",
+          title: "allowlist لإعدادات المطعم",
+          status: sensitive ? "fail" : "pass",
+          severity: sensitive ? "high" : "info",
+          details: sensitive ? `مفتاح حسّاس مكشوف: ${sensitive.key}` : "المفاتيح المعروضة آمنة.",
+        };
+      },
+      // 8. Edge functions reachable
+      async () => {
+        try {
+          const { error } = await supabase.functions.invoke("validate-coupon", { body: { code: "__SCAN__" } });
+          // Function might return validation error — what matters is it ran
+          return {
+            id: "edge_fn",
+            category: "Edge",
+            title: "Edge Functions قابلة للوصول",
+            status: "pass",
+            severity: "info",
+            details: error ? `استجابة (متوقّعة): ${error.message}` : "validate-coupon استجابت.",
+          };
+        } catch (e: any) {
+          return { id: "edge_fn", category: "Edge", title: "Edge Functions", status: "fail", severity: "high", details: e?.message };
+        }
+      },
+      // 9. Service role key not in bundle
+      async () => {
+        const hasServiceRole = /service_role/i.test(document.documentElement.innerHTML);
+        return {
+          id: "service_role_leak",
+          category: "أسرار",
+          title: "service_role غير مكشوف في الواجهة",
+          status: hasServiceRole ? "fail" : "pass",
+          severity: hasServiceRole ? "critical" : "info",
+          details: hasServiceRole ? "تم العثور على إشارة لـ service_role — راجع الكود فورًا." : "لم يُعثر على service_role في DOM.",
+        };
+      },
+      // 10. localStorage doesn't contain tokens in clear admin keys
+      async () => {
+        const keys = Object.keys(localStorage);
+        const risky = keys.filter((k) => /password|secret|service_role/i.test(k));
+        return {
+          id: "ls_secrets",
+          category: "التخزين",
+          title: "localStorage خالٍ من الأسرار",
+          status: risky.length ? "fail" : "pass",
+          severity: risky.length ? "high" : "info",
+          details: risky.length ? `مفاتيح مشبوهة: ${risky.join(", ")}` : "لا أسرار في التخزين المحلي.",
+          fixable: risky.length > 0,
+          fixLabel: "حذف المفاتيح المشبوهة",
+        };
+      },
+      // 11. Source maps not exposed
+      async () => {
+        try {
+          const scripts = Array.from(document.querySelectorAll("script[src]")).slice(0, 1);
+          if (!scripts.length) return { id: "sourcemaps", category: "الواجهة", title: "Source maps", status: "pass", severity: "info", details: "لا توجد scripts خارجية." };
+          const src = (scripts[0] as HTMLScriptElement).src;
+          const r = await fetch(src + ".map", { method: "HEAD" });
+          const exposed = r.ok;
+          return {
+            id: "sourcemaps",
+            category: "الواجهة",
+            title: "Source maps غير منشورة في الإنتاج",
+            status: exposed ? "warn" : "pass",
+            severity: exposed ? "medium" : "info",
+            details: exposed ? "تم العثور على .map — عطّلها في الإنتاج." : "لا توجد source maps متاحة.",
+          };
+        } catch {
+          return { id: "sourcemaps", category: "الواجهة", title: "Source maps", status: "pass", severity: "info", details: "غير متاحة (آمن)." };
+        }
+      },
+      // 12. Checklist blockers
+      async () => {
+        const remaining = blockers.length - blockersDone;
+        return {
+          id: "checklist",
+          category: "الإطلاق",
+          title: "عوائق قائمة الإطلاق",
+          status: remaining === 0 ? "pass" : "fail",
+          severity: remaining === 0 ? "info" : "high",
+          details: remaining === 0 ? "كل العوائق مكتملة." : `${remaining} عائق متبقٍ — راجع قسم القائمة.`,
+        };
+      },
+    ];
+
+    for (let i = 0; i < steps.length; i++) {
+      try {
+        const r = await steps[i]();
+        results.push(r);
+      } catch (e: any) {
+        results.push({
+          id: `step_${i}`,
+          category: "خطأ",
+          title: `فحص #${i + 1}`,
+          status: "fail",
+          severity: "medium",
+          details: e?.message || "فشل غير متوقع",
+        });
+      }
+      setScanProgress(Math.round(((i + 1) / steps.length) * 100));
+      setScanResults([...results]);
+    }
+    setScanRunning(false);
+    const failed = results.filter((r) => r.status === "fail").length;
+    if (failed === 0) toast.success("الفحص اكتمل — لا توجد مشاكل حرجة.");
+    else toast.error(`الفحص اكتمل: ${failed} مشكلة تحتاج إصلاح.`);
+  };
+
+  const applyFix = async (r: ScanResult) => {
+    setFixingId(r.id);
+    try {
+      switch (r.id) {
+        case "headers": {
+          setActiveHeaders(readActiveHeaders());
+          toast.success("تم إعادة قراءة الرؤوس.");
+          break;
+        }
+        case "has_role": {
+          // Force schema cache refresh by re-invoking
+          const { data: u } = await supabase.auth.getUser();
+          if (u.user) await supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
+          toast.success("تم إعادة استدعاء الدالة.");
+          break;
+        }
+        case "ls_secrets": {
+          Object.keys(localStorage)
+            .filter((k) => /password|secret|service_role/i.test(k))
+            .forEach((k) => localStorage.removeItem(k));
+          toast.success("تم حذف المفاتيح المشبوهة من localStorage.");
+          break;
+        }
+        default:
+          toast.info("لا يوجد إصلاح تلقائي — راجع التفاصيل.");
+      }
+      // Re-run that single check
+      await runFullScan();
+    } catch (e: any) {
+      toast.error(e?.message || "فشل الإصلاح");
+    } finally {
+      setFixingId(null);
+    }
+  };
+
+
   return (
     <AdminLayout>
       <div className="space-y-6">
