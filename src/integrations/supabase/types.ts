@@ -99,6 +99,7 @@ export type Database = {
           is_active: boolean
           max_discount: number | null
           min_order: number
+          per_user_limit: number
           type: Database["public"]["Enums"]["coupon_type"]
           usage_limit: number
           used_count: number
@@ -113,6 +114,7 @@ export type Database = {
           is_active?: boolean
           max_discount?: number | null
           min_order?: number
+          per_user_limit?: number
           type?: Database["public"]["Enums"]["coupon_type"]
           usage_limit?: number
           used_count?: number
@@ -127,6 +129,7 @@ export type Database = {
           is_active?: boolean
           max_discount?: number | null
           min_order?: number
+          per_user_limit?: number
           type?: Database["public"]["Enums"]["coupon_type"]
           usage_limit?: number
           used_count?: number
@@ -616,6 +619,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_coupon_usage: {
+        Args: { _coupon_id: string }
+        Returns: undefined
       }
     }
     Enums: {

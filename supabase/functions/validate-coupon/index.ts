@@ -29,9 +29,10 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
   if (authHeader?.startsWith("Bearer ")) {
-    const anon = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
-    const { data } = await anon.auth.getClaims(authHeader.replace("Bearer ", ""));
-    if (data?.claims?.sub) userId = data.claims.sub as string;
+    const token = authHeader.replace("Bearer ", "");
+    const anon = createClient(supabaseUrl, anonKey);
+    const { data, error } = await anon.auth.getUser(token);
+    if (!error && data?.user?.id) userId = data.user.id;
   }
 
   const admin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -40,10 +41,13 @@ Deno.serve(async (req) => {
   if (c.expires_at && new Date(c.expires_at) < new Date()) return bad(400, "كود الخصم منتهي الصلاحية");
   if (subtotal < Number(c.min_order)) return bad(400, `الحد الأدنى للطلب ${c.min_order} ر.س`);
   if ((c.used_count ?? 0) >= c.usage_limit) return bad(400, "تم استخدام هذا الكود بالحد الأقصى");
+
+  // Per-user limit (defaults to 1 when column unset)
   if (userId) {
+    const perUserLimit = Number(c.per_user_limit ?? 1);
     const { count } = await admin.from("coupon_usage").select("id", { count: "exact", head: true })
       .eq("coupon_id", c.id).eq("user_id", userId);
-    if ((count ?? 0) >= c.usage_limit) return bad(400, "تم استخدامك لهذا الكود سابقاً");
+    if ((count ?? 0) >= perUserLimit) return bad(400, "تم استخدامك لهذا الكود بالحد الأقصى");
   }
 
   let discount = 0;
