@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Receipt, MapPin, Phone, Clock, Truck, Copy, Check, Map, CreditCard, User, UserPlus, LogIn, Tag, ChevronDown, Download } from 'lucide-react';
 import html2canvas from 'html2canvas';
-import { getDeliveryZones, DeliveryZone } from '@/data/deliveryZones';
+import { fetchDeliveryZones, defaultDeliveryZones, DeliveryZone } from '@/data/deliveryZones';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
@@ -61,9 +61,20 @@ const Checkout: React.FC = () => {
     lng: 0,
   });
 
-  // Delivery zones
-  const [deliveryZones] = useState<DeliveryZone[]>(getDeliveryZones());
-  const [selectedZoneId, setSelectedZoneId] = useState<string>(deliveryZones[0]?.id || '');
+  // Delivery zones — loaded from the database (never from localStorage)
+  // so the customer cannot tamper with the fee. The edge function also
+  // re-reads the chosen zone's price server-side for authoritative totals.
+  const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>(defaultDeliveryZones);
+  const [selectedZoneId, setSelectedZoneId] = useState<string>('');
+  useEffect(() => {
+    let cancelled = false;
+    fetchDeliveryZones().then((zones) => {
+      if (cancelled) return;
+      setDeliveryZones(zones);
+      setSelectedZoneId((prev) => prev || zones[0]?.id || '');
+    });
+    return () => { cancelled = true; };
+  }, []);
   const selectedZone = deliveryZones.find((z) => z.id === selectedZoneId) || deliveryZones[0];
   const deliveryFee = selectedZone?.price || 0;
 

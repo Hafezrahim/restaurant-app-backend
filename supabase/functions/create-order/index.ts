@@ -47,9 +47,10 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
   if (authHeader?.startsWith("Bearer ")) {
-    const anon = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
-    const { data } = await anon.auth.getClaims(authHeader.replace("Bearer ", ""));
-    if (data?.claims?.sub) userId = data.claims.sub as string;
+    const token = authHeader.replace("Bearer ", "");
+    const anon = createClient(supabaseUrl, anonKey);
+    const { data, error } = await anon.auth.getUser(token);
+    if (!error && data?.user?.id) userId = data.user.id;
   }
 
   let body: Body;
@@ -103,7 +104,7 @@ Deno.serve(async (req) => {
 
   // 4) Coupon (server-validated against DB)
   let couponDiscount = 0;
-  let couponRow: { id: string; code: string; used_count: number; usage_limit: number } | null = null;
+  let couponRow: { id: string; code: string; used_count: number; usage_limit: number; per_user_limit?: number } | null = null;
   if (body.coupon_code) {
     const code = body.coupon_code.trim().toUpperCase();
     const { data: c } = await admin
@@ -113,12 +114,14 @@ Deno.serve(async (req) => {
     if (subtotal < Number(c.min_order)) return bad(400, `الحد الأدنى للطلب ${c.min_order} ر.س`);
     if ((c.used_count ?? 0) >= c.usage_limit) return bad(400, "تم استخدام هذا الكود بالحد الأقصى");
 
-    // Per-user limit when authenticated
+    // Per-user limit (defaults to 1) — applies to authenticated users only.
+    // Guests cannot be tracked, so per-user enforcement is skipped for them.
     if (userId) {
+      const perUserLimit = Number((c as any).per_user_limit ?? 1);
       const { count } = await admin
         .from("coupon_usage").select("id", { count: "exact", head: true })
         .eq("coupon_id", c.id).eq("user_id", userId);
-      if ((count ?? 0) >= c.usage_limit) return bad(400, "تم استخدامك لهذا الكود سابقاً");
+      if ((count ?? 0) >= perUserLimit) return bad(400, "تم استخدامك لهذا الكود بالحد الأقصى");
     }
 
     if (c.type === "percentage") {
@@ -131,7 +134,8 @@ Deno.serve(async (req) => {
     couponRow = c as any;
   }
 
-  // 5) Points redemption (server computes balance)
+  // 5) Points redemption (server computes balance).
+  // Only the authenticated user's balance is honored; guest requests are ignored.
   let pointsRedeemed = 0;
   let pointsDiscount = 0;
   if (body.redeem_points && userId) {
@@ -176,12 +180,12 @@ Deno.serve(async (req) => {
     return bad(500, "Failed to save items");
   }
 
-  // 8) Coupon usage
+  // 8) Coupon usage — atomic increment via RPC to avoid lost updates under concurrency.
   if (couponRow) {
     await admin.from("coupon_usage").insert({
       coupon_id: couponRow.id, user_id: userId, order_id: order.id,
     });
-    await admin.from("coupons").update({ used_count: (couponRow.used_count ?? 0) + 1 }).eq("id", couponRow.id);
+    await admin.rpc("increment_coupon_usage", { _coupon_id: couponRow.id });
   }
 
   // 9) Rewards: deduct redeemed, then award new based on (total / 1 SAR = 1 point)
