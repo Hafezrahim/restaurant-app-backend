@@ -14,6 +14,8 @@ import { NotificationsProvider } from "@/context/NotificationsContext";
 import { CurrencyProvider } from "@/context/CurrencyContext";
 import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
 import { ClientProtectedRoute } from "@/components/client/ClientProtectedRoute";
+import { RoleProtectedRoute } from "@/components/auth/RoleProtectedRoute";
+import MockLogin from "./pages/dev/MockLogin";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Index from "./pages/Index";
 import Menu from "./pages/Menu";
@@ -95,20 +97,24 @@ const App = () => (
                     <Route path="/client/profile" element={<ClientProtectedRoute><ClientProfile /></ClientProtectedRoute>} />
                     <Route path="/client/rewards" element={<ClientProtectedRoute><ClientRewards /></ClientProtectedRoute>} />
                     <Route path="/admin/login" element={<AdminLogin />} />
-                    <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-                    <Route path="/admin/orders" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
-                    <Route path="/admin/orders/:id" element={<ProtectedRoute><AdminOrderDetails /></ProtectedRoute>} />
-                    <Route path="/admin/customers" element={<ProtectedRoute><AdminCustomers /></ProtectedRoute>} />
-                    <Route path="/admin/customers/:id" element={<ProtectedRoute><AdminCustomerDetails /></ProtectedRoute>} />
-                    <Route path="/admin/menu" element={<ProtectedRoute><AdminMenu /></ProtectedRoute>} />
-                    <Route path="/admin/reservations" element={<ProtectedRoute><AdminReservations /></ProtectedRoute>} />
-                    <Route path="/admin/reservations/:id" element={<ProtectedRoute><AdminReservationDetails /></ProtectedRoute>} />
-                    <Route path="/admin/reports" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
-                    <Route path="/admin/reviews" element={<ProtectedRoute><AdminReviews /></ProtectedRoute>} />
-                    <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
-                    <Route path="/admin/coupons" element={<ProtectedRoute><AdminCoupons /></ProtectedRoute>} />
-                    <Route path="/admin/seo" element={<ProtectedRoute><AdminSEO /></ProtectedRoute>} />
-                    <Route path="/admin/security" element={<ProtectedRoute><AdminSecurity /></ProtectedRoute>} />
+                    <Route path="/dev/login" element={<MockLogin />} />
+                    {/* Admin-only surfaces */}
+                    <Route path="/admin" element={<RoleProtectedRoute allow={["admin", "manager"]} loginPath="/admin/login"><AdminDashboard /></RoleProtectedRoute>} />
+                    <Route path="/admin/customers" element={<RoleProtectedRoute allow={["admin", "manager"]} loginPath="/admin/login"><AdminCustomers /></RoleProtectedRoute>} />
+                    <Route path="/admin/customers/:id" element={<RoleProtectedRoute allow={["admin", "manager"]} loginPath="/admin/login"><AdminCustomerDetails /></RoleProtectedRoute>} />
+                    <Route path="/admin/reports" element={<RoleProtectedRoute allow={["admin", "manager"]} loginPath="/admin/login"><AdminReports /></RoleProtectedRoute>} />
+                    <Route path="/admin/settings" element={<RoleProtectedRoute allow={["admin"]} loginPath="/admin/login"><AdminSettings /></RoleProtectedRoute>} />
+                    <Route path="/admin/seo" element={<RoleProtectedRoute allow={["admin"]} loginPath="/admin/login"><AdminSEO /></RoleProtectedRoute>} />
+                    <Route path="/admin/security" element={<RoleProtectedRoute allow={["admin"]} loginPath="/admin/login"><AdminSecurity /></RoleProtectedRoute>} />
+                    <Route path="/admin/coupons" element={<RoleProtectedRoute allow={["admin", "manager"]} loginPath="/admin/login"><AdminCoupons /></RoleProtectedRoute>} />
+                    <Route path="/admin/reviews" element={<RoleProtectedRoute allow={["admin", "manager"]} loginPath="/admin/login"><AdminReviews /></RoleProtectedRoute>} />
+                    {/* Menu management — admin + manager + kitchen */}
+                    <Route path="/admin/menu" element={<RoleProtectedRoute allow={["admin", "manager", "kitchen"]} loginPath="/admin/login"><AdminMenu /></RoleProtectedRoute>} />
+                    {/* Operations — admin + manager + cashier + kitchen */}
+                    <Route path="/admin/orders" element={<RoleProtectedRoute allow={["admin", "manager", "cashier", "kitchen"]} loginPath="/admin/login"><AdminOrders /></RoleProtectedRoute>} />
+                    <Route path="/admin/orders/:id" element={<RoleProtectedRoute allow={["admin", "manager", "cashier", "kitchen"]} loginPath="/admin/login"><AdminOrderDetails /></RoleProtectedRoute>} />
+                    <Route path="/admin/reservations" element={<RoleProtectedRoute allow={["admin", "manager", "cashier"]} loginPath="/admin/login"><AdminReservations /></RoleProtectedRoute>} />
+                    <Route path="/admin/reservations/:id" element={<RoleProtectedRoute allow={["admin", "manager", "cashier"]} loginPath="/admin/login"><AdminReservationDetails /></RoleProtectedRoute>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </BrowserRouter>
