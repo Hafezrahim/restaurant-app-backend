@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Receipt, MapPin, Phone, Clock, Truck, Copy, Check, Map, CreditCard, User, UserPlus, LogIn, Tag, ChevronDown, Download } from 'lucide-react';
 import html2canvas from 'html2canvas';
@@ -61,11 +61,14 @@ const Checkout: React.FC = () => {
     lng: 0,
   });
 
-  // Delivery zones — loaded from the database (never from localStorage)
-  // so the customer cannot tamper with the fee. The edge function also
-  // re-reads the chosen zone's price server-side for authoritative totals.
+  // Delivery zones + free-delivery threshold — loaded from the database
+  // (never from localStorage) so the customer cannot tamper with the fee.
+  // The edge function also re-reads the chosen zone's price server-side
+  // for authoritative totals.
   const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>(defaultDeliveryZones);
   const [selectedZoneId, setSelectedZoneId] = useState<string>('');
+  const [freeDeliveryThreshold, setFreeDeliveryThreshold] = useState<number>(0);
+
   useEffect(() => {
     let cancelled = false;
     fetchDeliveryZones().then((zones) => {
@@ -73,18 +76,46 @@ const Checkout: React.FC = () => {
       setDeliveryZones(zones);
       setSelectedZoneId((prev) => prev || zones[0]?.id || '');
     });
+    // Free-delivery threshold lives in restaurant_settings.delivery.freeDeliveryThreshold
+    supabase
+      .from('restaurant_settings')
+      .select('value')
+      .eq('key', 'delivery')
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        const v = (data?.value as { freeDeliveryThreshold?: number } | null)?.freeDeliveryThreshold;
+        if (typeof v === 'number' && v > 0) setFreeDeliveryThreshold(v);
+      });
     return () => { cancelled = true; };
   }, []);
-  const selectedZone = deliveryZones.find((z) => z.id === selectedZoneId) || deliveryZones[0];
-  const deliveryFee = selectedZone?.price || 0;
 
-  // Check for stored customer data
+  const selectedZone = useMemo(
+    () => deliveryZones.find((z) => z.id === selectedZoneId) || deliveryZones[0],
+    [deliveryZones, selectedZoneId],
+  );
+
+  // Check for stored customer data (UI convenience only — NOT used for pricing)
   const storedData = localStorage.getItem(CUSTOMER_STORAGE_KEY);
   const hasStoredData = !!storedData;
 
+  // Totals are recomputed on every render from DB-backed inputs:
+  // selected zone fee, free-delivery threshold, cart subtotal, discounts.
+  // No price input is ever read from localStorage.
   const currentTotal = step === 'receipt' ? orderTotal : totalPrice;
-  const tax = currentTotal * 0.15;
-  const grandTotal = currentTotal + deliveryFee + tax - pointsDiscount - couponDiscount;
+  const isFreeDelivery = useMemo(
+    () => freeDeliveryThreshold > 0 && currentTotal >= freeDeliveryThreshold,
+    [freeDeliveryThreshold, currentTotal],
+  );
+  const deliveryFee = useMemo(
+    () => (isFreeDelivery ? 0 : selectedZone?.price || 0),
+    [isFreeDelivery, selectedZone],
+  );
+  const tax = useMemo(() => currentTotal * 0.15, [currentTotal]);
+  const grandTotal = useMemo(
+    () => currentTotal + deliveryFee + tax - pointsDiscount - couponDiscount,
+    [currentTotal, deliveryFee, tax, pointsDiscount, couponDiscount],
+  );
   const displayItems = step === 'receipt' ? orderItems : items;
 
   const handleApplyCoupon = async () => {
