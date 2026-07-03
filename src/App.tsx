@@ -43,6 +43,7 @@ import AdminSEO from "./pages/admin/AdminSEO";
 import AdminSecurity from "./pages/admin/AdminSecurity";
 import { SeoFromSettings } from "./components/seo/SeoFromSettings";
 import { SecurityHeaders } from "./components/seo/SecurityHeaders";
+import TouchTargetDebugOverlay from "./components/dev/TouchTargetDebugOverlay";
 import AdminOrderDetails from "./pages/admin/AdminOrderDetails";
 import AdminCustomerDetails from "./pages/admin/AdminCustomerDetails";
 import AdminReservationDetails from "./pages/admin/AdminReservationDetails";
@@ -75,6 +76,7 @@ const App = () => (
                 <BrowserRouter>
                 <SecurityHeaders />
                 <SeoFromSettings />
+                <TouchTargetDebugOverlay />
                 <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/menu" element={<Menu />} />
