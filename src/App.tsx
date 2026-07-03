@@ -76,6 +76,7 @@ const App = () => (
                 <BrowserRouter>
                 <SecurityHeaders />
                 <SeoFromSettings />
+                <TouchTargetDebugOverlay />
                 <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/menu" element={<Menu />} />
