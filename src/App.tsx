@@ -99,7 +99,7 @@ const App = () => (
                     <Route path="/client/profile" element={<ClientProtectedRoute><ClientProfile /></ClientProtectedRoute>} />
                     <Route path="/client/rewards" element={<ClientProtectedRoute><ClientRewards /></ClientProtectedRoute>} />
                     <Route path="/admin/login" element={<AdminLogin />} />
-                    <Route path="/dev/login" element={<MockLogin />} />
+                    
                     {/* Admin-only surfaces */}
                     <Route path="/admin" element={<RoleProtectedRoute allow={["admin", "manager"]} loginPath="/admin/login"><AdminDashboard /></RoleProtectedRoute>} />
                     <Route path="/admin/customers" element={<RoleProtectedRoute allow={["admin", "manager"]} loginPath="/admin/login"><AdminCustomers /></RoleProtectedRoute>} />
