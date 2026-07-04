@@ -50,15 +50,36 @@ const Reservation: React.FC = () => {
   const lunchSlots = timeSlots.filter(s => s.period === 'غداء');
   const dinnerSlots = timeSlots.filter(s => s.period === 'عشاء');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!date || !time || !guests || !name || !phone) {
       toast({ title: 'خطأ', description: 'يرجى ملء جميع الحقول المطلوبة', variant: 'destructive' });
       return;
     }
-    setIsSubmitted(true);
-    toast({ title: 'تم الحجز بنجاح', description: 'سنتواصل معك قريباً لتأكيد الحجز' });
+    setIsSubmitting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase.from('reservations').insert({
+        user_id: user?.id ?? null,
+        name,
+        phone,
+        date: format(date, 'yyyy-MM-dd'),
+        time,
+        guests,
+        notes: notes || null,
+        status: 'pending',
+      });
+      if (error) throw error;
+      setIsSubmitted(true);
+      toast({ title: 'تم الحجز بنجاح', description: 'سنتواصل معك قريباً لتأكيد الحجز' });
+    } catch (err: any) {
+      console.error('Reservation insert failed', err);
+      toast({ title: 'تعذر إتمام الحجز', description: err?.message ?? 'يرجى المحاولة مرة أخرى', variant: 'destructive' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
 
   const canProceedStep1 = !!date && !!time && !!guests;
   const canSubmit = canProceedStep1 && !!name && !!phone;
