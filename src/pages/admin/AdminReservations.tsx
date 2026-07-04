@@ -35,7 +35,7 @@ const statusBadge: Record<string, { label: string; variant: "default" | "seconda
 };
 
 const AdminReservations = () => {
-  const { data: reservations = [], isLoading } = useAdminReservations();
+  const { data: reservations = [], isLoading, isFetching, refetch, dataUpdatedAt } = useAdminReservations();
   const updateStatus = useUpdateReservationStatus();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -57,12 +57,16 @@ const AdminReservations = () => {
   };
 
   const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const newThreshold = subMinutes(new Date(), 30);
+  const isNewBooking = (r: any) => r.created_at && isAfter(new Date(r.created_at), newThreshold);
   const stats = {
     total: reservations.length,
     pending: reservations.filter((r: any) => r.status === "pending").length,
     confirmed: reservations.filter((r: any) => r.status === "confirmed").length,
     today: reservations.filter((r: any) => r.date === todayStr).length,
+    new: reservations.filter(isNewBooking).length,
   };
+
 
   return (
     <AdminLayout>
