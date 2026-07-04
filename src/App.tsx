@@ -15,7 +15,7 @@ import { CurrencyProvider } from "@/context/CurrencyContext";
 import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
 import { ClientProtectedRoute } from "@/components/client/ClientProtectedRoute";
 import { RoleProtectedRoute } from "@/components/auth/RoleProtectedRoute";
-import MockLogin from "./pages/dev/MockLogin";
+
 import { AppLayout } from "@/components/layout/AppLayout";
 import Index from "./pages/Index";
 import Menu from "./pages/Menu";
