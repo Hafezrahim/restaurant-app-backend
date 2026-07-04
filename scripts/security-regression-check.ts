@@ -62,17 +62,38 @@ async function checkSecurityDefinerExecutable(client: Client): Promise<CheckResu
   return [
     {
       id: "SUPA_anon_security_definer_function_executable",
+      title: "Anonymous users can execute SECURITY DEFINER function(s)",
       ok: anonLeaks.length === 0,
+      offenders: anonLeaks.map((r) => `public.${r.proname}(...)`),
       detail: anonLeaks.length
         ? `anon can EXECUTE: ${anonLeaks.map((r) => r.proname).join(", ")}`
         : "no SECURITY DEFINER functions executable by anon",
+      remediation: [
+        "Add a Supabase migration that revokes execute for anon on each offender:",
+        ...anonLeaks.map(
+          (r) => `  REVOKE EXECUTE ON FUNCTION public.${r.proname}(...) FROM anon, PUBLIC;`,
+        ),
+        "Confirm the function is only invoked from trusted callers (triggers, edge functions with service_role, or authenticated RLS via has_role).",
+      ],
+      docs: "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable",
     },
     {
       id: "SUPA_authenticated_security_definer_function_executable",
+      title: "Signed-in users can execute SECURITY DEFINER function(s)",
       ok: authLeaks.length === 0,
+      offenders: authLeaks.map((r) => `public.${r.proname}(...)`),
       detail: authLeaks.length
         ? `authenticated can EXECUTE (not allow-listed): ${authLeaks.map((r) => r.proname).join(", ")}`
         : "no unexpected SECURITY DEFINER functions executable by authenticated",
+      remediation: [
+        "Add a Supabase migration that revokes execute for authenticated on each offender:",
+        ...authLeaks.map(
+          (r) => `  REVOKE EXECUTE ON FUNCTION public.${r.proname}(...) FROM authenticated;`,
+        ),
+        `If a helper must remain callable by signed-in users (like has_role for RLS), add it to ALLOWED_AUTHENTICATED in ${__filename.split("/").slice(-2).join("/")} with a comment explaining why.`,
+        "Otherwise switch it to SECURITY INVOKER or move it out of the public schema.",
+      ],
+      docs: "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
     },
   ];
 }
@@ -82,27 +103,55 @@ async function checkPgGraphqlDisabled(client: Client): Promise<CheckResult[]> {
     `SELECT 1 FROM pg_extension WHERE extname = 'pg_graphql';`,
   );
   const disabled = rows.length === 0;
+  const remediation = disabled
+    ? undefined
+    : [
+        "Add a Supabase migration that removes the extension:",
+        "  DROP EXTENSION IF EXISTS pg_graphql CASCADE;",
+        "Confirm nothing in the app talks to /graphql/v1 before landing the migration.",
+      ];
   return [
     {
       id: "SUPA_pg_graphql_anon_table_exposed",
+      title: "pg_graphql exposes tables to anonymous users",
       ok: disabled,
+      offenders: disabled ? [] : ["extension pg_graphql"],
       detail: disabled ? "pg_graphql extension is not installed" : "pg_graphql extension is installed",
+      remediation,
+      docs: "https://supabase.com/docs/guides/graphql",
     },
     {
       id: "SUPA_pg_graphql_authenticated_table_exposed",
+      title: "pg_graphql exposes tables to signed-in users",
       ok: disabled,
+      offenders: disabled ? [] : ["extension pg_graphql"],
       detail: disabled ? "pg_graphql extension is not installed" : "pg_graphql extension is installed",
+      remediation,
+      docs: "https://supabase.com/docs/guides/graphql",
     },
   ];
 }
 
 async function checkLeakedPasswordProtection(): Promise<CheckResult> {
   const id = "SUPA_auth_leaked_password_protection";
+  const title = "Leaked-password protection (HaveIBeenPwned) disabled";
+  const docs = "https://docs.lovable.dev/features/security#leaked-password-protection";
+  const remediation = [
+    "Open Supabase Dashboard → Authentication → Providers → Email.",
+    "Toggle 'Leaked password protection' ON (HaveIBeenPwned).",
+    "Or via Management API: PATCH /v1/projects/{ref}/config/auth with { \"password_hibp_enabled\": true }.",
+  ];
   if (!PROJECT_REF || !ACCESS_TOKEN) {
     return {
       id,
+      title,
       ok: false,
       detail: "SUPABASE_PROJECT_REF and SUPABASE_ACCESS_TOKEN required to verify this check",
+      remediation: [
+        "Export SUPABASE_PROJECT_REF and SUPABASE_ACCESS_TOKEN in the CI environment so this check can run.",
+        ...remediation,
+      ],
+      docs,
     };
   }
   const res = await fetch(
@@ -110,16 +159,30 @@ async function checkLeakedPasswordProtection(): Promise<CheckResult> {
     { headers: { Authorization: `Bearer ${ACCESS_TOKEN}` } },
   );
   if (!res.ok) {
-    return { id, ok: false, detail: `Management API error ${res.status}` };
+    return {
+      id,
+      title,
+      ok: false,
+      detail: `Management API error ${res.status}`,
+      remediation: [
+        "Verify SUPABASE_ACCESS_TOKEN is valid and has access to the project.",
+        ...remediation,
+      ],
+      docs,
+    };
   }
   const cfg = (await res.json()) as { password_hibp_enabled?: boolean };
   const enabled = cfg.password_hibp_enabled === true;
   return {
     id,
+    title,
     ok: enabled,
     detail: enabled ? "leaked password protection is enabled" : "leaked password protection is disabled",
+    remediation: enabled ? undefined : remediation,
+    docs,
   };
 }
+
 
 async function main() {
   const client = new Client({ connectionString: DB_URL });
