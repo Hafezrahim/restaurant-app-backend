@@ -181,20 +181,70 @@ const AdminReservations = () => {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8">جاري التحميل...</TableCell></TableRow>
+                Array.from({ length: 4 }).map((_, i) => (
+                  <TableRow key={`sk-${i}`}>
+                    {Array.from({ length: 6 }).map((_, j) => (
+                      <TableCell key={j}><Skeleton className="h-5 w-full" /></TableCell>
+                    ))}
+                  </TableRow>
+                ))
               ) : filteredReservations.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">لا توجد حجوزات</TableCell></TableRow>
+                <TableRow>
+                  <TableCell colSpan={6} className="py-16">
+                    <div className="flex flex-col items-center justify-center gap-3 text-center">
+                      <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center">
+                        <CalendarPlus className="w-7 h-7 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="font-medium">
+                          {reservations.length === 0 ? 'لا توجد حجوزات بعد' : 'لا توجد نتائج مطابقة'}
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {reservations.length === 0
+                            ? 'ستظهر حجوزات العملاء والزوار هنا فور استلامها.'
+                            : 'جرّب تعديل البحث أو تصفية الحالة.'}
+                        </p>
+                      </div>
+                      {reservations.length > 0 && (
+                        <Button variant="outline" size="sm" onClick={() => { setSearchTerm(''); setStatusFilter('all'); }}>
+                          مسح الفلاتر
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
               ) : (
                 filteredReservations.map((res: any) => {
                   const badge = statusBadge[res.status] || statusBadge.pending;
+                  const isGuest = !res.user_id;
+                  const isNew = isNewBooking(res);
                   return (
-                    <TableRow key={res.id} className="cursor-pointer" onClick={() => navigate(`/admin/reservations/${res.id}`)}>
+                    <TableRow
+                      key={res.id}
+                      className={`cursor-pointer ${isNew ? 'bg-primary/5 hover:bg-primary/10' : ''}`}
+                      onClick={() => navigate(`/admin/reservations/${res.id}`)}
+                    >
                       <TableCell>
                         <div>
-                          <p className="font-medium">{res.name}</p>
-                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-medium">{res.name}</p>
+                            {isNew && <Badge variant="default" className="text-[10px] px-1.5 py-0">جديد</Badge>}
+                            {isGuest ? (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-1">
+                                <UserCircle2 className="w-3 h-3" /> زائر
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">مسجّل</Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
                             <Phone className="w-3 h-3" /> {res.phone}
                           </p>
+                          {res.created_at && (
+                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                              {formatDistanceToNow(new Date(res.created_at), { locale: ar, addSuffix: true })}
+                            </p>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -228,6 +278,7 @@ const AdminReservations = () => {
                         </div>
                       </TableCell>
                     </TableRow>
+
                   );
                 })
               )}
