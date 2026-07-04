@@ -71,10 +71,27 @@ const AdminReservations = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">إدارة الحجوزات</h1>
-          <p className="text-muted-foreground">إدارة ومتابعة حجوزات الطاولات ({reservations.length} حجز)</p>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              إدارة الحجوزات
+              {stats.new > 0 && (
+                <Badge className="bg-primary text-primary-foreground animate-pulse">
+                  {stats.new} جديد
+                </Badge>
+              )}
+            </h1>
+            <p className="text-muted-foreground">
+              إدارة ومتابعة حجوزات الطاولات ({reservations.length} حجز)
+              {dataUpdatedAt ? ` • آخر تحديث ${formatDistanceToNow(new Date(dataUpdatedAt), { locale: ar, addSuffix: true })}` : ''}
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
+            <RefreshCw className={`w-4 h-4 ml-2 ${isFetching ? 'animate-spin' : ''}`} />
+            تحديث
+          </Button>
         </div>
+
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
