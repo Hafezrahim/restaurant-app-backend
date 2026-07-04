@@ -4,6 +4,7 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -19,10 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Clock, Users, Phone, Search, Check, X, Eye } from "lucide-react";
+import { Calendar, Clock, Users, Phone, Search, Check, X, RefreshCw, UserCircle2, CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
 import { useAdminReservations, useUpdateReservationStatus } from "@/hooks/useAdminData";
-import { format } from "date-fns";
+import { format, formatDistanceToNow, isAfter, subMinutes } from "date-fns";
+import { ar } from "date-fns/locale";
+
 
 const statusBadge: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
   pending: { label: "في الانتظار", variant: "secondary" },
