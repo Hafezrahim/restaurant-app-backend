@@ -59,19 +59,30 @@ const Reservation: React.FC = () => {
     setIsSubmitting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const { error } = await supabase.from('reservations').insert({
-        user_id: user?.id ?? null,
-        name,
-        phone,
-        date: format(date, 'yyyy-MM-dd'),
-        time,
-        guests,
-        notes: notes || null,
-        status: 'pending',
-      });
+      const dateStr = format(date, 'yyyy-MM-dd');
+      const { data: inserted, error } = await supabase
+        .from('reservations')
+        .insert({
+          user_id: user?.id ?? null,
+          name,
+          phone,
+          date: dateStr,
+          time,
+          guests,
+          notes: notes || null,
+          status: 'pending',
+        })
+        .select('id, name, date, time, guests')
+        .single();
       if (error) throw error;
+      if (!inserted?.id) {
+        throw new Error('لم يتم تأكيد حفظ الحجز');
+      }
       setIsSubmitted(true);
-      toast({ title: 'تم الحجز بنجاح', description: 'سنتواصل معك قريباً لتأكيد الحجز' });
+      toast({
+        title: 'تم استلام حجزك',
+        description: `${inserted.name} • ${inserted.date} ${inserted.time} • ${inserted.guests} ${inserted.guests === 1 ? 'شخص' : 'أشخاص'} — رقم الحجز #${inserted.id.slice(0, 8)}`,
+      });
     } catch (err: any) {
       console.error('Reservation insert failed', err);
       toast({ title: 'تعذر إتمام الحجز', description: err?.message ?? 'يرجى المحاولة مرة أخرى', variant: 'destructive' });
@@ -79,6 +90,7 @@ const Reservation: React.FC = () => {
       setIsSubmitting(false);
     }
   };
+
 
 
   const canProceedStep1 = !!date && !!time && !!guests;
