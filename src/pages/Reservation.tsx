@@ -43,7 +43,9 @@ const Reservation: React.FC = () => {
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(1);
+
 
   const lunchSlots = timeSlots.filter(s => s.period === 'غداء');
   const dinnerSlots = timeSlots.filter(s => s.period === 'عشاء');
