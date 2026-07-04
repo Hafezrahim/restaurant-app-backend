@@ -197,19 +197,46 @@ async function main() {
     await client.end();
   }
 
-  let failed = 0;
-  for (const r of results) {
-    const icon = r.ok ? "✅" : "❌";
-    console.log(`${icon} ${r.id} — ${r.detail}`);
-    if (!r.ok) failed++;
-  }
+  const passed = results.filter((r) => r.ok);
+  const failedResults = results.filter((r) => !r.ok);
 
-  if (failed > 0) {
-    console.error(`\n${failed} security regression(s) detected. Failing build.`);
+  console.log("Security regression check — summary");
+  console.log("===================================");
+  for (const r of results) {
+    const icon = r.ok ? "PASS" : "FAIL";
+    console.log(`[${icon}] ${r.id}${r.title ? ` — ${r.title}` : ""}`);
+    console.log(`       ${r.detail}`);
+  }
+  console.log(`\n${passed.length} passed, ${failedResults.length} failed of ${results.length} checks.`);
+
+  if (failedResults.length > 0) {
+    console.error("\nRegressions detected");
+    console.error("--------------------");
+    for (const r of failedResults) {
+      console.error(`\n❌ ${r.id}`);
+      if (r.title) console.error(`   Finding : ${r.title}`);
+      console.error(`   Status  : ${r.detail}`);
+      if (r.offenders && r.offenders.length) {
+        console.error(`   Offenders:`);
+        for (const o of r.offenders) console.error(`     - ${o}`);
+      }
+      if (r.remediation && r.remediation.length) {
+        console.error(`   Remediation:`);
+        for (const step of r.remediation) console.error(`     • ${step}`);
+      }
+      if (r.docs) console.error(`   Docs    : ${r.docs}`);
+    }
+    console.error(
+      `\n${failedResults.length} security regression(s) detected. Failing build.`,
+    );
+    console.error(
+      "After fixing, re-run: bun run scripts/security-regression-check.ts",
+    );
     process.exit(1);
   }
   console.log("\nAll monitored security findings remain remediated.");
 }
+
 
 main().catch((err) => {
   console.error(err);
