@@ -80,9 +80,12 @@ export const useAdminReservations = () => {
       if (error) throw error;
       return data || [];
     },
-    staleTime: 30_000,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
   });
 };
+
 
 export const useUpdateReservationStatus = () => {
   const qc = useQueryClient();
