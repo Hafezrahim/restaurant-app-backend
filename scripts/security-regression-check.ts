@@ -12,7 +12,20 @@
  */
 import { Client } from "pg";
 
-type CheckResult = { id: string; ok: boolean; detail: string };
+type CheckResult = {
+  id: string;
+  ok: boolean;
+  detail: string;
+  /** Human-readable title of the finding this check guards against. */
+  title?: string;
+  /** Concrete offenders (function names, extensions, etc.) when a check fails. */
+  offenders?: string[];
+  /** Ordered remediation steps to print when a check fails. */
+  remediation?: string[];
+  /** Link to authoritative docs for this finding. */
+  docs?: string;
+};
+
 
 const PROJECT_REF = process.env.SUPABASE_PROJECT_REF;
 const ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN;
