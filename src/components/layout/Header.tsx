@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, UserCircle, LayoutDashboard, X, CheckCheck, Gift, ShoppingBag, Info, Heart, ShoppingCart } from 'lucide-react';
+import { Bell, UserCircle, LayoutDashboard, X, CheckCheck, Gift, ShoppingBag, Info, Heart, ShoppingCart, Loader2 } from 'lucide-react';
 import { useClientAuth } from '@/context/ClientAuthContext';
 import { useNotifications, ClientNotification } from '@/context/NotificationsContext';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { WebNav } from './WebNav';
+import { supabase } from '@/integrations/supabase/client';
+import type { AppRole } from '@/hooks/useUserRole';
 import logo from '@/assets/logo.png';
+
 
 interface HeaderProps {
   showSearch?: boolean;
@@ -27,6 +30,37 @@ export const Header: React.FC<HeaderProps> = ({ showSearch = true, title }) => {
   const { items } = useCart();
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const [showNotifs, setShowNotifs] = useState(false);
+  const [checkingRole, setCheckingRole] = useState(false);
+
+  // Landing page for each role — highest privilege wins.
+  const homeForRoles = (roles: AppRole[]): string => {
+    if (roles.includes('admin') || roles.includes('manager')) return '/admin';
+    if (roles.includes('cashier')) return '/admin/orders';
+    if (roles.includes('kitchen')) return '/admin/menu';
+    return '/client/dashboard';
+  };
+
+  // Check the signed-in user's role first, then route to the matching panel.
+  const handleAccountClick = async () => {
+    setCheckingRole(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) {
+        navigate('/client/login');
+        return;
+      }
+      const { data, error } = await supabase.from('user_roles').select('role').eq('user_id', uid);
+      const roles = (error ? [] : (data ?? []).map((r) => r.role)) as AppRole[];
+      navigate(homeForRoles(roles));
+    } catch {
+      navigate('/client/dashboard');
+    } finally {
+      setCheckingRole(false);
+    }
+  };
+
+
 
   return (
     <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border/50 px-4 py-3" dir="rtl">
@@ -76,9 +110,10 @@ export const Header: React.FC<HeaderProps> = ({ showSearch = true, title }) => {
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted" onClick={() => navigate(isAuthenticated ? '/client/dashboard' : '/client/login')}>
-                  {isAuthenticated ? <LayoutDashboard className="w-5 h-5" /> : <UserCircle className="w-5 h-5" />}
+                <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted" onClick={handleAccountClick} disabled={checkingRole} aria-label={isAuthenticated ? 'لوحة التحكم' : 'تسجيل الدخول'}>
+                  {checkingRole ? <Loader2 className="w-5 h-5 animate-spin" /> : isAuthenticated ? <LayoutDashboard className="w-5 h-5" /> : <UserCircle className="w-5 h-5" />}
                 </Button>
+
               </TooltipTrigger>
               <TooltipContent><p>{isAuthenticated ? 'لوحة التحكم' : 'تسجيل الدخول'}</p></TooltipContent>
             </Tooltip>
