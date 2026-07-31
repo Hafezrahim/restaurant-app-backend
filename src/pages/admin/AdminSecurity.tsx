@@ -615,6 +615,12 @@ export default function AdminSecurity() {
           toast.success("تم حذف المفاتيح المشبوهة من localStorage.");
           break;
         }
+        case "leaked_password": {
+          window.open(HIBP_DASHBOARD_URL, "_blank", "noopener");
+          toast.info("فعّل Leaked Password Protection ثم اضغط «تم التفعيل» في التنبيه.");
+          return; // don't auto-retry: still disabled until confirmed
+        }
+
         default:
           toast.info("لا يوجد إصلاح تلقائي — راجع التفاصيل.");
       }
