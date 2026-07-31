@@ -30,6 +30,37 @@ export const Header: React.FC<HeaderProps> = ({ showSearch = true, title }) => {
   const { items } = useCart();
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const [showNotifs, setShowNotifs] = useState(false);
+  const [checkingRole, setCheckingRole] = useState(false);
+
+  // Landing page for each role — highest privilege wins.
+  const homeForRoles = (roles: AppRole[]): string => {
+    if (roles.includes('admin') || roles.includes('manager')) return '/admin';
+    if (roles.includes('cashier')) return '/admin/orders';
+    if (roles.includes('kitchen')) return '/admin/menu';
+    return '/client/dashboard';
+  };
+
+  // Check the signed-in user's role first, then route to the matching panel.
+  const handleAccountClick = async () => {
+    setCheckingRole(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) {
+        navigate('/client/login');
+        return;
+      }
+      const { data, error } = await supabase.from('user_roles').select('role').eq('user_id', uid);
+      const roles = (error ? [] : (data ?? []).map((r) => r.role)) as AppRole[];
+      navigate(homeForRoles(roles));
+    } catch {
+      navigate('/client/dashboard');
+    } finally {
+      setCheckingRole(false);
+    }
+  };
+
+
 
   return (
     <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border/50 px-4 py-3" dir="rtl">
