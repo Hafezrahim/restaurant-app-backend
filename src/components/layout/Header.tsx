@@ -110,9 +110,10 @@ export const Header: React.FC<HeaderProps> = ({ showSearch = true, title }) => {
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted" onClick={() => navigate(isAuthenticated ? '/client/dashboard' : '/client/login')}>
-                  {isAuthenticated ? <LayoutDashboard className="w-5 h-5" /> : <UserCircle className="w-5 h-5" />}
+                <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted" onClick={handleAccountClick} disabled={checkingRole} aria-label={isAuthenticated ? 'لوحة التحكم' : 'تسجيل الدخول'}>
+                  {checkingRole ? <Loader2 className="w-5 h-5 animate-spin" /> : isAuthenticated ? <LayoutDashboard className="w-5 h-5" /> : <UserCircle className="w-5 h-5" />}
                 </Button>
+
               </TooltipTrigger>
               <TooltipContent><p>{isAuthenticated ? 'لوحة التحكم' : 'تسجيل الدخول'}</p></TooltipContent>
             </Tooltip>
