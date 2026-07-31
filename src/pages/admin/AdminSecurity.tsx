@@ -46,6 +46,13 @@ type ChecklistItem = {
   blocker: boolean;
 };
 
+// Supabase Auth providers page (Email → Leaked password protection)
+const HIBP_DASHBOARD_URL =
+  "https://supabase.com/dashboard/project/tbdhusuyokibidemwzcw/auth/providers";
+const HIBP_CONFIRM_KEY = "security_hibp_confirmed_at";
+
+
+
 const CHECKLIST: ChecklistItem[] = [
   {
     id: "leaked_password",
@@ -507,7 +514,27 @@ export default function AdminSecurity() {
         return { id: "sourcemaps", category: "الواجهة", title: "Source maps", status: "pass", severity: "info", details: "غير متاحة (آمن)." };
       }
     },
+    // SUPA_auth_leaked_password_protection — project-level Auth setting.
+    // It cannot be read from the browser, so it stays FAIL until an admin
+    // confirms it was enabled in the Supabase Dashboard.
+    leaked_password: async () => {
+      const at = localStorage.getItem(HIBP_CONFIRM_KEY);
+      const enabled = !!checked["leaked_password"] || !!at;
+      return {
+        id: "leaked_password",
+        category: "المصادقة",
+        title: "حماية كلمات المرور المسربة (HIBP)",
+        status: enabled ? "pass" : "fail",
+        severity: enabled ? "info" : "high",
+        details: enabled
+          ? `مؤكَّد من المسؤول${at ? ` بتاريخ ${new Date(at).toLocaleString("ar")}` : ""} — Leaked Password Protection مفعّلة.`
+          : "SUPA_auth_leaked_password_protection: الخاصية معطّلة أو غير مؤكّدة. فعّلها من Supabase Dashboard → Authentication → Providers → Email.",
+        fixable: !enabled,
+        fixLabel: "فتح Supabase Dashboard",
+      };
+    },
     checklist: async () => {
+
       const remaining = blockers.length - blockersDone;
       return {
         id: "checklist",
@@ -546,6 +573,18 @@ export default function AdminSecurity() {
     const failed = results.filter((r) => r.status === "fail").length;
     if (failed === 0) toast.success("الفحص اكتمل — لا توجد مشاكل حرجة.");
     else toast.error(`الفحص اكتمل: ${failed} مشكلة تحتاج إصلاح.`);
+    // Dedicated notification for the leaked-password finding
+    const hibp = results.find((r) => r.id === "leaked_password");
+    if (hibp && hibp.status !== "pass") {
+      toast.warning("حماية كلمات المرور المسربة معطّلة", {
+        duration: 12000,
+        description: "فعّلها من Supabase Dashboard → Authentication → Providers → Email.",
+        action: {
+          label: "فتح الإعدادات",
+          onClick: () => window.open(HIBP_DASHBOARD_URL, "_blank", "noopener"),
+        },
+      });
+    }
   };
 
   // Retry a single step without rerunning the whole scan
@@ -588,6 +627,12 @@ export default function AdminSecurity() {
           toast.success("تم حذف المفاتيح المشبوهة من localStorage.");
           break;
         }
+        case "leaked_password": {
+          window.open(HIBP_DASHBOARD_URL, "_blank", "noopener");
+          toast.info("فعّل Leaked Password Protection ثم اضغط «تم التفعيل» في التنبيه.");
+          return; // don't auto-retry: still disabled until confirmed
+        }
+
         default:
           toast.info("لا يوجد إصلاح تلقائي — راجع التفاصيل.");
       }
@@ -599,6 +644,16 @@ export default function AdminSecurity() {
     }
   };
 
+  // Admin confirms the toggle was switched on in the Supabase Dashboard.
+  const confirmHibpEnabled = async () => {
+    localStorage.setItem(HIBP_CONFIRM_KEY, new Date().toISOString());
+    persist({ ...checked, leaked_password: true });
+    toast.success("تم تسجيل تفعيل حماية كلمات المرور المسربة — جارٍ إعادة الفحص.");
+    setTimeout(() => retryStep("leaked_password"), 0);
+  };
+
+  const hibpResult = scanResults?.find((r) => r.id === "leaked_password");
+  const hibpAlert = !!hibpResult && hibpResult.status !== "pass";
 
 
   return (
@@ -615,21 +670,57 @@ export default function AdminSecurity() {
               قائمة تحقّق الإطلاق، تدقيق RLS، رؤوس الأمان، وأدوات الحماية.
             </p>
           </div>
-          <Badge
-            variant={releaseReady ? "default" : "destructive"}
-            className="text-sm py-2 px-3"
-          >
-            {releaseReady ? (
-              <>
-                <ShieldCheck className="w-4 h-4 ml-1" /> جاهز للإطلاق
-              </>
-            ) : (
-              <>
-                <ShieldAlert className="w-4 h-4 ml-1" /> {blockers.length - blockersDone} عوائق متبقية
-              </>
-            )}
-          </Badge>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button onClick={runFullScan} disabled={scanRunning} size="lg">
+              {scanRunning ? (
+                <><Loader2 className="w-4 h-4 ml-1 animate-spin"/>جارٍ الفحص...</>
+              ) : (
+                <><ScanLine className="w-4 h-4 ml-1"/>تشغيل فحص الأمان</>
+              )}
+            </Button>
+            <Badge
+              variant={releaseReady ? "default" : "destructive"}
+              className="text-sm py-2 px-3"
+            >
+              {releaseReady ? (
+                <>
+                  <ShieldCheck className="w-4 h-4 ml-1" /> جاهز للإطلاق
+                </>
+              ) : (
+                <>
+                  <ShieldAlert className="w-4 h-4 ml-1" /> {blockers.length - blockersDone} عوائق متبقية
+                </>
+              )}
+            </Badge>
+          </div>
         </div>
+
+        {/* Leaked password protection notification (after scan) */}
+        {hibpAlert && (
+          <Alert variant="destructive">
+            <AlertTriangle className="w-4 h-4" />
+            <AlertTitle>حماية كلمات المرور المسربة معطّلة (HIBP)</AlertTitle>
+            <AlertDescription className="space-y-3">
+              <p className="text-sm">
+                نتيجة الفحص: <strong>فشل</strong> — SUPA_auth_leaked_password_protection.
+                افتح Supabase Dashboard ← Authentication ← Providers ← Email وفعّل
+                «Leaked password protection»، ثم أكّد التفعيل هنا لإعادة الفحص.
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => window.open(HIBP_DASHBOARD_URL, "_blank", "noopener")}
+                >
+                  <ExternalLink className="w-4 h-4 ml-1" /> فتح إعدادات Supabase
+                </Button>
+                <Button size="sm" variant="outline" onClick={confirmHibpEnabled}>
+                  <CheckCircle2 className="w-4 h-4 ml-1" /> تم التفعيل — أعد الفحص
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Progress */}
         <Card>
@@ -641,6 +732,7 @@ export default function AdminSecurity() {
             <Progress value={progress} />
           </CardContent>
         </Card>
+
 
         <Tabs defaultValue="scan" className="space-y-4">
           <TabsList className="flex flex-wrap h-auto">
