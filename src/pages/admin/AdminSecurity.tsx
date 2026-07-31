@@ -518,8 +518,8 @@ export default function AdminSecurity() {
     // It cannot be read from the browser, so it stays FAIL until an admin
     // confirms it was enabled in the Supabase Dashboard.
     leaked_password: async () => {
-      const enabled = !!checked["leaked_password"];
       const at = localStorage.getItem(HIBP_CONFIRM_KEY);
+      const enabled = !!checked["leaked_password"] || !!at;
       return {
         id: "leaked_password",
         category: "المصادقة",
@@ -573,6 +573,18 @@ export default function AdminSecurity() {
     const failed = results.filter((r) => r.status === "fail").length;
     if (failed === 0) toast.success("الفحص اكتمل — لا توجد مشاكل حرجة.");
     else toast.error(`الفحص اكتمل: ${failed} مشكلة تحتاج إصلاح.`);
+    // Dedicated notification for the leaked-password finding
+    const hibp = results.find((r) => r.id === "leaked_password");
+    if (hibp && hibp.status !== "pass") {
+      toast.warning("حماية كلمات المرور المسربة معطّلة", {
+        duration: 12000,
+        description: "فعّلها من Supabase Dashboard → Authentication → Providers → Email.",
+        action: {
+          label: "فتح الإعدادات",
+          onClick: () => window.open(HIBP_DASHBOARD_URL, "_blank", "noopener"),
+        },
+      });
+    }
   };
 
   // Retry a single step without rerunning the whole scan
