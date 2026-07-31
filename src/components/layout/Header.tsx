@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, UserCircle, LayoutDashboard, X, CheckCheck, Gift, ShoppingBag, Info, Heart, ShoppingCart } from 'lucide-react';
+import { Bell, UserCircle, LayoutDashboard, X, CheckCheck, Gift, ShoppingBag, Info, Heart, ShoppingCart, Loader2 } from 'lucide-react';
 import { useClientAuth } from '@/context/ClientAuthContext';
 import { useNotifications, ClientNotification } from '@/context/NotificationsContext';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { WebNav } from './WebNav';
+import { supabase } from '@/integrations/supabase/client';
+import type { AppRole } from '@/hooks/useUserRole';
 import logo from '@/assets/logo.png';
+
 
 interface HeaderProps {
   showSearch?: boolean;
