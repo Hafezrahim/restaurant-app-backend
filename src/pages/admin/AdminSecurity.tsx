@@ -514,7 +514,27 @@ export default function AdminSecurity() {
         return { id: "sourcemaps", category: "الواجهة", title: "Source maps", status: "pass", severity: "info", details: "غير متاحة (آمن)." };
       }
     },
+    // SUPA_auth_leaked_password_protection — project-level Auth setting.
+    // It cannot be read from the browser, so it stays FAIL until an admin
+    // confirms it was enabled in the Supabase Dashboard.
+    leaked_password: async () => {
+      const enabled = !!checked["leaked_password"];
+      const at = localStorage.getItem(HIBP_CONFIRM_KEY);
+      return {
+        id: "leaked_password",
+        category: "المصادقة",
+        title: "حماية كلمات المرور المسربة (HIBP)",
+        status: enabled ? "pass" : "fail",
+        severity: enabled ? "info" : "high",
+        details: enabled
+          ? `مؤكَّد من المسؤول${at ? ` بتاريخ ${new Date(at).toLocaleString("ar")}` : ""} — Leaked Password Protection مفعّلة.`
+          : "SUPA_auth_leaked_password_protection: الخاصية معطّلة أو غير مؤكّدة. فعّلها من Supabase Dashboard → Authentication → Providers → Email.",
+        fixable: !enabled,
+        fixLabel: "فتح Supabase Dashboard",
+      };
+    },
     checklist: async () => {
+
       const remaining = blockers.length - blockersDone;
       return {
         id: "checklist",
