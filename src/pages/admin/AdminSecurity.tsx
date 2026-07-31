@@ -670,21 +670,57 @@ export default function AdminSecurity() {
               قائمة تحقّق الإطلاق، تدقيق RLS، رؤوس الأمان، وأدوات الحماية.
             </p>
           </div>
-          <Badge
-            variant={releaseReady ? "default" : "destructive"}
-            className="text-sm py-2 px-3"
-          >
-            {releaseReady ? (
-              <>
-                <ShieldCheck className="w-4 h-4 ml-1" /> جاهز للإطلاق
-              </>
-            ) : (
-              <>
-                <ShieldAlert className="w-4 h-4 ml-1" /> {blockers.length - blockersDone} عوائق متبقية
-              </>
-            )}
-          </Badge>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button onClick={runFullScan} disabled={scanRunning} size="lg">
+              {scanRunning ? (
+                <><Loader2 className="w-4 h-4 ml-1 animate-spin"/>جارٍ الفحص...</>
+              ) : (
+                <><ScanLine className="w-4 h-4 ml-1"/>تشغيل فحص الأمان</>
+              )}
+            </Button>
+            <Badge
+              variant={releaseReady ? "default" : "destructive"}
+              className="text-sm py-2 px-3"
+            >
+              {releaseReady ? (
+                <>
+                  <ShieldCheck className="w-4 h-4 ml-1" /> جاهز للإطلاق
+                </>
+              ) : (
+                <>
+                  <ShieldAlert className="w-4 h-4 ml-1" /> {blockers.length - blockersDone} عوائق متبقية
+                </>
+              )}
+            </Badge>
+          </div>
         </div>
+
+        {/* Leaked password protection notification (after scan) */}
+        {hibpAlert && (
+          <Alert variant="destructive">
+            <AlertTriangle className="w-4 h-4" />
+            <AlertTitle>حماية كلمات المرور المسربة معطّلة (HIBP)</AlertTitle>
+            <AlertDescription className="space-y-3">
+              <p className="text-sm">
+                نتيجة الفحص: <strong>فشل</strong> — SUPA_auth_leaked_password_protection.
+                افتح Supabase Dashboard ← Authentication ← Providers ← Email وفعّل
+                «Leaked password protection»، ثم أكّد التفعيل هنا لإعادة الفحص.
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => window.open(HIBP_DASHBOARD_URL, "_blank", "noopener")}
+                >
+                  <ExternalLink className="w-4 h-4 ml-1" /> فتح إعدادات Supabase
+                </Button>
+                <Button size="sm" variant="outline" onClick={confirmHibpEnabled}>
+                  <CheckCircle2 className="w-4 h-4 ml-1" /> تم التفعيل — أعد الفحص
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Progress */}
         <Card>
@@ -696,6 +732,7 @@ export default function AdminSecurity() {
             <Progress value={progress} />
           </CardContent>
         </Card>
+
 
         <Tabs defaultValue="scan" className="space-y-4">
           <TabsList className="flex flex-wrap h-auto">
