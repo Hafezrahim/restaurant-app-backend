@@ -46,6 +46,13 @@ type ChecklistItem = {
   blocker: boolean;
 };
 
+// Supabase Auth providers page (Email → Leaked password protection)
+const HIBP_DASHBOARD_URL =
+  "https://supabase.com/dashboard/project/tbdhusuyokibidemwzcw/auth/providers";
+const HIBP_CONFIRM_KEY = "security_hibp_confirmed_at";
+
+
+
 const CHECKLIST: ChecklistItem[] = [
   {
     id: "leaked_password",
