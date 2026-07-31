@@ -632,6 +632,16 @@ export default function AdminSecurity() {
     }
   };
 
+  // Admin confirms the toggle was switched on in the Supabase Dashboard.
+  const confirmHibpEnabled = async () => {
+    localStorage.setItem(HIBP_CONFIRM_KEY, new Date().toISOString());
+    persist({ ...checked, leaked_password: true });
+    toast.success("تم تسجيل تفعيل حماية كلمات المرور المسربة — جارٍ إعادة الفحص.");
+    setTimeout(() => retryStep("leaked_password"), 0);
+  };
+
+  const hibpResult = scanResults?.find((r) => r.id === "leaked_password");
+  const hibpAlert = !!hibpResult && hibpResult.status !== "pass";
 
 
   return (
