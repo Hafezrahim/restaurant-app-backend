@@ -209,4 +209,5 @@ export const InvoicePrint = forwardRef<HTMLDivElement, InvoicePrintProps>(({ ord
       </DialogContent>
     </Dialog>
   );
-};
+});
+InvoicePrint.displayName = "InvoicePrint";
