@@ -30,7 +30,7 @@ interface InvoicePrintProps {
   onClose: () => void;
 }
 
-export const InvoicePrint = ({ order, open, onClose }: InvoicePrintProps) => {
+export const InvoicePrint = forwardRef<HTMLDivElement, InvoicePrintProps>(({ order, open, onClose }, _ref) => {
   const printRef = useRef<HTMLDivElement>(null);
   const { formatPrice } = useCurrency();
 
