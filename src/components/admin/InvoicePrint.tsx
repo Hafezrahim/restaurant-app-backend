@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Printer, X } from "lucide-react";
-import { useRef } from "react";
+import { forwardRef, useRef } from "react";
 import logo from "@/assets/logo.png";
 import { useCurrency } from "@/context/CurrencyContext";
 
