@@ -6,7 +6,15 @@ export const categories: CategoryInfo[] = [
   { id: 'asian', name: 'Asian', nameAr: 'آسيوي', icon: '🍜', color: 'forest', image: 'https://images.unsplash.com/photo-1559314809-0d155014e29e?w=400' },
   { id: 'desserts', name: 'Desserts', nameAr: 'حلويات', icon: '🍰', color: 'secondary', image: 'https://images.unsplash.com/photo-1579888944880-d98341245702?w=400' },
   { id: 'drinks', name: 'Drinks', nameAr: 'مشروبات', icon: '🍹', color: 'accent', image: 'https://images.unsplash.com/photo-1514066558159-fc8c737ef259?w=400' },
+  { id: 'grills', name: 'Grills', nameAr: 'مشاوي', icon: '🔥', color: 'crimson', image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400' },
+  { id: 'seafood', name: 'Seafood', nameAr: 'مأكولات بحرية', icon: '🦐', color: 'forest', image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400' },
+  { id: 'burgers', name: 'Burgers', nameAr: 'برجر', icon: '🍔', color: 'gold', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400' },
+  { id: 'pizza', name: 'Pizza', nameAr: 'بيتزا', icon: '🍕', color: 'crimson', image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400' },
+  { id: 'breakfast', name: 'Breakfast', nameAr: 'فطور', icon: '🍳', color: 'secondary', image: 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=400' },
+  { id: 'salads', name: 'Salads', nameAr: 'سلطات', icon: '🥗', color: 'forest', image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400' },
+  { id: 'appetizers', name: 'Appetizers', nameAr: 'مقبلات', icon: '🧆', color: 'gold', image: 'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?w=400' },
 ];
+
 
 export const menuItems: MenuItem[] = [
   {
