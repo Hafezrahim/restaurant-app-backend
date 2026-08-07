@@ -12,7 +12,19 @@ export interface MenuItem {
   ingredients?: string[];
 }
 
-export type Category = 'arabic' | 'eastern' | 'asian' | 'desserts' | 'drinks';
+export type Category =
+  | 'arabic'
+  | 'eastern'
+  | 'asian'
+  | 'desserts'
+  | 'drinks'
+  | 'grills'
+  | 'seafood'
+  | 'burgers'
+  | 'pizza'
+  | 'breakfast'
+  | 'salads'
+  | 'appetizers';
 
 export interface CartItem extends MenuItem {
   quantity: number;
