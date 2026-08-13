@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Printer, X } from "lucide-react";
+import { Printer } from "lucide-react";
 import { forwardRef, useRef } from "react";
 import logo from "@/assets/logo.png";
 import { useCurrency } from "@/context/CurrencyContext";
@@ -102,12 +102,7 @@ export const InvoicePrint = forwardRef<HTMLDivElement, InvoicePrintProps>(({ ord
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>طباعة الفاتورة</span>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="w-4 h-4" />
-            </Button>
-          </DialogTitle>
+          <DialogTitle>طباعة الفاتورة</DialogTitle>
         </DialogHeader>
 
         {/* Invoice Preview */}
