@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAdminAuth } from "@/context/AdminAuthContext";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   LayoutDashboard, 
   ShoppingBag, 
@@ -23,80 +25,112 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-const menuItems = [
+const useSidebarCounts = () => {
+  return useQuery({
+    queryKey: ['admin-sidebar-counts'],
+    queryFn: async () => {
+      const [{ count: ordersCount }, { count: reservationsCount }, { count: reviewsCount }] = await Promise.all([
+        supabase.from('orders').select('*', { count: 'exact', head: true }),
+        supabase.from('reservations').select('*', { count: 'exact', head: true }),
+        supabase.from('reviews').select('*', { count: 'exact', head: true }),
+      ]);
+      return {
+        orders: ordersCount || 0,
+        reservations: reservationsCount || 0,
+        reviews: reviewsCount || 0,
+      };
+    },
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+  });
+};
+
+const baseMenuItems = [
   { 
     title: "لوحة التحكم", 
     icon: LayoutDashboard, 
     path: "/admin",
-    badge: null 
+    badgeKey: null as keyof SidebarCounts | null,
   },
   { 
     title: "الطلبات", 
     icon: ShoppingBag, 
     path: "/admin/orders",
-    badge: "12" 
+    badgeKey: "orders" as const,
   },
   { 
     title: "القائمة", 
     icon: UtensilsCrossed, 
     path: "/admin/menu",
-    badge: null 
+    badgeKey: null as keyof SidebarCounts | null,
   },
   { 
     title: "العملاء", 
     icon: Users, 
     path: "/admin/customers",
-    badge: null 
+    badgeKey: null as keyof SidebarCounts | null,
   },
   { 
     title: "الحجوزات", 
     icon: Calendar, 
     path: "/admin/reservations",
-    badge: "5" 
+    badgeKey: "reservations" as const,
   },
   { 
     title: "التقارير", 
     icon: BarChart3, 
     path: "/admin/reports",
-    badge: null 
+    badgeKey: null as keyof SidebarCounts | null,
   },
   { 
     title: "التقييمات", 
     icon: MessageSquare, 
     path: "/admin/reviews",
-    badge: "3" 
+    badgeKey: "reviews" as const,
   },
   { 
     title: "الكوبونات", 
     icon: Ticket, 
     path: "/admin/coupons",
-    badge: null 
+    badgeKey: null as keyof SidebarCounts | null,
   },
   {
     title: "تحسين محركات البحث",
     icon: Search,
     path: "/admin/seo",
-    badge: null
+    badgeKey: null as keyof SidebarCounts | null,
   },
   {
     title: "الأمان",
     icon: Shield,
     path: "/admin/security",
-    badge: null
+    badgeKey: null as keyof SidebarCounts | null,
   },
   { 
     title: "الإعدادات", 
     icon: Settings, 
     path: "/admin/settings",
-    badge: null 
+    badgeKey: null as keyof SidebarCounts | null,
   },
 ];
+
+type SidebarCounts = {
+  orders: number;
+  reservations: number;
+  reviews: number;
+};
 
 export const AdminSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAdminAuth();
+  const { data: counts } = useSidebarCounts();
+
+  const menuItems = baseMenuItems.map((item) => ({
+    ...item,
+    badge: item.badgeKey && counts ? String(counts[item.badgeKey]) : null,
+  }));
 
   const handleLogout = async () => {
     await logout();
