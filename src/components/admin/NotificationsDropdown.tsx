@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Bell, Package, Calendar, MessageSquare, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,29 +9,116 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeAdmin, type RealtimeNotification } from "@/hooks/useRealtimeAdmin";
+
+const READ_KEY = "admin-read-notifications";
+
+const getReadIds = (): string[] => {
+  try {
+    return JSON.parse(localStorage.getItem(READ_KEY) || "[]");
+  } catch {
+    return [];
+  }
+};
+
+const persistReadIds = (ids: string[]) => {
+  try {
+    localStorage.setItem(READ_KEY, JSON.stringify(ids.slice(0, 200)));
+  } catch {}
+};
 
 export const NotificationsDropdown = () => {
   const [notifications, setNotifications] = useState<RealtimeNotification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
   const handleNewNotification = useCallback((n: RealtimeNotification) => {
-    setNotifications((prev) => [n, ...prev.slice(0, 19)]);
+    setNotifications((prev) => [n, ...prev.filter((p) => p.id !== n.id).slice(0, 19)]);
   }, []);
 
   useRealtimeAdmin(handleNewNotification);
 
+  // Load recent activity so the panel isn't empty on first open
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      const readIds = getReadIds();
+      const [orders, reservations, reviews] = await Promise.all([
+        supabase
+          .from("orders")
+          .select("id, order_number, customer_name, total, created_at")
+          .order("created_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from("reservations")
+          .select("id, name, guests, date, time, created_at")
+          .order("created_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from("reviews")
+          .select("id, rating, comment, created_at")
+          .order("created_at", { ascending: false })
+          .limit(5),
+      ]);
+
+      const initial: RealtimeNotification[] = [
+        ...(orders.data ?? []).map((o: any) => ({
+          id: o.id,
+          type: "order" as const,
+          title: `طلب #${o.order_number}`,
+          message: `${o.customer_name ?? "عميل"} — ${Number(o.total).toFixed(0)} ر.س`,
+          time: new Date(o.created_at),
+          read: readIds.includes(o.id),
+        })),
+        ...(reservations.data ?? []).map((r: any) => ({
+          id: r.id,
+          type: "reservation" as const,
+          title: `حجز طاولة — ${r.name}`,
+          message: `${r.guests} أشخاص — ${r.date} ${r.time}`,
+          time: new Date(r.created_at),
+          read: readIds.includes(r.id),
+        })),
+        ...(reviews.data ?? []).map((r: any) => ({
+          id: r.id,
+          type: "review" as const,
+          title: `تقييم جديد (${r.rating}/5)`,
+          message: r.comment || "بدون تعليق",
+          time: new Date(r.created_at),
+          read: readIds.includes(r.id),
+        })),
+      ].sort((a, b) => b.time.getTime() - a.time.getTime());
+
+      if (!cancelled) {
+        setNotifications((prev) => {
+          const existing = new Set(prev.map((n) => n.id));
+          return [...prev, ...initial.filter((n) => !existing.has(n.id))]
+            .sort((a, b) => b.time.getTime() - a.time.getTime())
+            .slice(0, 20);
+        });
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const markAsRead = (id: string) => {
+    persistReadIds([id, ...getReadIds()]);
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
   };
 
   const markAllAsRead = () => {
+    persistReadIds([...notifications.map((n) => n.id), ...getReadIds()]);
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
+
 
   const removeNotification = (id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));

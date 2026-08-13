@@ -1,9 +1,13 @@
-import { Search, Sun } from "lucide-react";
+import { Search, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NotificationsDropdown } from "./NotificationsDropdown";
+import { useTheme } from "@/hooks/useTheme";
+
 
 export const AdminHeader = () => {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <header className="sticky top-0 z-30 h-16 bg-card/80 backdrop-blur-md border-b border-border px-6 flex items-center justify-between">
       {/* Search */}
@@ -18,9 +22,17 @@ export const AdminHeader = () => {
       {/* Actions */}
       <div className="flex items-center gap-3">
         {/* Theme Toggle */}
-        <Button variant="ghost" size="icon" className="text-muted-foreground">
-          <Sun className="w-5 h-5" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground"
+          onClick={toggleTheme}
+          aria-label={theme === "dark" ? "تفعيل الوضع الفاتح" : "تفعيل الوضع الداكن"}
+          title={theme === "dark" ? "الوضع الفاتح" : "الوضع الداكن"}
+        >
+          {theme === "dark" ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
         </Button>
+
 
         {/* Real-time Notifications */}
         <NotificationsDropdown />
