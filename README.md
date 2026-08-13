@@ -1,73 +1,250 @@
-# Welcome to your Lovable project
+# restaurant-app-backend
 
-## Project info
+فيما يلي خطة UI/UX احترافية ومتكاملة لمطعم يقدم أكلات عربية – شرقية – آسيوية، مع أسلوب جذّاب، ألوان مميزة، وتجربة مستخدم متقنة تشمل Bottom Navigation Bar في الموبايل وتصميم POS-styled cart page.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+أولاً: الهوية البصرية والألوان
+1. لوحة الألوان (Color Palette)
 
-## How can I edit this code?
+الأحمر الداكن: للطابع العربي والشرقي (رمز الحرارة والنكهات).
 
-There are several ways of editing your application.
+الذهبي/الأصفر الدافئ: لإبراز الجودة واللمسات الفاخرة.
 
-**Use Lovable**
+الأخضر الغامق: يعكس الطابع الآسيوي (السوشي، النودلز، الأعشاب).
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+الأبيض والأسود: للاتزان وإبراز العناصر.
 
-Changes made via Lovable will be committed automatically to this repo.
+2. أسلوب التصميم
 
-**Use your preferred IDE**
+صور عالية الدقة لأطباق عربية وأسيوية.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+ظلال خفيفة، بطاقات (Cards) ذات حواف دائرية (rounded-xl).
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+أيقونات بسيطة وواضحة بأسلوب Line Icons.
 
-Follow these steps:
+مراعاة الـ RTL و LTR عند الحاجة.
+
+ثانياً: الهيكل العام للواجهة (Information Architecture)
+الصفحات الأساسية
+
+Home
+
+Menu
+
+Cart
+
+Favorites
+
+More
+
+Sign in / Sign up
+
+About
+
+Contact
+
+FAQs
+
+ثالثاً: تصميم الموبايل (Mobile UI)
+1. الـ Header
+
+شعار المطعم في المنتصف.
+
+أيقونة البحث Search في اليمين.
+
+أيقونة الإشعارات أو العروض في اليسار إن وجدت.
+
+2. الـ Hero Section
+
+سلايدر جذاب يحتوي على:
+
+أطباق مميزة.
+
+عروض اليوم.
+
+قسم “Best Asian flavors”، “Top Arabic Grill”.
+
+3. قسم التصنيفات (Categories)
+
+بطاقات جذابة مثل:
+
+Arabic
+
+Eastern
+
+Asian
+
+Desserts
+
+Drinks
+
+استخدام صور دائرية + Label أسفل الصورة.
+
+4. قائمة الطعام (Menu List)
+
+قائمة بطاقات vertical.
+
+كل بطاقة تحتوي:
+
+صورة عالية الجودة.
+
+اسم الطبق.
+
+السعر.
+
+أيقونة ❤️ للمفضلة.
+
+زر “+ Add”.
+
+5. صفحة التفاصيل (Dish Details)
+
+صورة كبيرة للطبق.
+
+الوصف + المكوّنات.
+
+تقييم النجوم.
+
+السعر.
+
+زر كبير لإضافة الطبق.
+
+رابعاً: Bottom Navigation Bar
+
+مخصص للموبايل فقط:
+
+Icon	Label
+🏠	Home
+🍽️	Menu
+🛒	Cart (مرتفع قليلاً للأعلى - Floating)
+❤️	Favorites
+☰	More
+ملاحظة مهمة
+
+أيقونة السلة (Cart) تكون أعلى من البار بمقدار 8–12px ليظهر أنها مميزة (Floating Style).
+
+خامساً: صفحة Cart مع تصميم POS Style
+1. الواجهة العامة
+
+صفحة cart تحتوي قسمين رئيسيين:
+
+A. قائمة العناصر المختارة
+
+بطاقات صغيرة تحتوي:
+
+اسم الطبق
+
+الكمية
+
+السعر
+
+( + ) ( – ) لتعديل الكمية
+
+إزالة X
+
+المجموع النهائي في أسفل الصفحة.
+
+B. POS Style Items Grid
+
+شبكة من البطاقات (3×3 أو 4×4 حسب العرض).
+
+كل بطاقة تحتوي:
+
+صورة الطبق
+
+اسم مختصر
+
+السعر
+
+عند الضغط على البطاقة → إضافة مباشرة للسلة.
+
+المزايا الإضافية
+
+شريط علوي صغير يخبر المستخدم: “اضغط على الأطباق لإضافتها مباشرة”.
+
+زر كبير أسفل الصفحة لإكمال الطلب: Checkout.
+
+سادساً: صفحة Favorites
+
+نفس أسلوب بطاقات الـ Menu لكن بدون حقول سعر كبيرة.
+
+أزرار “Add to Cart” مباشرة.
+
+إمكانية إزالة العنصر من المفضلة.
+
+سابعاً: صفحة More
+
+تتضمن:
+
+Sign In / Sign Up
+
+About
+
+Contact
+
+FAQs
+
+Language Switch
+
+Orders history
+
+Profile
+
+تصميمها يكون بقائمة كبيرة جدًا (List Group) مع أيقونات واضحة.
+
+ثامناً: UX Guidelines مهمة
+
+تقليل النصوص وزيادة الصور لأنها مطعم.
+
+إظهار السعر بوضوح في كل خطوة.
+
+إضافة مؤشرات progress في عملية الطلب.
+
+سرعة الوصول للأطباق (Fast navigation).
+
+التأكد من أن جميع الأزرار مناسبة للإبهام (Thumb-friendly).
+
+استخدام animation بسيطة Transition 200ms.
+
+تاسعاً: أمثلة (حالات استخدام)
+مثال 1: إضافة طبق من الـ Menu
+
+المستخدم يضغط “+ Add”
+→ يظهر Popup صغير:
+
+Quantity
+
+“Add to Cart”
+→ يتم تحديث أيقونة السلة مع رقم الكمية.
+
+مثال 2: تجربة POS في Cart
+
+المستخدم يريد إضافة 3 “Noodles Asian”
+→ يضغط عليها 3 مرات من الشبكة
+→ تظهر مباشرة في قائمة cart من اليسار.
+
+مثال 3: التنقل
+
+المستخدم يضغط Favorites
+→ يجد العناصر المحفوظة
+→ يضغط Add
+→ ينتقل مباشرة إلى Cart مع Animation جميلة.
+
+This project was built with [Lovable](https://lovable.dev).
+
+## Build with Lovable
+
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/7df3e108-c7e3-41b6-ad1e-ece5320dedfa).
+
+- **Ship faster**: describe what you want to build and Lovable handles the code.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+
+## Development
+
+Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
+git clone <this-repository-url>
+cd <repository-name>
 npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
