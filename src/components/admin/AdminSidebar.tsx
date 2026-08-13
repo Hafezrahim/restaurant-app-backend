@@ -45,80 +45,92 @@ const useSidebarCounts = () => {
   });
 };
 
-const menuItems = [
+const baseMenuItems = [
   { 
     title: "لوحة التحكم", 
     icon: LayoutDashboard, 
     path: "/admin",
-    badge: null 
+    badgeKey: null as keyof SidebarCounts | null,
   },
   { 
     title: "الطلبات", 
     icon: ShoppingBag, 
     path: "/admin/orders",
-    badge: "12" 
+    badgeKey: "orders" as const,
   },
   { 
     title: "القائمة", 
     icon: UtensilsCrossed, 
     path: "/admin/menu",
-    badge: null 
+    badgeKey: null as keyof SidebarCounts | null,
   },
   { 
     title: "العملاء", 
     icon: Users, 
     path: "/admin/customers",
-    badge: null 
+    badgeKey: null as keyof SidebarCounts | null,
   },
   { 
     title: "الحجوزات", 
     icon: Calendar, 
     path: "/admin/reservations",
-    badge: "5" 
+    badgeKey: "reservations" as const,
   },
   { 
     title: "التقارير", 
     icon: BarChart3, 
     path: "/admin/reports",
-    badge: null 
+    badgeKey: null as keyof SidebarCounts | null,
   },
   { 
     title: "التقييمات", 
     icon: MessageSquare, 
     path: "/admin/reviews",
-    badge: "3" 
+    badgeKey: "reviews" as const,
   },
   { 
     title: "الكوبونات", 
     icon: Ticket, 
     path: "/admin/coupons",
-    badge: null 
+    badgeKey: null as keyof SidebarCounts | null,
   },
   {
     title: "تحسين محركات البحث",
     icon: Search,
     path: "/admin/seo",
-    badge: null
+    badgeKey: null as keyof SidebarCounts | null,
   },
   {
     title: "الأمان",
     icon: Shield,
     path: "/admin/security",
-    badge: null
+    badgeKey: null as keyof SidebarCounts | null,
   },
   { 
     title: "الإعدادات", 
     icon: Settings, 
     path: "/admin/settings",
-    badge: null 
+    badgeKey: null as keyof SidebarCounts | null,
   },
 ];
+
+type SidebarCounts = {
+  orders: number;
+  reservations: number;
+  reviews: number;
+};
 
 export const AdminSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAdminAuth();
+  const { data: counts } = useSidebarCounts();
+
+  const menuItems = baseMenuItems.map((item) => ({
+    ...item,
+    badge: item.badgeKey && counts ? String(counts[item.badgeKey]) : null,
+  }));
 
   const handleLogout = async () => {
     await logout();
