@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAdminAuth } from "@/context/AdminAuthContext";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   LayoutDashboard, 
   ShoppingBag, 
@@ -22,6 +24,26 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+
+const useSidebarCounts = () => {
+  return useQuery({
+    queryKey: ['admin-sidebar-counts'],
+    queryFn: async () => {
+      const [{ count: ordersCount }, { count: reservationsCount }, { count: reviewsCount }] = await Promise.all([
+        supabase.from('orders').select('*', { count: 'exact', head: true }),
+        supabase.from('reservations').select('*', { count: 'exact', head: true }),
+        supabase.from('reviews').select('*', { count: 'exact', head: true }),
+      ]);
+      return {
+        orders: ordersCount || 0,
+        reservations: reservationsCount || 0,
+        reviews: reviewsCount || 0,
+      };
+    },
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+  });
+};
 
 const menuItems = [
   { 
