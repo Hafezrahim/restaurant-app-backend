@@ -228,15 +228,6 @@ Quantity
 → يضغط Add
 → ينتقل مباشرة إلى Cart مع Animation جميلة.
 
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/7df3e108-c7e3-41b6-ad1e-ece5320dedfa).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
 ## Development
 
