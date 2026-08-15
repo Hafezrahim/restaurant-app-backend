@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useClientAuth } from '@/context/ClientAuthContext';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
-import logo from '@/assets/logo.png';
+import { useBrandLogo } from '@/hooks/useBrandLogo';
 
 const ClientLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -83,7 +83,7 @@ const ClientLogin: React.FC = () => {
         <div className="max-w-md mx-auto">
           {/* Logo */}
           <div className="text-center mb-8">
-            <img src={logo} alt="مزاج" className="w-20 h-20 rounded-full object-cover mx-auto mb-4 shadow-elevated" />
+            <img src={logoUrl} alt={brandName} className="w-20 h-20 rounded-full object-cover mx-auto mb-4 shadow-elevated" />
             <h1 className="text-2xl font-bold text-foreground">
               {mode === 'login' ? 'مرحباً بعودتك' : 'أهلاً بك في مزاج'}
             </h1>
