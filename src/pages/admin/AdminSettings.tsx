@@ -117,6 +117,8 @@ const AdminSettings = () => {
       setEmail(g.email || "");
       setPhone(g.phone || "");
       setAddress(g.address || "");
+      setLogoUrl(g.logo || "");
+
     }
     if (settings.working_hours) setWorkingHours(settings.working_hours as any);
     const d = settings.delivery as any;
