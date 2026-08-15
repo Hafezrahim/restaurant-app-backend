@@ -7,7 +7,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdminAuth } from "@/context/AdminAuthContext";
 import { toast } from "sonner";
-import { Lock, Mail, ChefHat, Eye, EyeOff } from "lucide-react";
+import { Lock, Mail, Eye, EyeOff } from "lucide-react";
+import { useBrandLogo } from "@/hooks/useBrandLogo";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState(() => localStorage.getItem("admin_email") || "");
@@ -15,6 +16,7 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(() => !!localStorage.getItem("admin_email"));
   const [isLoading, setIsLoading] = useState(false);
+  const { logoUrl, name: brandName } = useBrandLogo();
   const { login, isAuthenticated } = useAdminAuth();
   const navigate = useNavigate();
 
@@ -55,9 +57,7 @@ const AdminLogin = () => {
 
       <Card className="w-full max-w-md relative z-10 shadow-2xl border-border/50 bg-card/95 backdrop-blur-sm">
         <CardHeader className="text-center space-y-4 pb-2">
-          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
-            <ChefHat className="w-10 h-10 text-primary-foreground" />
-          </div>
+          <img src={logoUrl} alt={brandName} className="mx-auto w-20 h-20 rounded-2xl object-cover shadow-lg shadow-primary/20" />
           <div>
             <CardTitle className="text-2xl font-bold text-foreground">لوحة التحكم</CardTitle>
             <CardDescription className="text-muted-foreground mt-2">
