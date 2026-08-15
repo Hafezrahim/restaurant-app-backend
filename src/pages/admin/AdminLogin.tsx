@@ -16,6 +16,7 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(() => !!localStorage.getItem("admin_email"));
   const [isLoading, setIsLoading] = useState(false);
+  const { logoUrl, name: brandName } = useBrandLogo();
   const { login, isAuthenticated } = useAdminAuth();
   const navigate = useNavigate();
 

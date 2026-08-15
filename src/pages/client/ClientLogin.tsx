@@ -16,6 +16,7 @@ const ClientLogin: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '' });
+  const { logoUrl, name: brandName } = useBrandLogo();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
