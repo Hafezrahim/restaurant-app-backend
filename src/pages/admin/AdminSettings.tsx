@@ -60,6 +60,30 @@ const AdminSettings = () => {
 
   // Local form state
   const [restaurantName, setRestaurantName] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("يرجى اختيار ملف صورة صالح");
+      return;
+    }
+    if (file.size > 1024 * 1024) {
+      toast.error("حجم الصورة يجب أن يكون أقل من 1 ميجابايت");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setLogoUrl(String(reader.result));
+      toast.success("تم تحديث الشعار، لا تنس الحفظ");
+    };
+    reader.onerror = () => toast.error("تعذّر قراءة الصورة");
+    reader.readAsDataURL(file);
+  };
+
   const [description, setDescription] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
