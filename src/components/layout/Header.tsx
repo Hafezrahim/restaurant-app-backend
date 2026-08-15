@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { WebNav } from './WebNav';
 import { supabase } from '@/integrations/supabase/client';
 import type { AppRole } from '@/hooks/useUserRole';
-import logo from '@/assets/logo.png';
+import { useBrandLogo } from '@/hooks/useBrandLogo';
 
 
 interface HeaderProps {
@@ -31,6 +31,7 @@ export const Header: React.FC<HeaderProps> = ({ showSearch = true, title }) => {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const [showNotifs, setShowNotifs] = useState(false);
   const [checkingRole, setCheckingRole] = useState(false);
+  const { logoUrl, name: brandName } = useBrandLogo();
 
   // Landing page for each role — highest privilege wins.
   const homeForRoles = (roles: AppRole[]): string => {
@@ -71,7 +72,7 @@ export const Header: React.FC<HeaderProps> = ({ showSearch = true, title }) => {
             <h1 className="text-lg font-bold text-foreground md:hidden">{title}</h1>
           ) : null}
           <div className={`flex items-center gap-2 ${title ? 'hidden md:flex' : 'flex'}`}>
-            <img src={logo} alt="مزاج" className="w-12 h-12 rounded-full object-cover" />
+            <img src={logoUrl} alt={brandName} className="w-12 h-12 rounded-full object-cover" />
           </div>
         </div>
 

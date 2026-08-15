@@ -3,20 +3,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NotificationsDropdown } from "./NotificationsDropdown";
 import { useTheme } from "@/hooks/useTheme";
+import { useBrandLogo } from "@/hooks/useBrandLogo";
 
 
 export const AdminHeader = () => {
   const { theme, toggleTheme } = useTheme();
+  const { logoUrl, name: brandName } = useBrandLogo();
 
   return (
     <header className="sticky top-0 z-30 h-16 bg-card/80 backdrop-blur-md border-b border-border px-6 flex items-center justify-between">
-      {/* Search */}
-      <div className="relative w-80">
+      {/* Brand + Search */}
+      <div className="flex items-center gap-3">
+        <img src={logoUrl} alt={brandName} className="w-9 h-9 rounded-lg object-cover" />
+        <div className="relative w-80">
         <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input 
           placeholder="ابحث عن طلبات، عملاء، أو أطباق..." 
-          className="pr-10 bg-muted/50 border-0 focus-visible:ring-1"
-        />
+            className="pr-10 bg-muted/50 border-0 focus-visible:ring-1"
+          />
+        </div>
       </div>
 
       {/* Actions */}
