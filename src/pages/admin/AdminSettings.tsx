@@ -134,7 +134,7 @@ const AdminSettings = () => {
   const handleSave = async () => {
     try {
       await saveSettings.mutateAsync({
-        general: { name: restaurantName, description, email, phone, address },
+        general: { name: restaurantName, description, email, phone, address, logo: logoUrl },
         working_hours: workingHours,
         delivery: { enabled: deliveryEnabled, minimumOrder: Number(minimumOrder), estimatedTime },
         payments,
