@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useCurrency, CURRENCIES } from "@/context/CurrencyContext";
 import { useRestaurantSettings, useSaveSettings, useDeliveryZones, useUpsertDeliveryZone, useDeleteDeliveryZone, useUsersWithRoles } from "@/hooks/useSettingsData";
 import { AdminLayout } from "@/components/admin/AdminLayout";
