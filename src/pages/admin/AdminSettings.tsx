@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useCurrency, CURRENCIES } from "@/context/CurrencyContext";
 import { useRestaurantSettings, useSaveSettings, useDeliveryZones, useUpsertDeliveryZone, useDeleteDeliveryZone, useUsersWithRoles } from "@/hooks/useSettingsData";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -60,6 +60,30 @@ const AdminSettings = () => {
 
   // Local form state
   const [restaurantName, setRestaurantName] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("يرجى اختيار ملف صورة صالح");
+      return;
+    }
+    if (file.size > 1024 * 1024) {
+      toast.error("حجم الصورة يجب أن يكون أقل من 1 ميجابايت");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setLogoUrl(String(reader.result));
+      toast.success("تم تحديث الشعار، لا تنس الحفظ");
+    };
+    reader.onerror = () => toast.error("تعذّر قراءة الصورة");
+    reader.readAsDataURL(file);
+  };
+
   const [description, setDescription] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -93,6 +117,8 @@ const AdminSettings = () => {
       setEmail(g.email || "");
       setPhone(g.phone || "");
       setAddress(g.address || "");
+      setLogoUrl(g.logo || "");
+
     }
     if (settings.working_hours) setWorkingHours(settings.working_hours as any);
     const d = settings.delivery as any;
@@ -108,7 +134,7 @@ const AdminSettings = () => {
   const handleSave = async () => {
     try {
       await saveSettings.mutateAsync({
-        general: { name: restaurantName, description, email, phone, address },
+        general: { name: restaurantName, description, email, phone, address, logo: logoUrl },
         working_hours: workingHours,
         delivery: { enabled: deliveryEnabled, minimumOrder: Number(minimumOrder), estimatedTime },
         payments,
@@ -240,15 +266,32 @@ const AdminSettings = () => {
 
             <div className="flex items-center gap-6 pb-6 border-b border-border/50">
               <Avatar className="w-24 h-24">
-                <AvatarImage src="/src/assets/logo.png" />
+                <AvatarImage src={logoUrl || undefined} alt="شعار المطعم" />
                 <AvatarFallback className="text-2xl bg-primary/10 text-primary">أ</AvatarFallback>
               </Avatar>
               <div>
                 <h3 className="font-medium text-foreground mb-2">شعار المطعم</h3>
-                <p className="text-sm text-muted-foreground mb-3">يُفضل صورة بحجم 200x200 بكسل</p>
-                <Button variant="outline" size="sm" className="gap-2"><Upload className="w-4 h-4" />تغيير الشعار</Button>
+                <p className="text-sm text-muted-foreground mb-3">يُفضل صورة بحجم 200x200 بكسل (حد أقصى 1 ميجابايت)</p>
+                <input
+                  ref={logoInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  className="hidden"
+                  onChange={handleLogoChange}
+                />
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="gap-2" onClick={() => logoInputRef.current?.click()}>
+                    <Upload className="w-4 h-4" />تغيير الشعار
+                  </Button>
+                  {logoUrl && (
+                    <Button variant="ghost" size="sm" className="gap-2 text-destructive" onClick={() => setLogoUrl("")}>
+                      <Trash2 className="w-4 h-4" />إزالة
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
+
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
