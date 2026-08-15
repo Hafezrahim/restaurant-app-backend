@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin, Clock, Facebook, Instagram, Twitter } from 'lucide-react';
-import logo from '@/assets/logo.png';
+import { useBrandLogo } from '@/hooks/useBrandLogo';
 import { useRestaurantSettings } from '@/hooks/useSettingsData';
 
 const dayLabels: Record<string, string> = {
@@ -16,6 +16,7 @@ const dayLabels: Record<string, string> = {
 
 export const Footer: React.FC = () => {
   const { data: settings } = useRestaurantSettings();
+  const { logoUrl } = useBrandLogo();
   const general = (settings?.general as any) || {};
   const workingHours = (settings?.working_hours as any) || {};
 
@@ -36,7 +37,7 @@ export const Footer: React.FC = () => {
           {/* About */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <img src={logo} alt={name} className="w-14 h-14 rounded-full object-cover" />
+              <img src={logoUrl} alt={name} className="w-14 h-14 rounded-full object-cover" />
               <h3 className="text-xl font-bold text-gold">{name}</h3>
             </div>
             <p className="text-cream/80 text-sm leading-relaxed mb-4">{description}</p>
