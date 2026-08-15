@@ -39,6 +39,17 @@ export const useAdminCustomers = () => {
         .order('created_at', { ascending: false });
       if (error) throw error;
 
+      // Fetch all roles to filter out staff (admin, manager, cashier, kitchen)
+      const { data: roles } = await supabase.from('user_roles').select('user_id, role');
+      const staffIds = new Set(
+        (roles || [])
+          .filter(r => ['admin', 'manager', 'cashier', 'kitchen'].includes(r.role))
+          .map(r => r.user_id)
+      );
+
+      // Filter out staff profiles
+      const clientProfiles = (profiles || []).filter(p => !staffIds.has(p.id));
+
       // Get order stats per user
       const { data: orders } = await supabase
         .from('orders')
@@ -57,7 +68,7 @@ export const useAdminCustomers = () => {
         }
       });
 
-      return (profiles || []).map((p) => ({
+      return clientProfiles.map((p) => ({
         ...p,
         totalOrders: ordersByUser[p.id]?.count || 0,
         totalSpent: ordersByUser[p.id]?.total || 0,

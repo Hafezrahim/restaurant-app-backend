@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeAdmin, type RealtimeNotification } from "@/hooks/useRealtimeAdmin";
+import { useNavigate } from "react-router-dom";
 
 const READ_KEY = "admin-read-notifications";
 
@@ -29,6 +30,7 @@ const persistReadIds = (ids: string[]) => {
 };
 
 export const NotificationsDropdown = () => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<RealtimeNotification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -186,7 +188,13 @@ export const NotificationsDropdown = () => {
                   "flex items-start gap-3 p-3 border-b border-border hover:bg-muted/50 cursor-pointer transition-colors",
                   !notification.read && "bg-primary/5"
                 )}
-                onClick={() => markAsRead(notification.id)}
+                onClick={() => {
+                  markAsRead(notification.id);
+                  setIsOpen(false);
+                  if (notification.type === 'order') navigate('/admin/orders');
+                  else if (notification.type === 'reservation') navigate('/admin/reservations');
+                  else if (notification.type === 'review') navigate('/admin/reviews');
+                }}
               >
                 <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                   {getIcon(notification.type)}

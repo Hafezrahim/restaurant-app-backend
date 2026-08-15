@@ -7,10 +7,10 @@ import { Input } from '@/components/ui/input';
 import { useClientAuth } from '@/context/ClientAuthContext';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
-import logo from '@/assets/logo.png';
-
+import { useAppInfo } from '@/context/AppInfoContext';
 const ClientLogin: React.FC = () => {
   const navigate = useNavigate();
+  const { appName, appLogo } = useAppInfo();
   const { login, register } = useClientAuth();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [showPassword, setShowPassword] = useState(false);
@@ -77,15 +77,15 @@ const ClientLogin: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>{mode === 'login' ? 'تسجيل الدخول' : 'إنشاء حساب'} - مطعم مزاج</title>
+        <title>{mode === 'login' ? 'تسجيل الدخول' : 'إنشاء حساب'} - {appName}</title>
       </Helmet>
       <AppLayout title={mode === 'login' ? 'تسجيل الدخول' : 'إنشاء حساب'} showSearch={false}>
-        <div className="max-w-md mx-auto">
+        <div className="max-w-md mx-auto flex flex-col items-center">
           {/* Logo */}
           <div className="text-center mb-8">
-            <img src={logo} alt="مزاج" className="w-20 h-20 rounded-full object-cover mx-auto mb-4 shadow-elevated" />
+            <img src={appLogo} alt={appName} className="w-20 h-20 rounded-full object-cover mx-auto mb-4 shadow-elevated" />
             <h1 className="text-2xl font-bold text-foreground">
-              {mode === 'login' ? 'مرحباً بعودتك' : 'أهلاً بك في مزاج'}
+              {mode === 'login' ? 'مرحباً بعودتك' : `أهلاً بك في ${appName}`}
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
               {mode === 'login' ? 'سجّل دخولك للوصول لحسابك' : 'أنشئ حساباً جديداً'}
@@ -172,6 +172,13 @@ const ClientLogin: React.FC = () => {
               </button>
             </div>
           </form>
+
+          <div className="mt-8 mb-4">
+            <Button variant="outline" className="gap-2 rounded-full px-6" onClick={() => navigate("/")}>
+              <ArrowRight className="w-4 h-4" />
+              العودة للموقع
+            </Button>
+          </div>
         </div>
       </AppLayout>
     </>

@@ -1,5 +1,5 @@
 // Centralized SEO helpers. Update SITE_URL when the production domain changes.
-export const SITE_URL = "https://mazaj.lovable.app";
+export const SITE_URL = "https://mazaj-restaurant.com";
 
 export const absUrl = (path: string = "/") => {
   if (!path) return SITE_URL + "/";

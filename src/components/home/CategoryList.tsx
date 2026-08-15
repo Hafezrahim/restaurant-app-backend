@@ -77,7 +77,15 @@ export const CategoryList: React.FC = () => {
               }}>
               <button onClick={() => navigate(`/menu?category=${cat.id}`)} className="flex flex-col items-center gap-2 w-full group">
                 <div className="w-[4.5rem] h-[4.5rem] md:w-20 md:h-20 rounded-full overflow-hidden shadow-card transition-all duration-300 group-hover:shadow-elevated group-hover:scale-110 ring-2 ring-primary/20 group-hover:ring-primary/40">
-                  <img src={cat.image} alt={cat.nameAr} className="w-full h-full object-cover" loading="lazy" />
+                  <img 
+                    src={cat.image || 'https://placehold.co/400x400/f3f4f6/a1a1aa?text=No+Image'} 
+                    alt={cat.nameAr} 
+                    className="w-full h-full object-cover" 
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.src = 'https://placehold.co/400x400/f3f4f6/a1a1aa?text=No+Image';
+                    }}
+                  />
                 </div>
                 <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate max-w-full">{cat.nameAr}</span>
               </button>

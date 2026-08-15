@@ -135,7 +135,7 @@ async function checkPgGraphqlDisabled(client: Client): Promise<CheckResult[]> {
 async function checkLeakedPasswordProtection(): Promise<CheckResult> {
   const id = "SUPA_auth_leaked_password_protection";
   const title = "Leaked-password protection (HaveIBeenPwned) disabled";
-  const docs = "https://docs.lovable.dev/features/security#leaked-password-protection";
+  const docs = "https://supabase.com/docs";
   const remediation = [
     "Open Supabase Dashboard → Authentication → Providers → Email.",
     "Toggle 'Leaked password protection' ON (HaveIBeenPwned).",

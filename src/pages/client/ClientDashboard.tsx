@@ -33,8 +33,8 @@ const ClientDashboard: React.FC = () => {
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/5 to-transparent rounded-bl-full" />
           <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-secondary/5 to-transparent rounded-tr-full" />
           <div className="relative flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-primary/20">
-              {user?.name?.charAt(0) || '👋'}
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-primary/20 overflow-hidden">
+              {user?.avatarUrl ? <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" /> : (user?.name?.charAt(0) || '👋')}
             </div>
             <div className="flex-1">
               <p className="text-xs text-muted-foreground">مرحباً بعودتك</p>

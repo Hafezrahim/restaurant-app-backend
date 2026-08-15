@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://mazaj.lovable.app/</loc>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://mazaj.lovable.app/" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://mazaj.lovable.app/" />
+    <loc>https://mazaj-restaurant.com/</loc>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://mazaj-restaurant.com/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://mazaj-restaurant.com/" />
     <changefreq>weekly</changefreq><priority>1.0</priority>
   </url>
-  <url><loc>https://mazaj.lovable.app/menu</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://mazaj.lovable.app/about</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://mazaj.lovable.app/reservation</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://mazaj.lovable.app/favorites</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>https://mazaj.lovable.app/compare</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>https://mazaj.lovable.app/cart</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://mazaj.lovable.app/more</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://mazaj-restaurant.com/menu</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://mazaj-restaurant.com/about</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://mazaj-restaurant.com/reservation</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://mazaj-restaurant.com/favorites</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://mazaj-restaurant.com/compare</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://mazaj-restaurant.com/cart</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://mazaj-restaurant.com/more</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
 </urlset>

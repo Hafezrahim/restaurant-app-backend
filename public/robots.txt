@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://mazaj.lovable.app/sitemap.xml
+Sitemap: https://mazaj-restaurant.com/sitemap.xml

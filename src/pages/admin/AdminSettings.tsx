@@ -59,6 +59,7 @@ const AdminSettings = () => {
   const { data: usersWithRoles } = useUsersWithRoles();
 
   // Local form state
+  const [logoUrl, setLogoUrl] = useState("");
   const [restaurantName, setRestaurantName] = useState("");
   const [description, setDescription] = useState("");
   const [email, setEmail] = useState("");
@@ -88,6 +89,7 @@ const AdminSettings = () => {
     if (!settings) return;
     const g = settings.general as any;
     if (g) {
+      setLogoUrl(g.logoUrl || "");
       setRestaurantName(g.name || "");
       setDescription(g.description || "");
       setEmail(g.email || "");
@@ -108,7 +110,7 @@ const AdminSettings = () => {
   const handleSave = async () => {
     try {
       await saveSettings.mutateAsync({
-        general: { name: restaurantName, description, email, phone, address },
+        general: { logoUrl, name: restaurantName, description, email, phone, address },
         working_hours: workingHours,
         delivery: { enabled: deliveryEnabled, minimumOrder: Number(minimumOrder), estimatedTime },
         payments,
@@ -194,6 +196,17 @@ const AdminSettings = () => {
     thursday: "الخميس", friday: "الجمعة",
   };
 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   if (settingsLoading || zonesLoading) {
     return (
       <AdminLayout>
@@ -240,13 +253,16 @@ const AdminSettings = () => {
 
             <div className="flex items-center gap-6 pb-6 border-b border-border/50">
               <Avatar className="w-24 h-24">
-                <AvatarImage src="/src/assets/logo.png" />
+                <AvatarImage src={logoUrl || "/src/assets/logo.png"} />
                 <AvatarFallback className="text-2xl bg-primary/10 text-primary">أ</AvatarFallback>
               </Avatar>
               <div>
                 <h3 className="font-medium text-foreground mb-2">شعار المطعم</h3>
                 <p className="text-sm text-muted-foreground mb-3">يُفضل صورة بحجم 200x200 بكسل</p>
-                <Button variant="outline" size="sm" className="gap-2"><Upload className="w-4 h-4" />تغيير الشعار</Button>
+                <div className="relative inline-block">
+                  <input type="file" accept="image/*" onChange={handleLogoUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                  <Button variant="outline" size="sm" className="gap-2 pointer-events-none"><Upload className="w-4 h-4" />تغيير الشعار</Button>
+                </div>
               </div>
             </div>
 

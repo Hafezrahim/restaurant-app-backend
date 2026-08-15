@@ -11,8 +11,7 @@ import {
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
-import logo from '@/assets/logo.png';
-
+import { useAppInfo } from '@/context/AppInfoContext';
 const statusConfig: Record<string, { icon: React.ReactNode; label: string; color: string; bgClass: string; step: number }> = {
   pending: { icon: <Clock className="w-4 h-4" />, label: 'قيد الانتظار', color: 'text-amber-600', bgClass: 'bg-amber-100 dark:bg-amber-500/15', step: 1 },
   confirmed: { icon: <Package className="w-4 h-4" />, label: 'مؤكد', color: 'text-primary', bgClass: 'bg-primary/10', step: 2 },
@@ -57,6 +56,7 @@ interface OrderData {
 const ClientOrderDetails: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { appName, appLogo } = useAppInfo();
   const { formatPrice } = useCurrency();
   const { user } = useClientAuth();
   const invoiceRef = useRef<HTMLDivElement>(null);
@@ -227,9 +227,9 @@ const ClientOrderDetails: React.FC = () => {
         <div className="bg-gradient-to-bl from-primary via-primary to-primary/85 p-6 text-center relative overflow-hidden">
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
           <div className="relative z-10">
-            <img src={logo} alt="مزاج" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-3 border-2 border-white/20 shadow-lg" />
-            <h2 className="text-white font-bold text-xl">مطعم مزاج</h2>
-            <p className="text-white/50 text-[10px] mt-0.5 tracking-widest font-medium">MAZAG RESTAURANT</p>
+            <img src={appLogo} alt={appName} className="w-16 h-16 rounded-2xl object-cover mx-auto mb-3 border-2 border-white/20 shadow-lg" />
+            <h2 className="text-white font-bold text-xl">{appName}</h2>
+            <p className="text-white/50 text-[10px] mt-0.5 tracking-widest font-medium">RESTAURANT</p>
             <div className="mt-4 bg-white/12 backdrop-blur-sm rounded-xl px-5 py-2.5 inline-block">
               <p className="text-white/60 text-[10px] mb-0.5">رقم الفاتورة</p>
               <p className="text-white font-mono font-bold text-sm tracking-widest">{order.order_number}</p>
@@ -311,7 +311,7 @@ const ClientOrderDetails: React.FC = () => {
         {/* Footer */}
         <div className="bg-muted/20 px-5 py-4 text-center border-t border-border/15">
           <p className="text-xs text-muted-foreground">شكراً لتعاملكم معنا 💛</p>
-          <p className="text-[10px] text-muted-foreground/50 mt-1">مطعم مزاج • MAZAG Restaurant</p>
+          <p className="text-[10px] text-muted-foreground/50 mt-1">{appName} • Restaurant</p>
         </div>
       </div>
 

@@ -18,8 +18,7 @@ import { useNotifications } from '@/context/NotificationsContext';
 import { validateCoupon } from '@/data/coupons';
 import { useCurrency } from '@/context/CurrencyContext';
 import { supabase } from '@/integrations/supabase/client';
-import logo from '@/assets/logo.png';
-
+import { useAppInfo } from '@/context/AppInfoContext';
 const CUSTOMER_STORAGE_KEY = 'mazaj_customer_data';
 
 const paymentMethodLabels: Record<PaymentMethod, string> = {
@@ -29,6 +28,7 @@ const paymentMethodLabels: Record<PaymentMethod, string> = {
 };
 
 const Checkout: React.FC = () => {
+  const { appName, appLogo } = useAppInfo();
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCart();
   const { user, isAuthenticated } = useClientAuth();
@@ -341,7 +341,7 @@ const Checkout: React.FC = () => {
     return (
       <>
         <Helmet>
-          <title>تأكيد الطلب - مطعم مزاج</title>
+          <title>تأكيد الطلب - {appName}</title>
         </Helmet>
         <AppLayout title="تأكيد الطلب" showSearch={false}>
           <div className="max-w-md mx-auto">
@@ -358,8 +358,8 @@ const Checkout: React.FC = () => {
             <div ref={receiptCardRef} className="bg-card rounded-3xl shadow-elegant overflow-hidden animate-fade-in" dir="rtl" style={{ fontFamily: "'Segoe UI', Tahoma, Arial, sans-serif" }}>
               {/* Receipt Header */}
               <div className="bg-gradient-to-br from-primary to-primary/80 p-6 text-center">
-                <img src={logo} alt="مزاج" className="w-14 h-14 rounded-full object-cover mx-auto mb-2 border-2 border-white/30" />
-                <h2 className="text-white font-bold text-lg">مطعم مزاج</h2>
+                <img src={appLogo} alt={appName} className="w-14 h-14 rounded-full object-cover mx-auto mb-2 border-2 border-white/30" />
+                <h2 className="text-white font-bold text-lg">{appName}</h2>
                 <p className="text-white/70 text-xs mt-1">MAZAG Restaurant</p>
                 <p className="text-white/80 text-sm mt-2">فاتورة الطلب</p>
               </div>
@@ -508,12 +508,12 @@ const Checkout: React.FC = () => {
     return (
       <>
         <Helmet>
-          <title>إتمام الطلب - مطعم مزاج</title>
+          <title>إتمام الطلب - {appName}</title>
         </Helmet>
         <AppLayout title="إتمام الطلب" showSearch={false}>
           <div className="max-w-md mx-auto">
-            <div className="bg-card rounded-2xl p-5 shadow-card space-y-4">
-              <h2 className="font-bold text-lg text-foreground text-center mb-4">مرحباً بك في مطعم مزاج</h2>
+            <div className="mb-6 p-4 bg-primary/5 border border-primary/10 rounded-2xl">
+              <h2 className="font-bold text-lg text-foreground text-center mb-4">مرحباً بك في {appName}</h2>
               <p className="text-muted-foreground text-center text-sm mb-6">كيف تريد إتمام طلبك؟</p>
 
               <div className="grid gap-3">
@@ -586,7 +586,7 @@ const Checkout: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>إتمام الطلب - مطعم مزاج</title>
+        <title>إتمام الطلب - {appName}</title>
       </Helmet>
       <AppLayout title="إتمام الطلب" showSearch={false}>
         {showLocationPicker && (

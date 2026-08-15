@@ -79,9 +79,12 @@ export const FoodCard: React.FC<FoodCardProps> = ({ item, variant = 'default', c
         onClick={handleCardClick}
       >
         <img
-          src={item.image}
+          src={item.image || 'https://placehold.co/400x400/f3f4f6/a1a1aa?text=No+Image'}
           alt={item.name}
           className="w-20 h-20 rounded-xl object-cover"
+          onError={(e) => {
+            e.currentTarget.src = 'https://placehold.co/400x400/f3f4f6/a1a1aa?text=No+Image';
+          }}
         />
         <div className="flex-1 min-w-0">
           <h4 className="font-semibold text-foreground truncate">{item.name}</h4>
@@ -108,9 +111,12 @@ export const FoodCard: React.FC<FoodCardProps> = ({ item, variant = 'default', c
     >
       <div className="relative aspect-square">
         <img
-          src={item.image}
+          src={item.image || 'https://placehold.co/600x400/f3f4f6/a1a1aa?text=No+Image'}
           alt={item.name}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          onError={(e) => {
+            e.currentTarget.src = 'https://placehold.co/600x400/f3f4f6/a1a1aa?text=No+Image';
+          }}
         />
         <div className="absolute top-2 left-2 flex flex-col gap-2">
           <button

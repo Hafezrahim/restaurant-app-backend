@@ -24,6 +24,24 @@ const ClientProfile: React.FC = () => {
     toast.success('تم تحديث الملف الشخصي');
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('حجم الصورة يجب أن لا يتجاوز 2 ميجابايت');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result as string;
+      await updateProfile({ avatarUrl: base64String });
+      toast.success('تم تحديث الصورة الشخصية');
+    };
+    reader.readAsDataURL(file);
+  };
+
   const memberSince = user?.createdAt 
     ? new Date(user.createdAt).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long' })
     : '';
@@ -38,12 +56,24 @@ const ClientProfile: React.FC = () => {
           </div>
           <div className="flex flex-col items-center -mt-12 pb-5 px-5 relative z-10">
             <div className="relative mb-3">
-              <div className="w-24 h-24 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center ring-4 ring-white dark:ring-card shadow-xl text-3xl font-bold text-white">
-                {user?.name?.charAt(0) || 'م'}
+              <div className="w-24 h-24 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center ring-4 ring-white dark:ring-card shadow-xl text-3xl font-bold text-white overflow-hidden">
+                {user?.avatarUrl ? (
+                  <img src={user.avatarUrl} alt={user?.name} className="w-full h-full object-cover" />
+                ) : (
+                  user?.name?.charAt(0) || 'م'
+                )}
               </div>
-              <button className="absolute -bottom-1 -right-1 w-8 h-8 bg-secondary rounded-xl flex items-center justify-center shadow-md border-2 border-white dark:border-card">
-                <Camera className="w-3.5 h-3.5 text-secondary-foreground" />
-              </button>
+              <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-secondary rounded-xl shadow-md border-2 border-white dark:border-card overflow-hidden">
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                  onChange={handleAvatarUpload}
+                />
+                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                  <Camera className="w-3.5 h-3.5 text-secondary-foreground" />
+                </div>
+              </div>
             </div>
             <h2 className="font-bold text-xl text-foreground">{user?.name}</h2>
             <p className="text-xs text-muted-foreground mt-0.5">{user?.email}</p>

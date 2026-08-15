@@ -4,8 +4,7 @@ import { ShoppingBag, Heart, Headphones, UserCircle, LogOut, Gift, LayoutDashboa
 import { useClientAuth } from '@/context/ClientAuthContext';
 import { toast } from 'sonner';
 import { Helmet } from 'react-helmet-async';
-import logo from '@/assets/logo.png';
-
+import { useAppInfo } from '@/context/AppInfoContext';
 const navItems = [
   { to: '/client/dashboard', icon: LayoutDashboard, label: 'الرئيسية' },
   { to: '/client/orders', icon: ShoppingBag, label: 'طلباتي' },
@@ -17,6 +16,7 @@ const navItems = [
 
 export const ClientLayout: React.FC<{ children: React.ReactNode; title: string }> = ({ children, title }) => {
   const { user, logout } = useClientAuth();
+  const { appName, appLogo } = useAppInfo();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -35,7 +35,7 @@ export const ClientLayout: React.FC<{ children: React.ReactNode; title: string }
           <div className="bg-gradient-to-l from-primary via-primary to-primary/90 px-4 py-4 pb-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <img src={logo} alt="مزاج" className="w-9 h-9 rounded-xl object-cover border-2 border-white/20" />
+                <img src={appLogo} alt={appName} className="w-9 h-9 rounded-xl object-cover border-2 border-white/20" />
                 <div>
                   <h1 className="text-base font-bold text-white">{title}</h1>
                   <p className="text-[10px] text-white/60">مرحباً {user?.name?.split(' ')[0]}</p>
@@ -60,7 +60,7 @@ export const ClientLayout: React.FC<{ children: React.ReactNode; title: string }
               </button>
               <div className="w-px h-6 bg-border/50" />
               <div className="flex items-center gap-2.5">
-                <img src={logo} alt="مزاج" className="w-8 h-8 rounded-lg object-cover" />
+                <img src={appLogo} alt={appName} className="w-8 h-8 rounded-lg object-cover" />
                 <h1 className="text-lg font-bold text-foreground">{title}</h1>
               </div>
             </div>
@@ -69,8 +69,8 @@ export const ClientLayout: React.FC<{ children: React.ReactNode; title: string }
                 <p className="text-sm font-semibold text-foreground">{user?.name}</p>
                 <p className="text-[11px] text-muted-foreground">{user?.email}</p>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white text-sm font-bold shadow-md">
-                {user?.name?.charAt(0) || 'م'}
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white text-sm font-bold shadow-md overflow-hidden">
+                {user?.avatarUrl ? <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" /> : (user?.name?.charAt(0) || 'م')}
               </div>
             </div>
           </div>
@@ -84,8 +84,8 @@ export const ClientLayout: React.FC<{ children: React.ReactNode; title: string }
               <div className="bg-gradient-to-br from-primary to-primary/80 p-5 text-center relative overflow-hidden">
                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
                 <div className="relative z-10">
-                  <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-3 text-2xl font-bold text-white shadow-lg">
-                    {user?.name?.charAt(0) || 'م'}
+                  <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-3 text-2xl font-bold text-white shadow-lg overflow-hidden">
+                    {user?.avatarUrl ? <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" /> : (user?.name?.charAt(0) || 'م')}
                   </div>
                   <p className="font-bold text-white text-base">{user?.name}</p>
                   <p className="text-xs text-white/60 mt-0.5">{user?.email}</p>

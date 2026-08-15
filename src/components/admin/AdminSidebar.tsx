@@ -3,6 +3,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAdminAuth } from "@/context/AdminAuthContext";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAppInfo } from "@/context/AppInfoContext";
 import { 
   LayoutDashboard, 
   ShoppingBag, 
@@ -125,6 +126,7 @@ export const AdminSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAdminAuth();
+  const { appName, appLogo } = useAppInfo();
   const { data: counts } = useSidebarCounts();
 
   const menuItems = baseMenuItems.map((item) => ({
@@ -149,19 +151,15 @@ export const AdminSidebar = () => {
         <div className="flex items-center justify-between">
           {!collapsed && (
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl gradient-warm flex items-center justify-center">
-                <UtensilsCrossed className="w-5 h-5 text-primary-foreground" />
-              </div>
+              <img src={appLogo} alt={appName} className="w-10 h-10 rounded-xl object-cover" />
               <div>
-                <h2 className="font-bold text-foreground">المطعم</h2>
+                <h2 className="font-bold text-foreground text-sm line-clamp-1">{appName}</h2>
                 <p className="text-xs text-muted-foreground">لوحة الإدارة</p>
               </div>
             </div>
           )}
           {collapsed && (
-            <div className="w-10 h-10 rounded-xl gradient-warm flex items-center justify-center mx-auto">
-              <UtensilsCrossed className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img src={appLogo} alt={appName} className="w-10 h-10 rounded-xl object-cover mx-auto" />
           )}
         </div>
       </div>

@@ -106,10 +106,14 @@ export const useUsersWithRoles = () => {
         rolesByUser[r.user_id].push(r.role);
       });
 
-      return (profiles || []).map((p) => ({
-        ...p,
-        roles: rolesByUser[p.id] || ['user'],
-      }));
+      const staffRoles = ['admin', 'manager', 'cashier', 'kitchen', 'moderator'];
+      
+      return (profiles || [])
+        .map((p) => ({
+          ...p,
+          roles: rolesByUser[p.id] || ['user'],
+        }))
+        .filter(p => p.roles.some(r => staffRoles.includes(r)));
     },
     staleTime: 60_000,
   });

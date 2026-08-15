@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Printer } from "lucide-react";
 import { forwardRef, useRef } from "react";
-import logo from "@/assets/logo.png";
 import { useCurrency } from "@/context/CurrencyContext";
+import { useAppInfo } from "@/context/AppInfoContext";
 
 interface OrderItem {
   name: string;
@@ -33,6 +33,7 @@ interface InvoicePrintProps {
 export const InvoicePrint = forwardRef<HTMLDivElement, InvoicePrintProps>(({ order, open, onClose }, _ref) => {
   const printRef = useRef<HTMLDivElement>(null);
   const { formatPrice } = useCurrency();
+  const { appName, appLogo } = useAppInfo();
 
   const handlePrint = () => {
     if (printRef.current) {
@@ -111,9 +112,9 @@ export const InvoicePrint = forwardRef<HTMLDivElement, InvoicePrintProps>(({ ord
             {/* Header */}
             <div className="header text-center border-b-2 border-dashed border-muted pb-4 mb-4">
               <div className="flex justify-center mb-3">
-                <img src={logo} alt="مزاج" className="w-16 h-16 rounded-full object-cover" />
+                <img src={appLogo} alt={appName} className="w-16 h-16 rounded-full object-cover" />
               </div>
-              <div className="text-lg font-bold text-primary mb-1">MAZAG</div>
+              <div className="text-lg font-bold text-primary mb-1">{appName}</div>
               <div className="text-sm text-muted-foreground">فاتورة ضريبية مبسطة</div>
               <div className="order-id text-sm text-muted-foreground mt-2">
                 رقم الطلب: <span className="font-bold text-foreground">{order.id}</span>

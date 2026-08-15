@@ -7,19 +7,19 @@ const slides = [
     id: 1,
     title: 'مشاوي عربية أصيلة',
     subtitle: 'استمتع بأفضل النكهات الشرقية',
-    image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=1200',
+    image: 'https://placehold.co/1200x800/8b2323/ffffff?text=Arabic+Grill',
   },
   {
     id: 2,
     title: 'أشهى المأكولات الآسيوية',
     subtitle: 'من طوكيو إلى بانكوك على طبقك',
-    image: 'https://images.unsplash.com/photo-1559314809-0d155014e29e?w=1200',
+    image: 'https://placehold.co/1200x800/2a2a2a/ffffff?text=Asian+Food',
   },
   {
     id: 3,
     title: 'عروض خاصة اليوم',
     subtitle: 'خصم حتى 30% على أطباق مختارة',
-    image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200',
+    image: 'https://placehold.co/1200x800/d4af37/ffffff?text=Special+Offers',
   },
 ];
 

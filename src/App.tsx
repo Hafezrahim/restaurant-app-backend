@@ -12,6 +12,7 @@ import { ClientAuthProvider } from "@/context/ClientAuthContext";
 import { RewardsProvider } from "@/context/RewardsContext";
 import { NotificationsProvider } from "@/context/NotificationsContext";
 import { CurrencyProvider } from "@/context/CurrencyContext";
+import { AppInfoProvider } from "@/context/AppInfoContext";
 import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
 import { ClientProtectedRoute } from "@/components/client/ClientProtectedRoute";
 import { RoleProtectedRoute } from "@/components/auth/RoleProtectedRoute";
@@ -62,6 +63,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
+      <AppInfoProvider>
       <CartProvider>
         <CurrencyProvider>
         <FavoritesProvider>
@@ -129,6 +131,7 @@ const App = () => (
         </FavoritesProvider>
         </CurrencyProvider>
       </CartProvider>
+      </AppInfoProvider>
     </QueryClientProvider>
   </HelmetProvider>
 );

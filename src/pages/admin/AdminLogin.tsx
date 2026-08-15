@@ -7,12 +7,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdminAuth } from "@/context/AdminAuthContext";
 import { toast } from "sonner";
-import { Lock, Mail, ChefHat, Eye, EyeOff } from "lucide-react";
+import { Lock, Mail, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { useAppInfo } from "@/context/AppInfoContext";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState(() => localStorage.getItem("admin_email") || "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const { appName, appLogo } = useAppInfo();
   const [rememberMe, setRememberMe] = useState(() => !!localStorage.getItem("admin_email"));
   const [isLoading, setIsLoading] = useState(false);
   const { login, isAuthenticated } = useAdminAuth();
@@ -53,13 +55,14 @@ const AdminLogin = () => {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
       </div>
 
-      <Card className="w-full max-w-md relative z-10 shadow-2xl border-border/50 bg-card/95 backdrop-blur-sm">
+      <div className="w-full max-w-md relative z-10 flex flex-col items-center">
+        <Card className="w-full shadow-2xl border-border/50 bg-card/95 backdrop-blur-sm">
         <CardHeader className="text-center space-y-4 pb-2">
-          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
-            <ChefHat className="w-10 h-10 text-primary-foreground" />
+          <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 p-2">
+            <img src={appLogo} alt={appName} className="w-full h-full object-contain rounded-xl" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold text-foreground">لوحة التحكم</CardTitle>
+            <CardTitle className="text-2xl font-bold text-foreground">لوحة تحكم {appName}</CardTitle>
             <CardDescription className="text-muted-foreground mt-2">
               قم بتسجيل الدخول للوصول إلى لوحة التحكم الإدارية
             </CardDescription>
@@ -141,6 +144,14 @@ const AdminLogin = () => {
           </div>
         </CardContent>
       </Card>
+      
+      <div className="mt-6">
+        <Button variant="outline" className="gap-2 rounded-full px-6" onClick={() => navigate("/")}>
+          <ArrowRight className="w-4 h-4" />
+          العودة للموقع
+        </Button>
+      </div>
+      </div>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 // Supabase client — credentials are loaded from VITE_* environment variables
-// (auto-populated by Lovable Cloud / configured in .env).
+// (configured in .env).
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 

@@ -28,7 +28,7 @@ export const DEFAULT_LANGUAGES: SeoLanguage[] = [
 ];
 
 export const SEO_DEFAULTS: SeoSettings = {
-  site_url: "https://mazaj.lovable.app",
+  site_url: "https://mazaj-restaurant.com",
   default_title: "مطعم مزاج - أشهى الأطباق العربية والعالمية",
   default_description:
     "اكتشف قائمة مطعم مزاج، اطلب أطباقك المفضلة بسهولة، واستمتع بتجربة طعام لا تُنسى.",

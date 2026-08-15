@@ -8,7 +8,7 @@ import { Helmet } from "react-helmet-async";
  * - HSTS, X-Frame-Options and true HTTP-only headers MUST be set at the
  *   CDN/edge layer (Cloudflare/Netlify/Vercel/_headers). They are documented
  *   in the Security admin page and cannot be enforced via <meta>.
- * - The CSP below is intentionally tight but allows Supabase, Lovable preview,
+ * - The CSP below is intentionally tight but allows Supabase,
  *   Unsplash images, Google Fonts, GA/GTM and Leaflet/OSM tiles which the app
  *   already depends on.
  */
@@ -32,8 +32,12 @@ export const SecurityHeaders: React.FC = () => (
   <Helmet>
     <meta httpEquiv="Content-Security-Policy" content={CSP} />
     <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
-    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="referrer" content="no-referrer" />
     <meta httpEquiv="Permissions-Policy" content="camera=(), microphone=(self), geolocation=(self), payment=()" />
+    <meta httpEquiv="Strict-Transport-Security" content="max-age=63072000; includeSubDomains; preload" />
+    <meta httpEquiv="X-Frame-Options" content="SAMEORIGIN" />
+    <meta httpEquiv="Cross-Origin-Opener-Policy" content="same-origin" />
+    <meta httpEquiv="Cross-Origin-Resource-Policy" content="same-site" />
   </Helmet>
 );
 
@@ -41,7 +45,7 @@ export const RECOMMENDED_EDGE_HEADERS: Record<string, string> = {
   "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
   "X-Frame-Options": "SAMEORIGIN",
   "X-Content-Type-Options": "nosniff",
-  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Referrer-Policy": "no-referrer",
   "Permissions-Policy": "camera=(), microphone=(self), geolocation=(self), payment=()",
   "Cross-Origin-Opener-Policy": "same-origin",
   "Cross-Origin-Resource-Policy": "same-site",

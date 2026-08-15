@@ -10,14 +10,17 @@ const mapCategory = (cat: {
   icon: string;
   color: string;
   image: string | null;
-}): CategoryInfo => ({
-  id: cat.slug as Category,
-  name: cat.name,
-  nameAr: cat.name_ar,
-  icon: cat.icon,
-  color: cat.color,
-  image: cat.image ?? undefined,
-});
+}): CategoryInfo => {
+  const fallback = fallbackCategories.find((c) => c.id === cat.slug);
+  return {
+    id: cat.slug as Category,
+    name: cat.name,
+    nameAr: cat.name_ar,
+    icon: cat.icon,
+    color: cat.color,
+    image: cat.image || fallback?.image || undefined,
+  };
+};
 
 const mapMenuItem = (item: {
   id: string;
@@ -31,21 +34,24 @@ const mapMenuItem = (item: {
   is_new: boolean;
   ingredients: string[] | null;
   categories?: { slug: string } | { slug: string }[] | null;
-}): MenuItem => ({
-  id: item.id,
-  name: item.name,
-  nameAr: item.name_ar ?? undefined,
-  description: item.description,
-  price: Number(item.price),
-  image: item.image ?? '',
-  category: (Array.isArray(item.categories)
-    ? item.categories[0]?.slug
-    : item.categories?.slug ?? 'arabic') as Category,
-  rating: Number(item.rating),
-  isPopular: item.is_popular,
-  isNew: item.is_new,
-  ingredients: item.ingredients ?? undefined,
-});
+}): MenuItem => {
+  const fallback = fallbackMenuItems.find((i) => i.id === item.id);
+  return {
+    id: item.id,
+    name: item.name,
+    nameAr: item.name_ar ?? undefined,
+    description: item.description,
+    price: Number(item.price),
+    image: item.image || fallback?.image || '',
+    category: (Array.isArray(item.categories)
+      ? item.categories[0]?.slug
+      : item.categories?.slug ?? 'arabic') as Category,
+    rating: Number(item.rating),
+    isPopular: item.is_popular,
+    isNew: item.is_new,
+    ingredients: item.ingredients ?? undefined,
+  };
+};
 
 // Fetch categories from Supabase and fall back to local seed data if needed
 export const useCategories = () => {

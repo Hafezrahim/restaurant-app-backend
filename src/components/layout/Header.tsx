@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { WebNav } from './WebNav';
 import { supabase } from '@/integrations/supabase/client';
 import type { AppRole } from '@/hooks/useUserRole';
-import logo from '@/assets/logo.png';
+import { useAppInfo } from '@/context/AppInfoContext';
 
 
 interface HeaderProps {
@@ -23,7 +23,8 @@ const notifIcons: Record<string, React.ReactNode> = {
   info: <Info className="w-4 h-4 text-accent" />,
 };
 
-export const Header: React.FC<HeaderProps> = ({ showSearch = true, title }) => {
+export const Header: React.FC<HeaderProps> = ({ showSearch = false, title }) => {
+  const { appName, appLogo } = useAppInfo();
   const navigate = useNavigate();
   const { isAuthenticated } = useClientAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
@@ -71,7 +72,7 @@ export const Header: React.FC<HeaderProps> = ({ showSearch = true, title }) => {
             <h1 className="text-lg font-bold text-foreground md:hidden">{title}</h1>
           ) : null}
           <div className={`flex items-center gap-2 ${title ? 'hidden md:flex' : 'flex'}`}>
-            <img src={logo} alt="مزاج" className="w-12 h-12 rounded-full object-cover" />
+            <img src={appLogo} alt={appName} className="w-12 h-12 rounded-full object-cover" />
           </div>
         </div>
 

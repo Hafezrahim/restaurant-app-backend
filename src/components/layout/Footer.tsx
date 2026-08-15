@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin, Clock, Facebook, Instagram, Twitter } from 'lucide-react';
-import logo from '@/assets/logo.png';
 import { useRestaurantSettings } from '@/hooks/useSettingsData';
+import { useAppInfo } from '@/context/AppInfoContext';
 
 const dayLabels: Record<string, string> = {
   saturday: 'السبت',
@@ -16,13 +16,14 @@ const dayLabels: Record<string, string> = {
 
 export const Footer: React.FC = () => {
   const { data: settings } = useRestaurantSettings();
+  const { appName, appLogo } = useAppInfo();
   const general = (settings?.general as any) || {};
   const workingHours = (settings?.working_hours as any) || {};
 
-  const name = general.name || 'مزاج';
+  const name = general.name || appName;
   const description =
     general.description ||
-    'مطعم مزاج يقدم أشهى المأكولات العربية والشرقية والآسيوية. نحرص على تقديم أجود المكونات مع خدمة مميزة لضمان تجربة طعام لا تُنسى.';
+    `مطعم ${name} يقدم أشهى المأكولات العربية والشرقية والآسيوية. نحرص على تقديم أجود المكونات مع خدمة مميزة لضمان تجربة طعام لا تُنسى.`;
   const phone = general.phone || '+966 12 345 6789';
   const email = general.email || 'info@mazaj.sa';
   const address = general.address || 'الرياض، المملكة العربية السعودية';
@@ -36,7 +37,7 @@ export const Footer: React.FC = () => {
           {/* About */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <img src={logo} alt={name} className="w-14 h-14 rounded-full object-cover" />
+              <img src={appLogo} alt={name} className="w-14 h-14 rounded-full object-cover" />
               <h3 className="text-xl font-bold text-gold">{name}</h3>
             </div>
             <p className="text-cream/80 text-sm leading-relaxed mb-4">{description}</p>
