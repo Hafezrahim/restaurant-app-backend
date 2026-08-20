@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Save, Mail, Phone, MapPin, User, Camera, Shield, Settings } from 'lucide-react';
+import { Save, Mail, Phone, MapPin, User, Camera, Shield, Settings, Loader2 } from 'lucide-react';
 import { ClientLayout } from '@/components/client/ClientLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
