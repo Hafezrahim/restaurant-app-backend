@@ -76,13 +76,29 @@ const ClientProfile: React.FC = () => {
           </div>
           <div className="flex flex-col items-center -mt-12 pb-5 px-5 relative z-10">
             <div className="relative mb-3">
-              <div className="w-24 h-24 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center ring-4 ring-white dark:ring-card shadow-xl text-3xl font-bold text-white">
-                {user?.name?.charAt(0) || 'م'}
+              <div className="w-24 h-24 bg-gradient-to-br from-primary to-primary/80 rounded-2xl overflow-hidden flex items-center justify-center ring-4 ring-white dark:ring-card shadow-xl text-3xl font-bold text-white">
+                {user?.avatarUrl ? (
+                  <img src={user.avatarUrl} alt={`صورة ${user?.name || 'المستخدم'} الشخصية`} className="w-full h-full object-cover" />
+                ) : (
+                  user?.name?.charAt(0) || 'م'
+                )}
               </div>
-              <button className="absolute -bottom-1 -right-1 w-8 h-8 bg-secondary rounded-xl flex items-center justify-center shadow-md border-2 border-white dark:border-card">
-                <Camera className="w-3.5 h-3.5 text-secondary-foreground" />
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                aria-label="تغيير الصورة الشخصية"
+                className="absolute -bottom-1 -right-1 w-8 h-8 bg-secondary rounded-xl flex items-center justify-center shadow-md border-2 border-white dark:border-card disabled:opacity-60"
+              >
+                {uploading ? <Loader2 className="w-3.5 h-3.5 text-secondary-foreground animate-spin" /> : <Camera className="w-3.5 h-3.5 text-secondary-foreground" />}
               </button>
             </div>
+            {user?.avatarUrl && (
+              <button type="button" onClick={handleRemoveAvatar} disabled={uploading} className="text-[11px] text-destructive font-semibold mb-2 hover:underline">
+                إزالة الصورة
+              </button>
+            )}
             <h2 className="font-bold text-xl text-foreground">{user?.name}</h2>
             <p className="text-xs text-muted-foreground mt-0.5">{user?.email}</p>
             {memberSince && (
