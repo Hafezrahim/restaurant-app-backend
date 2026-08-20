@@ -38,6 +38,7 @@ const mapProfile = (profile: any, userId: string): ClientUser => ({
 
 export const ClientAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<ClientUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
@@ -45,39 +46,41 @@ export const ClientAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
     return data;
   };
 
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user) {
-          // Use setTimeout to avoid Supabase client deadlock
+      (event, newSession) => {
+        setSession(newSession);
+        setIsLoading(false);
+        if (newSession?.user) {
+          // Defer Supabase call to avoid client deadlock
           setTimeout(async () => {
-            const profile = await fetchProfile(session.user.id);
-            setUser(mapProfile(profile, session.user.id));
-            setIsLoading(false);
+            const profile = await fetchProfile(newSession.user.id);
+            setUser(mapProfile(profile ?? { email: newSession.user.email }, newSession.user.id));
           }, 0);
         } else {
           setUser(null);
-          setIsLoading(false);
         }
       }
     );
 
     // THEN check existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const profile = await fetchProfile(session.user.id);
-        setUser(mapProfile(profile, session.user.id));
-      }
+    supabase.auth.getSession().then(async ({ data: { session: existing } }) => {
+      setSession(existing);
       setIsLoading(false);
+      if (existing?.user) {
+        const profile = await fetchProfile(existing.user.id);
+        setUser(mapProfile(profile ?? { email: existing.user.email }, existing.user.id));
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
 
   const login = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
