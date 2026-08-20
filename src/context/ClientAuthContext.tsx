@@ -10,6 +10,7 @@ export interface ClientUser {
   address?: string;
   lat?: number;
   lng?: number;
+  avatarUrl?: string;
   createdAt: string;
 }
 
