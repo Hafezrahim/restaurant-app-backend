@@ -15,6 +15,44 @@ const ClientProfile: React.FC = () => {
     address: user?.address || '',
   });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('الرجاء اختيار ملف صورة');
+      return;
+    }
+    if (file.size > 1024 * 1024) {
+      toast.error('حجم الصورة يجب أن يكون أقل من 1 ميجابايت');
+      return;
+    }
+    setUploading(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      await updateProfile({ avatarUrl: dataUrl });
+      toast.success('تم تحديث الصورة الشخصية');
+    } catch {
+      toast.error('تعذر تحديث الصورة');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    setUploading(true);
+    await updateProfile({ avatarUrl: '' });
+    setUploading(false);
+    toast.success('تم حذف الصورة الشخصية');
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
