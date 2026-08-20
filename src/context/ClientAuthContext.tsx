@@ -110,6 +110,8 @@ export const ClientAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
     setUser(null);
+    setSession(null);
+
   }, []);
 
   const updateProfile = useCallback(async (data: Partial<ClientUser>) => {
@@ -133,7 +135,7 @@ export const ClientAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, [user]);
 
   return (
-    <ClientAuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, register, logout, updateProfile }}>
+    <ClientAuthContext.Provider value={{ user, isAuthenticated: !!session, isLoading, login, register, logout, updateProfile }}>
       {children}
     </ClientAuthContext.Provider>
   );
