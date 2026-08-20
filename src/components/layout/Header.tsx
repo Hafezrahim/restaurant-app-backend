@@ -73,6 +73,7 @@ export const Header: React.FC<HeaderProps> = ({ showSearch = true, title }) => {
           ) : null}
           <div className={`flex items-center gap-2 ${title ? 'hidden md:flex' : 'flex'}`}>
             <img src={logoUrl} alt={brandName} className="w-12 h-12 rounded-full object-cover" />
+            <span className="hidden md:inline text-lg font-bold text-gold">{brandName}</span>
           </div>
         </div>
 
