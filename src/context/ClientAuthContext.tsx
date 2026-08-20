@@ -10,6 +10,7 @@ export interface ClientUser {
   address?: string;
   lat?: number;
   lng?: number;
+  avatarUrl?: string;
   createdAt: string;
 }
 
@@ -33,6 +34,7 @@ const mapProfile = (profile: any, userId: string): ClientUser => ({
   address: profile?.address ?? undefined,
   lat: profile?.lat ?? undefined,
   lng: profile?.lng ?? undefined,
+  avatarUrl: profile?.avatar_url ?? undefined,
   createdAt: profile?.created_at ?? new Date().toISOString(),
 });
 
@@ -123,6 +125,7 @@ export const ClientAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     if (data.address !== undefined) updates.address = data.address;
     if (data.lat !== undefined) updates.lat = data.lat;
     if (data.lng !== undefined) updates.lng = data.lng;
+    if (data.avatarUrl !== undefined) updates.avatar_url = data.avatarUrl;
 
     const { error } = await supabase
       .from('profiles')
