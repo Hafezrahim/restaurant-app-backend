@@ -69,8 +69,12 @@ export const ClientLayout: React.FC<{ children: React.ReactNode; title: string }
                 <p className="text-sm font-semibold text-foreground">{user?.name}</p>
                 <p className="text-[11px] text-muted-foreground">{user?.email}</p>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white text-sm font-bold shadow-md">
-                {user?.name?.charAt(0) || 'م'}
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white text-sm font-bold shadow-md overflow-hidden">
+                {user?.avatarUrl ? (
+                  <img src={user.avatarUrl} alt={user?.name || 'الصورة الشخصية'} className="w-full h-full object-cover" />
+                ) : (
+                  user?.name?.charAt(0) || 'م'
+                )}
               </div>
             </div>
           </div>
@@ -84,8 +88,12 @@ export const ClientLayout: React.FC<{ children: React.ReactNode; title: string }
               <div className="bg-gradient-to-br from-primary to-primary/80 p-5 text-center relative overflow-hidden">
                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
                 <div className="relative z-10">
-                  <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-3 text-2xl font-bold text-white shadow-lg">
-                    {user?.name?.charAt(0) || 'م'}
+                  <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-3 text-2xl font-bold text-white shadow-lg overflow-hidden">
+                    {user?.avatarUrl ? (
+                      <img src={user.avatarUrl} alt={user?.name || 'الصورة الشخصية'} className="w-full h-full object-cover" />
+                    ) : (
+                      user?.name?.charAt(0) || 'م'
+                    )}
                   </div>
                   <p className="font-bold text-white text-base">{user?.name}</p>
                   <p className="text-xs text-white/60 mt-0.5">{user?.email}</p>
