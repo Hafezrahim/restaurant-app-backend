@@ -113,7 +113,9 @@ export const Header: React.FC<HeaderProps> = ({ showSearch = true, title }) => {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted" onClick={handleAccountClick} disabled={checkingRole} aria-label={isAuthenticated ? 'لوحة التحكم' : 'تسجيل الدخول'}>
-                  {checkingRole ? <Loader2 className="w-5 h-5 animate-spin" /> : isAuthenticated ? <LayoutDashboard className="w-5 h-5" /> : <UserCircle className="w-5 h-5" />}
+                  {checkingRole ? <Loader2 className="w-5 h-5 animate-spin" /> : user?.avatarUrl ? (
+                    <img src={user.avatarUrl} alt={user?.name || 'حسابي'} className="w-7 h-7 rounded-full object-cover border border-primary/30" />
+                  ) : isAuthenticated ? <LayoutDashboard className="w-5 h-5" /> : <UserCircle className="w-5 h-5" />}
                 </Button>
 
               </TooltipTrigger>
