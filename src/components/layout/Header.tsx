@@ -25,7 +25,7 @@ const notifIcons: Record<string, React.ReactNode> = {
 
 export const Header: React.FC<HeaderProps> = ({ showSearch = true, title }) => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useClientAuth();
+  const { isAuthenticated, user } = useClientAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { items } = useCart();
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
