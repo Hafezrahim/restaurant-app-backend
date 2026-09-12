@@ -8,11 +8,12 @@ import { useClientAuth } from '@/context/ClientAuthContext';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
 import { useBrandLogo } from '@/hooks/useBrandLogo';
+import { supabase } from '@/integrations/supabase/client';
 
 const ClientLogin: React.FC = () => {
   const navigate = useNavigate();
   const { login, register } = useClientAuth();
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register' | 'forgot'>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '' });
@@ -24,7 +25,22 @@ const ClientLogin: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      if (mode === 'login') {
+      if (mode === 'forgot') {
+        const email = form.email.trim();
+        if (!email) {
+          toast.error('يرجى إدخال البريد الإلكتروني');
+          return;
+        }
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/client/reset-password`,
+        });
+        if (error) {
+          toast.error('تعذر إرسال رابط الاستعادة، حاول مرة أخرى');
+        } else {
+          toast.success('تم إرسال رابط استعادة كلمة المرور إلى بريدك');
+          setMode('login');
+        }
+      } else if (mode === 'login') {
         if (!form.email || !form.password) {
           toast.error('يرجى ملء جميع الحقول');
           return;
@@ -75,21 +91,23 @@ const ClientLogin: React.FC = () => {
     }
   };
 
+  const pageTitle = mode === 'login' ? 'تسجيل الدخول' : mode === 'register' ? 'إنشاء حساب' : 'استعادة كلمة المرور';
+
   return (
     <>
       <Helmet>
-        <title>{mode === 'login' ? 'تسجيل الدخول' : 'إنشاء حساب'} - مطعم مزاج</title>
+        <title>{pageTitle} - مطعم مزاج</title>
       </Helmet>
-      <AppLayout title={mode === 'login' ? 'تسجيل الدخول' : 'إنشاء حساب'} showSearch={false}>
+      <AppLayout title={pageTitle} showSearch={false}>
         <div className="max-w-md mx-auto">
           {/* Logo */}
           <div className="text-center mb-8">
             <img src={logoUrl} alt={brandName} className="w-20 h-20 rounded-full object-cover mx-auto mb-4 shadow-elevated" />
             <h1 className="text-2xl font-bold text-foreground">
-              {mode === 'login' ? 'مرحباً بعودتك' : 'أهلاً بك في مزاج'}
+              {mode === 'login' ? 'مرحباً بعودتك' : mode === 'register' ? 'أهلاً بك في مزاج' : 'استعادة كلمة المرور'}
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              {mode === 'login' ? 'سجّل دخولك للوصول لحسابك' : 'أنشئ حساباً جديداً'}
+              {mode === 'login' ? 'سجّل دخولك للوصول لحسابك' : mode === 'register' ? 'أنشئ حساباً جديداً' : 'أدخل بريدك وسنرسل لك رابط إعادة التعيين'}
             </p>
           </div>
 
@@ -131,23 +149,37 @@ const ClientLogin: React.FC = () => {
               />
             </div>
 
-            <div className="relative">
-              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                value={form.password}
-                onChange={e => setForm({ ...form, password: e.target.value })}
-                placeholder="كلمة المرور"
-                type={showPassword ? 'text' : 'password'}
-                className="rounded-xl pr-10 pl-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute left-3 top-1/2 -translate-y-1/2"
-              >
-                {showPassword ? <EyeOff className="w-4 h-4 text-muted-foreground" /> : <Eye className="w-4 h-4 text-muted-foreground" />}
-              </button>
-            </div>
+            {mode !== 'forgot' && (
+              <div className="relative">
+                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={form.password}
+                  onChange={e => setForm({ ...form, password: e.target.value })}
+                  placeholder="كلمة المرور"
+                  type={showPassword ? 'text' : 'password'}
+                  className="rounded-xl pr-10 pl-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4 text-muted-foreground" /> : <Eye className="w-4 h-4 text-muted-foreground" />}
+                </button>
+              </div>
+            )}
+
+            {mode === 'login' && (
+              <div className="text-left">
+                <button
+                  type="button"
+                  onClick={() => setMode('forgot')}
+                  className="text-xs text-primary hover:underline"
+                >
+                  نسيت كلمة المرور؟
+                </button>
+              </div>
+            )}
 
             <Button type="submit" className="w-full btn-primary rounded-full" size="lg" disabled={isSubmitting}>
               {isSubmitting ? (
@@ -157,7 +189,7 @@ const ClientLogin: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  {mode === 'login' ? 'تسجيل الدخول' : 'إنشاء حساب'}
+                  {mode === 'login' ? 'تسجيل الدخول' : mode === 'register' ? 'إنشاء حساب' : 'إرسال رابط الاستعادة'}
                   <ArrowRight className="w-4 h-4 mr-2" />
                 </>
               )}
@@ -169,7 +201,7 @@ const ClientLogin: React.FC = () => {
                 onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
                 className="text-sm text-primary hover:underline"
               >
-                {mode === 'login' ? 'ليس لديك حساب؟ أنشئ واحداً' : 'لديك حساب بالفعل؟ سجّل دخولك'}
+                {mode === 'login' ? 'ليس لديك حساب؟ أنشئ واحداً' : mode === 'register' ? 'لديك حساب بالفعل؟ سجّل دخولك' : 'العودة لتسجيل الدخول'}
               </button>
             </div>
           </form>

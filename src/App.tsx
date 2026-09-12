@@ -56,6 +56,7 @@ import ClientWishlist from "./pages/client/ClientWishlist";
 import ClientSupport from "./pages/client/ClientSupport";
 import ClientProfile from "./pages/client/ClientProfile";
 import ClientRewards from "./pages/client/ClientRewards";
+import ClientResetPassword from "./pages/client/ClientResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -91,6 +92,7 @@ const App = () => (
                     <Route path="/reservation" element={<Reservation />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/client/login" element={<ClientLogin />} />
+                    <Route path="/client/reset-password" element={<ClientResetPassword />} />
                     <Route path="/client/dashboard" element={<ClientProtectedRoute><ClientDashboard /></ClientProtectedRoute>} />
                     <Route path="/client/orders" element={<ClientProtectedRoute><ClientOrders /></ClientProtectedRoute>} />
                     <Route path="/client/orders/:id" element={<ClientProtectedRoute><ClientOrderDetails /></ClientProtectedRoute>} />
