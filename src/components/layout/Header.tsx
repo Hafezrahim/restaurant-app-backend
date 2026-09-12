@@ -42,18 +42,41 @@ export const Header: React.FC<HeaderProps> = ({ showSearch = true, title }) => {
   };
 
   // Check the signed-in user's role first, then route to the matching panel.
+  // Uses the locally cached session (no network round-trip) and caps the role
+  // lookup at 1.5s so the click never feels stuck.
   const handleAccountClick = async () => {
     setCheckingRole(true);
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      const uid = userData.user?.id;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const uid = sessionData.session?.user?.id;
       if (!uid) {
         navigate('/client/login');
         return;
       }
-      const { data, error } = await supabase.from('user_roles').select('role').eq('user_id', uid);
-      const roles = (error ? [] : (data ?? []).map((r) => r.role)) as AppRole[];
-      navigate(homeForRoles(roles));
+
+      const cached = sessionStorage.getItem(`roles:${uid}`);
+      if (cached) {
+        navigate(homeForRoles(JSON.parse(cached) as AppRole[]));
+        return;
+      }
+
+      const rolesPromise = supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', uid)
+        .then(({ data, error }) => (error ? [] : (data ?? []).map((r) => r.role)) as AppRole[]);
+
+      const roles = await Promise.race([
+        rolesPromise,
+        new Promise<AppRole[] | null>((resolve) => setTimeout(() => resolve(null), 1500)),
+      ]);
+
+      if (roles) {
+        sessionStorage.setItem(`roles:${uid}`, JSON.stringify(roles));
+        navigate(homeForRoles(roles));
+      } else {
+        navigate('/client/dashboard');
+      }
     } catch {
       navigate('/client/dashboard');
     } finally {

@@ -110,11 +110,14 @@ export const ClientAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, []);
 
   const logout = useCallback(async () => {
+    const uid = user?.id;
     await supabase.auth.signOut();
+    if (uid) sessionStorage.removeItem(`roles:${uid}`);
     setUser(null);
     setSession(null);
 
-  }, []);
+
+  }, [user?.id]);
 
   const updateProfile = useCallback(async (data: Partial<ClientUser>) => {
     if (!user) return;
