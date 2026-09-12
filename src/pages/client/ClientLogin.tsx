@@ -8,6 +8,7 @@ import { useClientAuth } from '@/context/ClientAuthContext';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
 import { useBrandLogo } from '@/hooks/useBrandLogo';
+import { supabase } from '@/integrations/supabase/client';
 
 const ClientLogin: React.FC = () => {
   const navigate = useNavigate();
