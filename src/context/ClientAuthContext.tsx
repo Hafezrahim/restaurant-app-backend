@@ -117,7 +117,7 @@ export const ClientAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setSession(null);
 
 
-  }, []);
+  }, [user?.id]);
 
   const updateProfile = useCallback(async (data: Partial<ClientUser>) => {
     if (!user) return;
