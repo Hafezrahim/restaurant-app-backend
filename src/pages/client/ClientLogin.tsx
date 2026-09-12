@@ -12,7 +12,7 @@ import { useBrandLogo } from '@/hooks/useBrandLogo';
 const ClientLogin: React.FC = () => {
   const navigate = useNavigate();
   const { login, register } = useClientAuth();
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register' | 'forgot'>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '' });
@@ -24,7 +24,22 @@ const ClientLogin: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      if (mode === 'login') {
+      if (mode === 'forgot') {
+        const email = form.email.trim();
+        if (!email) {
+          toast.error('يرجى إدخال البريد الإلكتروني');
+          return;
+        }
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/client/reset-password`,
+        });
+        if (error) {
+          toast.error('تعذر إرسال رابط الاستعادة، حاول مرة أخرى');
+        } else {
+          toast.success('تم إرسال رابط استعادة كلمة المرور إلى بريدك');
+          setMode('login');
+        }
+      } else if (mode === 'login') {
         if (!form.email || !form.password) {
           toast.error('يرجى ملء جميع الحقول');
           return;
