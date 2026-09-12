@@ -91,21 +91,23 @@ const ClientLogin: React.FC = () => {
     }
   };
 
+  const pageTitle = mode === 'login' ? 'تسجيل الدخول' : mode === 'register' ? 'إنشاء حساب' : 'استعادة كلمة المرور';
+
   return (
     <>
       <Helmet>
-        <title>{mode === 'login' ? 'تسجيل الدخول' : 'إنشاء حساب'} - مطعم مزاج</title>
+        <title>{pageTitle} - مطعم مزاج</title>
       </Helmet>
-      <AppLayout title={mode === 'login' ? 'تسجيل الدخول' : 'إنشاء حساب'} showSearch={false}>
+      <AppLayout title={pageTitle} showSearch={false}>
         <div className="max-w-md mx-auto">
           {/* Logo */}
           <div className="text-center mb-8">
             <img src={logoUrl} alt={brandName} className="w-20 h-20 rounded-full object-cover mx-auto mb-4 shadow-elevated" />
             <h1 className="text-2xl font-bold text-foreground">
-              {mode === 'login' ? 'مرحباً بعودتك' : 'أهلاً بك في مزاج'}
+              {mode === 'login' ? 'مرحباً بعودتك' : mode === 'register' ? 'أهلاً بك في مزاج' : 'استعادة كلمة المرور'}
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              {mode === 'login' ? 'سجّل دخولك للوصول لحسابك' : 'أنشئ حساباً جديداً'}
+              {mode === 'login' ? 'سجّل دخولك للوصول لحسابك' : mode === 'register' ? 'أنشئ حساباً جديداً' : 'أدخل بريدك وسنرسل لك رابط إعادة التعيين'}
             </p>
           </div>
 
