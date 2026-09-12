@@ -149,23 +149,37 @@ const ClientLogin: React.FC = () => {
               />
             </div>
 
-            <div className="relative">
-              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                value={form.password}
-                onChange={e => setForm({ ...form, password: e.target.value })}
-                placeholder="كلمة المرور"
-                type={showPassword ? 'text' : 'password'}
-                className="rounded-xl pr-10 pl-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute left-3 top-1/2 -translate-y-1/2"
-              >
-                {showPassword ? <EyeOff className="w-4 h-4 text-muted-foreground" /> : <Eye className="w-4 h-4 text-muted-foreground" />}
-              </button>
-            </div>
+            {mode !== 'forgot' && (
+              <div className="relative">
+                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={form.password}
+                  onChange={e => setForm({ ...form, password: e.target.value })}
+                  placeholder="كلمة المرور"
+                  type={showPassword ? 'text' : 'password'}
+                  className="rounded-xl pr-10 pl-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4 text-muted-foreground" /> : <Eye className="w-4 h-4 text-muted-foreground" />}
+                </button>
+              </div>
+            )}
+
+            {mode === 'login' && (
+              <div className="text-left">
+                <button
+                  type="button"
+                  onClick={() => setMode('forgot')}
+                  className="text-xs text-primary hover:underline"
+                >
+                  نسيت كلمة المرور؟
+                </button>
+              </div>
+            )}
 
             <Button type="submit" className="w-full btn-primary rounded-full" size="lg" disabled={isSubmitting}>
               {isSubmitting ? (
@@ -175,7 +189,7 @@ const ClientLogin: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  {mode === 'login' ? 'تسجيل الدخول' : 'إنشاء حساب'}
+                  {mode === 'login' ? 'تسجيل الدخول' : mode === 'register' ? 'إنشاء حساب' : 'إرسال رابط الاستعادة'}
                   <ArrowRight className="w-4 h-4 mr-2" />
                 </>
               )}
@@ -187,7 +201,7 @@ const ClientLogin: React.FC = () => {
                 onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
                 className="text-sm text-primary hover:underline"
               >
-                {mode === 'login' ? 'ليس لديك حساب؟ أنشئ واحداً' : 'لديك حساب بالفعل؟ سجّل دخولك'}
+                {mode === 'login' ? 'ليس لديك حساب؟ أنشئ واحداً' : mode === 'register' ? 'لديك حساب بالفعل؟ سجّل دخولك' : 'العودة لتسجيل الدخول'}
               </button>
             </div>
           </form>
