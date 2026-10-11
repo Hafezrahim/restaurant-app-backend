@@ -67,9 +67,9 @@ export const CategoryList: React.FC = () => {
         </div>
       </div>
       <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex gap-3">
+        <div className="flex">
           {categories.map((cat, idx) => (
-            <div key={cat.id} className="flex-[0_0_28%] min-w-0 md:flex-[0_0_16%] lg:flex-[0_0_12%] transition-all duration-500"
+            <div key={cat.id} className="flex-[0_0_28%] min-w-0 px-1.5 md:flex-[0_0_16%] lg:flex-[0_0_12%] transition-all duration-500"
               style={{ 
                 opacity: emblaApi ? 1 : 0,
                 transform: emblaApi ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.95)',
