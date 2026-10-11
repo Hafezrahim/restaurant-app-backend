@@ -31,7 +31,7 @@ export const Footer: React.FC = () => {
   const hourEntries = Object.entries(workingHours) as Array<[string, any]>;
 
   return (
-    <footer className="hidden md:block bg-charcoal text-cream py-12">
+    <footer className="hidden md:block bg-charcoal text-cream py-5">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* About */}
@@ -118,7 +118,7 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="border-t border-cream/10 mt-8 pt-8 text-center">
+        <div className="border-t border-cream/10 mt-4 pt-4 text-center">
           <p className="text-cream/60 text-sm">
             © {new Date().getFullYear()} {name}. جميع الحقوق محفوظة.
           </p>
