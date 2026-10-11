@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useClientAuth } from '@/context/ClientAuthContext';
 import { toast } from 'sonner';
+import { uploadImage } from '@/lib/uploadImage';
 
 const ClientProfile: React.FC = () => {
   const { user, updateProfile, logout } = useClientAuth();
@@ -32,13 +33,9 @@ const ClientProfile: React.FC = () => {
     }
     setUploading(true);
     try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      await updateProfile({ avatarUrl: dataUrl });
+      if (!user) throw new Error('no user');
+      const url = await uploadImage(file, `avatars/${user.id}`);
+      await updateProfile({ avatarUrl: url });
       toast.success('تم تحديث الصورة الشخصية');
     } catch {
       toast.error('تعذر تحديث الصورة');

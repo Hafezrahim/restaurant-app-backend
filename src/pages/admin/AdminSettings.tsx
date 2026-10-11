@@ -15,6 +15,7 @@ import {
   Upload, Truck, Users, Key, Plus, Trash2, Coins, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { uploadImage } from "@/lib/uploadImage";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -75,13 +76,13 @@ const AdminSettings = () => {
       toast.error("حجم الصورة يجب أن يكون أقل من 1 ميجابايت");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      setLogoUrl(String(reader.result));
-      toast.success("تم تحديث الشعار، لا تنس الحفظ");
-    };
-    reader.onerror = () => toast.error("تعذّر قراءة الصورة");
-    reader.readAsDataURL(file);
+    const t = toast.loading("جارٍ رفع الشعار...");
+    uploadImage(file, "branding")
+      .then((url) => {
+        setLogoUrl(url);
+        toast.success("تم رفع الشعار، لا تنس الحفظ", { id: t });
+      })
+      .catch(() => toast.error("تعذّر رفع الصورة", { id: t }));
   };
 
   const [description, setDescription] = useState("");
